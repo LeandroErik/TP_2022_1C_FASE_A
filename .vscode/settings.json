@@ -1,9 +1,0 @@
-{
-	"files.associations": {
-		"main.h": "c",
-		"stdbool.h": "c",
-		"protocolo.h": "c",
-		"init.h": "c",
-		"cstdio": "c"
-	}
-}
