@@ -23,7 +23,7 @@ typedef enum
 t_log* logger;
 
 void* recibir_buffer(int*, int);
-void conectar_cpu(void);
+
 int iniciar_servidor(void);
 int esperar_cliente(int);
 t_list* recibir_paquete(int);
