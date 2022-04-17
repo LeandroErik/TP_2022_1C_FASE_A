@@ -1,9 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "utils.h"
 #include <string.h>
 #include <commons/log.h>
-#include "utils.h"
+#include "kernel_utils.h"
 
 int main(int argc, char *argv[])
 {

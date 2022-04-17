@@ -1,5 +1,5 @@
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef CONSOLA_UTILS_H
+#define CONSOLA_UTILS_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,4 +40,4 @@ void liberar_conexion(int socket_cliente);
 void eliminar_paquete(t_paquete *paquete);
 t_config *iniciar_config(char *);
 
-#endif /* UTILS_H_ */
+#endif /* CONSOLA_UTILS_H */

@@ -1,13 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "utils.h"
+#include "consola_utils.h"
 
 int main(int argc, char *argv[])
 {
     t_config *config = iniciar_config("consola.config");
 
-    char *ipKernel = config_get_string_value(config, "IP_KERNEL");;
-    char *puertoKernel = config_get_string_value(config, "PUERTO_KERNEL");;
+    char *ipKernel = config_get_string_value(config, "IP_KERNEL");
+    ;
+    char *puertoKernel = config_get_string_value(config, "PUERTO_KERNEL");
+    ;
 
     int socketConsola = crear_conexion(ipKernel, puertoKernel);
 
