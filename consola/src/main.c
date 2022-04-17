@@ -4,9 +4,10 @@
 
 int main(int argc, char *argv[])
 {
+    t_config *config = iniciar_config("consola.config");
 
-    char *ipKernel = "127.0.0.1";
-    char *puertoKernel = "5000";
+    char *ipKernel = config_get_string_value(config, "IP_KERNEL");;
+    char *puertoKernel = config_get_string_value(config, "PUERTO_KERNEL");;
 
     int socketConsola = crear_conexion(ipKernel, puertoKernel);
 

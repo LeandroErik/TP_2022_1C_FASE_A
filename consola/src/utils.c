@@ -118,3 +118,10 @@ void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
 }
+
+t_config *iniciar_config(char* rutaArchivo)
+{
+	t_config *nuevo_config = config_create(rutaArchivo);
+
+	return nuevo_config;
+}
