@@ -8,6 +8,9 @@
 -
 * **A**gus
 
+## ¿Cómo correr los módulos?
+`make start`
+
 ## Convenciones
 
 #### nombres de funciones:
