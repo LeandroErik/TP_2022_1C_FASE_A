@@ -4,7 +4,8 @@ int main(int argc, char *argv[])
 {
     logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
 
-    int socketConsola = obtener_socket_consola(logger);
+    int socketKernel = iniciar_servidor_kernel(logger);
+    int socketConsola = obtener_socket_consola(socketKernel, logger);
     char *mensaje;
 
     while (true)
@@ -18,7 +19,7 @@ int main(int argc, char *argv[])
             break;
 
         case DESCONEXION:
-            log_error(logger, "La Consola se desconectó. Apagando Servidor Kernel.");
+            apagar_servidor_kernel(socketKernel, logger);
             return EXIT_FAILURE;
         default:
             log_warning(logger, "Operación desconocida.");

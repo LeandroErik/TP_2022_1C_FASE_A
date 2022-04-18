@@ -21,8 +21,8 @@ typedef enum
 /**
  * @brief Iniciar un servidor para que clientes se conecten.
  *
- * @param ip: IP del servidor.
- * @param puerto: Puerto del servidor.
+ * @param ip IP del servidor.
+ * @param puerto Puerto del servidor.
  *
  * @return Socket del servidor (int).
  */
@@ -51,5 +51,12 @@ cod_op obtener_codigo_operacion(int socketCliente);
  * @return Mensaje.
  */
 char *obtener_mensaje(int socketCliente);
+
+/**
+ * @brief Apagar el servidor
+ *
+ * @param socketServidor Socket del servidor (int).
+ */
+void apagar_servidor(int socketServidor);
 
 #endif

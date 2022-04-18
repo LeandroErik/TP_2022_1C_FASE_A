@@ -21,10 +21,19 @@ int iniciar_servidor_kernel(t_log *logger);
 /**
  * @brief Obtener el socket del Módulo de Consola.
  *
+ * @param socketKernel Socket del servidor Kernel (int).
  * @param logger Logger de Kernel.
  *
  * @return Socket de Consola (int).
  */
-int obtener_socket_consola(t_log *logger);
+int obtener_socket_consola(int socketKernel, t_log *logger);
 
-#endif /* KERNEL_UTILS_H_ */
+/**
+ * @brief Apagar el servidor de Kernel.
+ *
+ * @param socketKernel Socket del servidor Kernel (int).
+ * @param logger Logger de Kernel.
+ */
+void apagar_servidor_kernel(int socketKernel, t_log *logger);
+
+#endif

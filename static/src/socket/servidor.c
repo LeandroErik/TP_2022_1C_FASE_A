@@ -62,3 +62,8 @@ char *obtener_mensaje(int socketCliente)
 
   return buffer;
 }
+
+void apagar_servidor(int socketServidor)
+{
+  close(socketServidor);
+}

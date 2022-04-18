@@ -1,9 +1,9 @@
 # Libraries
-LIBS=commons readline
+LIBS=static commons readline
 
 # Custom libraries' paths
 SHARED_LIBPATHS=
-STATIC_LIBPATHS=
+STATIC_LIBPATHS= ../static
 
 # Compiler flags
 CDEBUG=-g -Wall -DDEBUG

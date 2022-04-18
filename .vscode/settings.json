@@ -1,0 +1,11 @@
+{
+  "files.associations": {
+    "*.ejs": "html",
+    "list.h": "c",
+    "stdio.h": "c",
+    "cstdio": "c",
+    "log.h": "c",
+    "servidor.h": "c",
+    "kernel_utils.h": "c"
+  }
+}
