@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 {
     logger = log_create("log.log", "CPU", 1, LOG_LEVEL_DEBUG);
 
-    puts("Hello world!!");
+    puts("CPU");
 
     int socketCpu = iniciar_servidor();
     log_info(logger, "Servidor CPU listo para recibir al cliente");

@@ -8,15 +8,13 @@
 int main(int argc, char *argv[])
 {
     logger = log_create("log.log", "Kernel", 1, LOG_LEVEL_DEBUG);
+    
+    conectar_cpu();
 
-    puts("Hello world!!");
-
-    int socketKernel = iniciar_servidor();
+    int socketKernelServidor = iniciar_servidor();
     log_info(logger, "Servidor listo para recibir al cliente");
 
-    int socketConsola = esperar_cliente(socketKernel);
-
-    conectar_cpu();
+    int socketConsola = esperar_cliente(socketKernelServidor);
 
     while (1)
     {
@@ -46,17 +44,10 @@ void conectar_cpu(void) {
     char *ipCpu = config_get_string_value(config, "IP_CPU");
     char *puertoCpu = config_get_string_value(config, "PUERTO_CPU");
 
-    int socketKernel = crear_conexion(ipCpu, puertoCpu);
+    int socketKernelCliente = crear_conexion(ipCpu, puertoCpu);
+    printf("\n %d %s %s \n", socketKernelCliente, ipCpu, puertoCpu);
 
-    //char *input = readline("> ");
-    enviar_mensaje("soy kernel, pa", socketKernel);
+    enviar_mensaje("soy kernel, pa", socketKernelCliente);
 
-    /*while (strcmp(input, ""))
-    {
-        enviar_mensaje(input, socketKernel);
-        free(input);
-        input = readline("> ");
-    } */
-
-    liberar_conexion(socketKernel);
+    liberar_conexion(socketKernelCliente);
 }

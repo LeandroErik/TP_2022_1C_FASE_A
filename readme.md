@@ -23,7 +23,8 @@
 	 UN_NOMBRE_DE_CONSTANTE 
 
 
-// COMO SE CONECTAN LOS MODULOS ENTRE SI
-//	CONSOLA --> KERNEL
-//	KERNEL --> CPU, KERNEL --> MEMORIA/SWAP
-//	CPU --> MEMORIA/SWAP
+## Cómo se conectan los módulos entre sí
+ - consola --> kernel ✅   
+ - kernel --> cpu ✅
+ - kernel --> memoria/swap
+ - cpu --> memoria/swap
