@@ -12,12 +12,16 @@ t_log *logger;
 /**
  * @brief Iniciar el servidor del módulo Kernel para conectar el Módulo de Consola (como cliente).
  *
+ * @param logger Logger de Kernel.
+ *
  * @return Socket del servidor Kernel (int).
  */
 int iniciar_servidor_kernel(t_log *logger);
 
 /**
  * @brief Obtener el socket del Módulo de Consola.
+ *
+ * @param logger Logger de Kernel.
  *
  * @return Socket de Consola (int).
  */
