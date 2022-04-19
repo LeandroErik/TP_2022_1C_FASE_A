@@ -1,33 +1,36 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<sys/socket.h>
-#include<unistd.h>
-#include<netdb.h>
-#include<commons/log.h>
-#include<commons/collections/list.h>
-#include<string.h>
-#include<assert.h>
+#include <socket/servidor.h>
+#include <commons/log.h>
 
-#define IP "127.0.0.1"
-#define PUERTO "5001"
+t_log *logger;
 
-typedef enum
-{
-	MENSAJE,
-	PAQUETE
-}op_code;
+/**
+ * @brief Iniciar el servidor del módulo CPU para conectar el Módulo de Kernel (como cliente).
+ *
+ * @param logger Logger de CPU.
+ *
+ * @return Socket del servidor CPU (int).
+ */
+int iniciar_servidor_cpu(t_log *logger);
 
-t_log* logger;
+/**
+ * @brief Obtener el socket del Módulo de Kernel.
+ *
+ * @param socketCPU Socket del servidor CPU (int).
+ * @param logger Logger de CPU.
+ *
+ * @return Socket de Kernel (int).
+ */
+int obtener_socket_kernel(int socketCPU, t_log *logger);
 
-void* recibir_buffer(int*, int);
+/**
+ * @brief Apagar el servidor de CPU.
+ *
+ * @param socketKernel Socket del servidor CPU (int).
+ * @param logger Logger de CPU.
+ */
+void apagar_servidor_cpu(int socketCPU, t_log *logger);
 
-int iniciar_servidor(void);
-int esperar_cliente(int);
-t_list* recibir_paquete(int);
-void recibir_mensaje(int);
-int recibir_operacion(int);
-
-#endif /* UTILS_H_ */
+#endif

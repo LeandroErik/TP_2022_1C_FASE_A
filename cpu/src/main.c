@@ -1,39 +1,31 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include "cpu_utils.h"
-#include <string.h>
-#include <commons/log.h>
+#include <cpu_utils.h>
 
 int main(int argc, char *argv[])
 {
-    logger = log_create("log.log", "CPU", 1, LOG_LEVEL_DEBUG);
+  logger = log_create("CPU.log", "CPU", true, LOG_LEVEL_DEBUG);
 
-    puts("CPU");
+  int socketCPU = iniciar_servidor_cpu(logger);
+  int socketKernel = obtener_socket_kernel(socketCPU, logger);
+  char *mensaje;
 
-    int socketCpu = iniciar_servidor();
-    log_info(logger, "Servidor CPU listo para recibir al cliente");
+  while (true)
+  {
+    cod_op_servidor codOp = obtener_codigo_operacion(socketKernel);
 
-    int socketKernel = esperar_cliente(socketCpu);
-
-    while (1)
+    switch (codOp)
     {
-        int codOp = recibir_operacion(socketKernel);
-        switch (codOp)
-        {
-        case MENSAJE:
-            recibir_mensaje(socketKernel);
-            break;
+    case MENSAJE_CLIENTE:
+      mensaje = obtener_mensaje(socketKernel);
+      log_info(logger, "Recibí el mensaje: %s", mensaje);
+      break;
 
-        case -1:
-            log_error(logger, "el cliente se desconecto. Terminando servidor");
-            return EXIT_FAILURE;
-        default:
-            log_warning(logger, "Operacion desconocida. No quieras meter la pata");
-            break;
-        }
+    case DESCONEXION_CLIENTE:
+      apagar_servidor_cpu(socketCPU, logger);
+      return EXIT_FAILURE;
+    default:
+      log_warning(logger, "Operación desconocida.");
+      break;
     }
-    log_destroy(logger);
-
-    return 0;
+  }
+  log_destroy(logger);
 }
-

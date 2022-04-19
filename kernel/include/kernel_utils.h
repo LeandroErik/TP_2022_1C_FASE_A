@@ -5,9 +5,6 @@
 #include <socket/cliente.h>
 #include <commons/log.h>
 
-#define IP "127.0.0.1"
-#define PUERTO "5000"
-
 t_log *logger;
 
 /**
