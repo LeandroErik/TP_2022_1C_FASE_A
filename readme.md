@@ -8,6 +8,9 @@
 -
 * **A**gus
 
+## ¿Cómo correr los módulos?
+`make start`
+
 ## Convenciones
 
 #### nombres de funciones:
@@ -18,3 +21,10 @@
 
 #### constantes:
 	 UN_NOMBRE_DE_CONSTANTE 
+
+
+## Cómo se conectan los módulos entre sí
+ - consola --> kernel ✅   
+ - kernel --> cpu ✅
+ - kernel --> memoria/swap
+ - cpu --> memoria/swap
