@@ -13,7 +13,7 @@
 typedef enum
 {
   MENSAJE
-} cod_op;
+} cod_op_cliente;
 
 typedef struct
 {
@@ -23,7 +23,7 @@ typedef struct
 
 typedef struct
 {
-  cod_op codigoOperacion;
+  cod_op_cliente codigoOperacion;
   t_buffer *buffer;
 } t_paquete;
 

@@ -15,8 +15,8 @@
 typedef enum
 {
   DESCONEXION = -1,
-  MENSAJE
-} cod_op;
+  MENSAJE_CLIENTE
+} cod_op_servidor;
 
 /**
  * @brief Iniciar un servidor para que clientes se conecten.
@@ -42,7 +42,7 @@ int esperar_cliente(int socketServidor);
  * @param socketCliente Socket del cliente (int).
  * @return Código de operación.
  */
-cod_op obtener_codigo_operacion(int socketCliente);
+cod_op_servidor obtener_codigo_operacion(int socketCliente);
 
 /**
  * @brief Obtener el mensaje dentro del paquete recibido.

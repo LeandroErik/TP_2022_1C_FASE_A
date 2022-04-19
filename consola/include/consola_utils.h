@@ -12,7 +12,7 @@
 int crear_conexion_con_kernel(void);
 
 /**
- * @brief Liberar la conexión con el servidor de Kernel
+ * @brief Liberar la conexión con el servidor de Kernel.
  *
  * @param socketConsola Socket de la Consola (int).
  */

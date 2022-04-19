@@ -3,6 +3,7 @@
 
 #include <socket/servidor.h>
 #include <commons/log.h>
+#include <socket/cliente.h>
 
 #define IP "127.0.0.1"
 #define PUERTO "5000"
@@ -35,5 +36,19 @@ int obtener_socket_consola(int socketKernel, t_log *logger);
  * @param logger Logger de Kernel.
  */
 void apagar_servidor_kernel(int socketKernel, t_log *logger);
+
+/**
+ * @brief Conectar Kernel con el servidor de CPU.
+ * 
+ * @return Socket de Kernel.
+ */
+int crear_conexion_con_cpu(void);
+
+/**
+ * @brief Liberar la conexión con el servidor del CPU.
+ * 
+ * @param socketKernel Socket del Kernel (int).
+ */
+void liberar_conexion_con_cpu(int socketKernel);
 
 #endif
