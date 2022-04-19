@@ -40,7 +40,7 @@ cod_op_servidor obtener_codigo_operacion(int socketCliente)
   else
   {
     close(socketCliente);
-    return DESCONEXION;
+    return DESCONEXION_CLIENTE;
   }
 }
 

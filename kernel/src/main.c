@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
             log_info(logger, "Recibí el mensaje: %s", mensaje);
             break;
 
-        case DESCONEXION:
+        case DESCONEXION_CLIENTE:
             apagar_servidor_kernel(socketKernel, logger);
             return EXIT_FAILURE;
         default:
@@ -36,15 +36,15 @@ int main(int argc, char *argv[])
     return EXIT_SUCCESS;
 }
 
-void conectar_cpu(void) {
-    //t_config *config = iniciar_config("kernel.config");
+void conectar_cpu(void)
+{
+    // t_config *config = iniciar_config("kernel.config");
 
-    //char *ipCpu = config_get_string_value(config, "IP_CPU");
-    //char *puertoCpu = config_get_string_value(config, "PUERTO_CPU");
-    
+    // char *ipCpu = config_get_string_value(config, "IP_CPU");
+    // char *puertoCpu = config_get_string_value(config, "PUERTO_CPU");
 
     int socketKernelCliente = crear_conexion_con_cpu();
-    //printf("\n %d %s %s \n", socketKernelCliente, ipCpu, puertoCpu);
+    // printf("\n %d %s %s \n", socketKernelCliente, ipCpu, puertoCpu);
 
     enviar_mensaje("soy kernel, pa", socketKernelCliente);
 

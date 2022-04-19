@@ -12,6 +12,7 @@
 
 typedef enum
 {
+  DESCONEXION = -1,
   MENSAJE
 } cod_op_cliente;
 
