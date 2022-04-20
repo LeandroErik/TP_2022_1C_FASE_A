@@ -48,4 +48,11 @@ int crear_conexion_con_cpu(void);
  */
 void liberar_conexion_con_cpu(int socketKernel);
 
+/**
+ * @brief Conectar Kernel con el servidor de Memoria.
+ *
+ * @return Socket de Kernel.
+ */
+int crear_conexion_con_memoria(void);
+
 #endif

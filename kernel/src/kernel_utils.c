@@ -30,3 +30,8 @@ void liberar_conexion_con_cpu(int socketKernel)
 {
 	liberar_conexion_con_servidor(socketKernel);
 }
+
+int crear_conexion_con_memoria(void) 
+{
+	return crear_conexion_con_servidor("127.0.0.1", "5002");
+}

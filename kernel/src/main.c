@@ -2,6 +2,7 @@
 #include <commons/config.h>
 
 void conectar_cpu(void);
+void conectar_memoria(void);
 
 int main(int argc, char *argv[])
 {
@@ -12,6 +13,7 @@ int main(int argc, char *argv[])
     char *mensaje;
 
     conectar_cpu();
+    conectar_memoria();
 
     while (true)
     {
@@ -40,7 +42,15 @@ void conectar_cpu(void)
 {
     int socketKernelCliente = crear_conexion_con_cpu();
 
-    enviar_mensaje("soy kernel, pa", socketKernelCliente);
+    enviar_mensaje("soy kernel, envio un mensaje al modulo CPU", socketKernelCliente);
 
     liberar_conexion_con_cpu(socketKernelCliente);
+}
+
+void conectar_memoria(void) {
+    int socketKernelCliente = crear_conexion_con_memoria();
+
+    enviar_mensaje("soy kernel, envio un mensaje al modulo Memoria", socketKernelCliente);
+
+    liberar_conexion_con_servidor(socketKernelCliente);
 }
