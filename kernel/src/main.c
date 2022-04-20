@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
     int socketKernel = iniciar_servidor_kernel(logger);
     int socketConsola = obtener_socket_consola(socketKernel, logger);
     char *mensaje;
+    
 
     conectar_cpu();
     conectar_memoria();
