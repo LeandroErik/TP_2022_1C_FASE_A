@@ -10,18 +10,15 @@ int main(int argc, char *argv[])
 {
     logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
 
-    //conectar_cpu();
-    //conectar_memoria();
-
     int socketKernel = iniciar_servidor_kernel(logger);
-    
-while(1)
-{
-    int socketCliente = esperar_cliente(socketKernel);
-    pthread_t th_cliente;
-    pthread_create(&th_cliente, NULL, (void *)recibir_mensajes,(void *)socketCliente);
 
-}
+    while (1)
+    {
+        int socketCliente = esperar_cliente(socketKernel);
+        pthread_t hiloCliente;
+
+        pthread_create(&hiloCliente, NULL, (void *)recibir_mensajes, (void *)socketCliente);
+    }
     log_destroy(logger);
 
     return EXIT_SUCCESS;
@@ -36,7 +33,8 @@ void conectar_cpu(void)
     liberar_conexion_con_cpu(socketKernelCliente);
 }
 
-void conectar_memoria(void) {
+void conectar_memoria(void)
+{
     int socketKernelCliente = crear_conexion_con_memoria();
 
     enviar_mensaje("soy kernel, envio un mensaje al modulo Memoria", socketKernelCliente);
@@ -44,12 +42,13 @@ void conectar_memoria(void) {
     liberar_conexion_con_servidor(socketKernelCliente);
 }
 
-void* recibir_mensajes(int socketCliente){
+void *recibir_mensajes(int socketCliente)
+{
 
-t_log* logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
+    t_log *logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
 
-char *mensaje;
-while (true)
+    char *mensaje;
+    while (true)
     {
         cod_op_cliente codOp = obtener_codigo_operacion(socketCliente);
         switch (codOp)
@@ -58,7 +57,6 @@ while (true)
             mensaje = obtener_mensaje(socketCliente);
             log_info(logger, "Recibí el mensaje: %s", mensaje);
             break;
-
         case DESCONEXION_CLIENTE:
             apagar_servidor_kernel(socketCliente, logger);
             return EXIT_FAILURE;
@@ -69,4 +67,3 @@ while (true)
     }
     log_destroy(logger);
 }
-
