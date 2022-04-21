@@ -1,37 +1,23 @@
 #include <kernel_utils.h>
 #include <commons/config.h>
+#include <pthread.h>
 
 void conectar_cpu(void);
 void conectar_memoria(void);
+void *recibir_mensajes(int);
 
 int main(int argc, char *argv[])
 {
     logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
 
     int socketKernel = iniciar_servidor_kernel(logger);
-    int socketConsola = obtener_socket_consola(socketKernel, logger);
-    char *mensaje;
 
-    conectar_cpu();
-    conectar_memoria();
-
-    while (true)
+    while (1)
     {
-        cod_op_cliente codOp = obtener_codigo_operacion(socketConsola);
-        switch (codOp)
-        {
-        case MENSAJE_CLIENTE:
-            mensaje = obtener_mensaje(socketConsola);
-            log_info(logger, "Recibí el mensaje: %s", mensaje);
-            break;
+        int socketCliente = esperar_cliente(socketKernel);
+        pthread_t hiloCliente;
 
-        case DESCONEXION_CLIENTE:
-            apagar_servidor_kernel(socketKernel, logger);
-            return EXIT_FAILURE;
-        default:
-            log_warning(logger, "Operación desconocida.");
-            break;
-        }
+        pthread_create(&hiloCliente, NULL, (void *)recibir_mensajes, (void *)socketCliente);
     }
     log_destroy(logger);
 
@@ -47,10 +33,37 @@ void conectar_cpu(void)
     liberar_conexion_con_cpu(socketKernelCliente);
 }
 
-void conectar_memoria(void) {
+void conectar_memoria(void)
+{
     int socketKernelCliente = crear_conexion_con_memoria();
 
     enviar_mensaje("soy kernel, envio un mensaje al modulo Memoria", socketKernelCliente);
 
     liberar_conexion_con_servidor(socketKernelCliente);
+}
+
+void *recibir_mensajes(int socketCliente)
+{
+
+    t_log *logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
+
+    char *mensaje;
+    while (true)
+    {
+        cod_op_cliente codOp = obtener_codigo_operacion(socketCliente);
+        switch (codOp)
+        {
+        case MENSAJE_CLIENTE:
+            mensaje = obtener_mensaje(socketCliente);
+            log_info(logger, "Recibí el mensaje: %s", mensaje);
+            break;
+        case DESCONEXION_CLIENTE:
+            apagar_servidor_kernel(socketCliente, logger);
+            return EXIT_FAILURE;
+        default:
+            log_warning(logger, "Operación desconocida.");
+            break;
+        }
+    }
+    log_destroy(logger);
 }
