@@ -11,10 +11,10 @@ typedef struct
     char *ip_kernel;
     char *ip_cpu;
     char *ip_memoria;
-    int puerto_memoria;
-    int puerto_cpu_dispatch;
-    int puerto_cpu_interrupt;
-    int puerto_escucha;
+    char *puerto_memoria;
+    char *puerto_cpu_dispatch;
+    char *puerto_cpu_interrupt;
+    char *puerto_escucha;
     char *algoritmo_planificacion;
     int estimacion_inicial;
     double alfa;
@@ -60,11 +60,18 @@ int obtener_socket_consola(int socketKernel, t_log *logger);
 void apagar_servidor_kernel(int socketKernel, t_log *logger);
 
 /**
- * @brief Conectar Kernel con el servidor de CPU.
+ * @brief Conectar Kernel con el servidor de CPU en el puerto dispatch.
  *
  * @return Socket de Kernel.
  */
-int crear_conexion_con_cpu(void);
+int crear_conexion_cpu_dispatch(void);
+
+/**
+ * @brief Conectar Kernel con el servidor de CPU en el puerto interrupt.
+ *
+ * @return Socket de Kernel.
+ */
+int crear_conexion_cpu_interrupt(void);
 
 /**
  * @brief Liberar la conexión con el servidor del CPU.

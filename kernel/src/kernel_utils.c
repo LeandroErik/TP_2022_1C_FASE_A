@@ -11,10 +11,10 @@ void cargar_configuracion(void)
     valores_config.ip_kernel = config_get_string_value(config, "IP_KERNEL");
     valores_config.ip_cpu = config_get_string_value(config, "IP_CPU");
     valores_config.ip_memoria = config_get_string_value(config, "IP_MEMORIA");
-    valores_config.puerto_memoria = config_get_int_value(config, "PUERTO_MEMORIA");
-    valores_config.puerto_cpu_dispatch = config_get_int_value(config, "PUERTO_CPU_DISPATCH");
-    valores_config.puerto_cpu_interrupt = config_get_int_value(config, "PUERTO_CPU_INTERRUPT");
-    valores_config.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
+    valores_config.puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
+    valores_config.puerto_cpu_dispatch = config_get_string_value(config, "PUERTO_CPU_DISPATCH");
+    valores_config.puerto_cpu_interrupt = config_get_string_value(config, "PUERTO_CPU_INTERRUPT");
+    valores_config.puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
     valores_config.algoritmo_planificacion = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
     valores_config.estimacion_inicial = config_get_int_value(config, "ESTIMACION_INICIAL");
     valores_config.alfa = config_get_double_value(config, "ALFA");
@@ -23,7 +23,7 @@ void cargar_configuracion(void)
 }
 int iniciar_servidor_kernel(t_log *logger)
 {
-    int socketKernel = iniciar_servidor("127.0.0.1", "5000");
+    int socketKernel = iniciar_servidor(valores_config.ip_kernel, valores_config.puerto_escucha);
     log_info(logger, "Módulo Kernel listo para recibir el Módulo Consola");
     return socketKernel;
 }
@@ -42,9 +42,13 @@ void apagar_servidor_kernel(int socketKernel, t_log *logger)
     log_error(logger, "La Consola se desconectó. Apagando Servidor Kernel.");
 }
 
-int crear_conexion_con_cpu(void)
+int crear_conexion_cpu_dispatch(void)
 {
-    return crear_conexion_con_servidor("127.0.0.1", "5001");
+    return crear_conexion_con_servidor(valores_config.ip_cpu, valores_config.puerto_cpu_dispatch);
+}
+int crear_conexion_cpu_interrupt(void)
+{
+    return crear_conexion_con_servidor(valores_config.ip_cpu, valores_config.puerto_cpu_interrupt);
 }
 
 void liberar_conexion_con_cpu(int socketKernel)
@@ -54,7 +58,7 @@ void liberar_conexion_con_cpu(int socketKernel)
 
 int crear_conexion_con_memoria(void)
 {
-    return crear_conexion_con_servidor("127.0.0.1", "5002");
+    return crear_conexion_con_servidor(valores_config.ip_memoria, valores_config.puerto_memoria);
 }
 
 void *recibir_mensajes(int socketCliente)
@@ -96,7 +100,7 @@ void *iniciar_escucha(int socketServidor)
 
 void conectar_cpu(void)
 {
-    int socketKernelCliente = crear_conexion_con_cpu();
+    int socketKernelCliente = crear_conexion_cpu_dispatch();
 
     enviar_mensaje("soy kernel, envio un mensaje al modulo CPU", socketKernelCliente);
 
