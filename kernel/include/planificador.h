@@ -15,6 +15,5 @@ typedef struct
 	uint32_t tabla_de_paginas;
 	float estimacion_rafaga;
 } pcb;
-typedef
 
 #endif
