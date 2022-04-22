@@ -4,8 +4,33 @@
 #include <socket/servidor.h>
 #include <socket/cliente.h>
 #include <commons/log.h>
+#include <pthread.h>
 
+typedef struct
+{
+    char *ip_kernel;
+    char *ip_cpu;
+    char *ip_memoria;
+    int puerto_memoria;
+    int puerto_cpu_dispatch;
+    int puerto_cpu_interrupt;
+    int puerto_escucha;
+    char *algoritmo_planificacion;
+    int estimacion_inicial;
+    double alfa;
+    int grado_multiprogramacion;
+    int tiempo_maximo_bloqueado;
+
+} kernel_config;
+
+kernel_config valores_config;
 t_log *logger;
+
+/**
+ * @brief Carga datos del archivo config en un struct valores_config.
+ *
+ */
+void cargar_configuracion(void);
 
 /**
  * @brief Iniciar el servidor del módulo Kernel para conectar el Módulo de Consola (como cliente).
@@ -54,5 +79,31 @@ void liberar_conexion_con_cpu(int socketKernel);
  * @return Socket de Kernel.
  */
 int crear_conexion_con_memoria(void);
+
+/**
+ * @brief escucha mensajes de un determinado socket.
+ *
+ * @param socket Socket del cual recibe mensajes (int).
+ */
+void *recibir_mensajes(int);
+
+/**
+ * @brief escucha peticiones de conexion.
+ *
+ * @param socketServidor Socket del servidor para aceptar clientes (int).
+ */
+void *iniciar_escucha(int);
+
+/**
+ * @brief conexion con cpu
+ *
+ */
+void conectar_cpu(void);
+
+/**
+ * @brief conexion con memoria
+ *
+ */
+void conectar_memoria(void);
 
 #endif
