@@ -20,6 +20,7 @@ void cargar_configuracion(void)
     valores_config.alfa = config_get_double_value(config, "ALFA");
     valores_config.grado_multiprogramacion = config_get_int_value(config, "GRADO_MULTIPROGRAMACION");
     valores_config.tiempo_maximo_bloqueado = config_get_int_value(config, "TIEMPO_MAXIMO_BLOQUEADO");
+    // config_destroy(config);
 }
 int iniciar_servidor_kernel(t_log *logger)
 {
@@ -46,6 +47,7 @@ int crear_conexion_cpu_dispatch(void)
 {
     return crear_conexion_con_servidor(valores_config.ip_cpu, valores_config.puerto_cpu_dispatch);
 }
+
 int crear_conexion_cpu_interrupt(void)
 {
     return crear_conexion_con_servidor(valores_config.ip_cpu, valores_config.puerto_cpu_interrupt);
@@ -67,6 +69,7 @@ void *recibir_mensajes(int socketCliente)
     t_log *logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
 
     char *mensaje;
+    t_list *listaInstrucciones;
 
     while (true)
     {
@@ -76,6 +79,16 @@ void *recibir_mensajes(int socketCliente)
         case MENSAJE_CLIENTE:
             mensaje = obtener_mensaje(socketCliente);
             log_info(logger, "Recibí el mensaje: %s", mensaje);
+            break;
+        case 10: //(10-INICIAR_PROCESO)
+            listaInstrucciones = list_create();
+
+            recibir_lista_intrucciones(socketCliente, listaInstrucciones);
+
+            log_info(logger, "Recibi INICIAR_PROCESO y  la lista de instrucciones");
+
+            iniciar_proceso(listaInstrucciones);
+
             break;
         case DESCONEXION_CLIENTE:
             log_info(logger, "Se DESCONECTO un cliente");

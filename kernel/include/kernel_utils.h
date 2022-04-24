@@ -5,7 +5,7 @@
 #include <socket/cliente.h>
 #include <commons/log.h>
 #include <pthread.h>
-
+#include <proceso.h>
 typedef struct
 {
     char *ip_kernel;
