@@ -22,6 +22,7 @@ void cargar_configuracion(void)
     valores_config.tiempo_maximo_bloqueado = config_get_int_value(config, "TIEMPO_MAXIMO_BLOQUEADO");
     // config_destroy(config);
 }
+
 int iniciar_servidor_kernel(t_log *logger)
 {
     int socketKernel = iniciar_servidor(valores_config.ip_kernel, valores_config.puerto_escucha);
@@ -73,14 +74,10 @@ void *recibir_mensajes(int socketCliente)
 
     while (true)
     {
-        cod_op_servidor codOp = obtener_codigo_operacion(socketCliente);
+        cod_protocolo codOp = obtener_codigo_operacion(socketCliente);
         switch (codOp)
         {
-        case MENSAJE_CLIENTE:
-            mensaje = obtener_mensaje(socketCliente);
-            log_info(logger, "Recibí el mensaje: %s", mensaje);
-            break;
-        case 10: //(10-INICIAR_PROCESO)
+        case INICIAR_PROCESO:
             listaInstrucciones = list_create();
 
             recibir_lista_intrucciones(socketCliente, listaInstrucciones);
@@ -90,7 +87,11 @@ void *recibir_mensajes(int socketCliente)
             iniciar_proceso(listaInstrucciones);
 
             break;
-        case DESCONEXION_CLIENTE:
+        case MENSAJE_P:
+            mensaje = obtener_mensaje(socketCliente);
+            log_info(logger, "Recibí el mensaje: %s", mensaje);
+            break;
+        case DESCONEXION_P:
             log_info(logger, "Se DESCONECTO un cliente");
             break;
         default:
