@@ -1,9 +1,8 @@
 #include <kernel_utils.h>
 
-#include <commons/config.h>
-
 int main(int argc, char *argv[])
 {
+    id_proceso_total = 0;
     cargar_configuracion();
 
     logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);

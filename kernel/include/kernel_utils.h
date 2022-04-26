@@ -3,6 +3,7 @@
 
 #include <socket/servidor.h>
 #include <socket/cliente.h>
+#include <commons/config.h>
 #include <commons/log.h>
 #include <pthread.h>
 #include <proceso.h>
@@ -26,7 +27,10 @@ typedef struct
 } kernel_config;
 
 kernel_config valores_config;
+
 t_log *logger;
+
+int id_proceso_total;
 
 /**
  * @brief Carga datos del archivo config en un struct valores_config.

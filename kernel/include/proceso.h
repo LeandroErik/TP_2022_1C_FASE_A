@@ -1,5 +1,5 @@
-#ifndef KERNEL_UTILS_H_
-#define KERNEL_UTILS_H_
+#ifndef PROCESO_H_
+#define PROCESO_H_
 
 #include <commons/log.h>
 #include <commons/collections/list.h>
@@ -21,7 +21,7 @@ typedef struct
 } pcb;
 
 void iniciar_proceso();
-void generar_estructura_PCB(pcb *, t_list *);
+void generar_estructura_PCB(pcb *, t_list *, int);
 void recibir_lista_intrucciones(int, t_list *);
 
 #endif
