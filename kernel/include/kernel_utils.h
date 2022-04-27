@@ -11,18 +11,18 @@
 
 typedef struct
 {
-    char *ip_kernel;
-    char *ip_cpu;
-    char *ip_memoria;
-    char *puerto_memoria;
-    char *puerto_cpu_dispatch;
-    char *puerto_cpu_interrupt;
-    char *puerto_escucha;
-    char *algoritmo_planificacion;
-    int estimacion_inicial;
-    double alfa;
-    int grado_multiprogramacion;
-    int tiempo_maximo_bloqueado;
+    char *IP_KERNEL;
+    char *IP_CPU;
+    char *IP_MEMORIA;
+    char *PUERTO_MEMORIA;
+    char *PUERTO_CPU_DISPATCH;
+    char *PUERTO_CPU_INTERRUPT;
+    char *PUERTO_ESCUCHA;
+    char *ALGORITMO_PLANIFICACION;
+    int ESTIMACION_INICIAL;
+    double ALFA;
+    int GRADO_MULTIPROGRAMACION;
+    int TIEMPO_MAXIMO_BLOQUEADO;
 
 } kernel_config;
 
