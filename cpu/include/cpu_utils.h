@@ -12,10 +12,11 @@ t_log *logger;
  * @brief Iniciar el servidor del módulo CPU para conectar el Módulo de Kernel (como cliente).
  *
  * @param logger Logger de CPU.
+ * @param puerto Puerto de CPU (Dispatch o Interrupt)
  *
  * @return Socket del servidor CPU (int).
  */
-int iniciar_servidor_cpu(t_log *logger);
+int iniciar_servidor_cpu(t_log *logger, char *puerto);
 
 /**
  * @brief Obtener el socket del Módulo de Kernel.

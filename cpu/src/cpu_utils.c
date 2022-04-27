@@ -1,8 +1,8 @@
 #include <cpu_utils.h>
 
-int iniciar_servidor_cpu(t_log *logger)
+int iniciar_servidor_cpu(t_log *logger, char *puerto)
 {
-	int socketCPU = iniciar_servidor(CPU_CONFIG.IP_CPU, CPU_CONFIG.PUERTO_ESCUCHA_DISPATCH);
+	int socketCPU = iniciar_servidor(CPU_CONFIG.IP_CPU, puerto);
 	log_info(logger, "Módulo CPU listo para recibir el Módulo Kernel");
 	return socketCPU;
 }

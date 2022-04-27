@@ -21,9 +21,14 @@ void apagar_servidor_kernel(int socketKernel, t_log *logger)
 	log_error(logger, "La Consola se desconectó. Apagando Servidor Kernel.");
 }
 
-int crear_conexion_con_cpu(void)
+int crear_conexion_con_cpu_dispatch(void)
 {
 	return crear_conexion_con_servidor("127.0.0.1", "8001");
+}
+
+int crear_conexion_con_cpu_interrupt(void)
+{
+	return crear_conexion_con_servidor("127.0.0.1", "8005");
 }
 
 void liberar_conexion_con_cpu(int socketKernel)

@@ -35,11 +35,18 @@ int obtener_socket_consola(int socketKernel, t_log *logger);
 void apagar_servidor_kernel(int socketKernel, t_log *logger);
 
 /**
- * @brief Conectar Kernel con el servidor de CPU.
+ * @brief Conectar Kernel con el servidor de CPU a través del puerto Dispatch.
  *
  * @return Socket de Kernel.
  */
-int crear_conexion_con_cpu(void);
+int crear_conexion_con_cpu_dispatch(void);
+
+/**
+ * @brief Conectar Kernel con el servidor de CPU a través del puerto Interrupt.
+ *
+ * @return Socket de Kernel.
+ */
+int crear_conexion_con_cpu_interrupt(void);
 
 /**
  * @brief Liberar la conexión con el servidor del CPU.

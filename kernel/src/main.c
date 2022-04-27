@@ -1,15 +1,26 @@
 #include <kernel_utils.h>
 #include <commons/config.h>
+#include <pthread.h>
 
-void conectar_cpu(void);
 void conectar_memoria(void);
+void conectar_cpu_dispatch(char *mensaje);
+void conectar_cpu_interrupt(char *mensaje);
 
 int main(int argc, char *argv[])
 {
     logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
 
-    conectar_cpu();
-    int socketKernel = iniciar_servidor_kernel(logger);
+    // conectar_cpu_dispatch();
+    // conectar_cpu_interrupt();
+    pthread_t hiloConexionDispatch;
+    pthread_t hiloConexionInterrupt;
+
+    pthread_create(&hiloConexionDispatch, NULL, (void *)conectar_cpu_dispatch, (void *)"Soy Kernel a CPU Dispatch");
+    pthread_join(hiloConexionDispatch, NULL);
+
+    pthread_create(&hiloConexionInterrupt, NULL, (void *)conectar_cpu_interrupt, (void *)"Soy Kernel a CPU Interrupt");
+    pthread_join(hiloConexionInterrupt, NULL);
+    /* int socketKernel = iniciar_servidor_kernel(logger);
     int socketConsola = obtener_socket_consola(socketKernel, logger);
     char *mensaje;
 
@@ -32,19 +43,26 @@ int main(int argc, char *argv[])
             log_warning(logger, "Operación desconocida.");
             break;
         }
-    }
+    } */
     log_destroy(logger);
 
     return EXIT_SUCCESS;
 }
 
-void conectar_cpu(void)
+void conectar_cpu_dispatch(char *mensaje)
 {
-    int socketKernelCliente = crear_conexion_con_cpu();
+    int socketKernelClienteDispatch = crear_conexion_con_cpu_dispatch();
 
-    enviar_mensaje("soy kernel, envio un mensaje al modulo CPU", socketKernelCliente);
+    enviar_mensaje(mensaje, socketKernelClienteDispatch);
+    liberar_conexion_con_servidor(socketKernelClienteDispatch);
+}
 
-    liberar_conexion_con_cpu(socketKernelCliente);
+void conectar_cpu_interrupt(char *mensaje)
+{
+    int socketKernelClienteInterrupt = crear_conexion_con_cpu_interrupt();
+
+    enviar_mensaje(mensaje, socketKernelClienteInterrupt);
+    liberar_conexion_con_servidor(socketKernelClienteInterrupt);
 }
 
 void conectar_memoria(void)
