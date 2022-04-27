@@ -2,7 +2,7 @@
 
 int iniciar_servidor_cpu(t_log *logger)
 {
-	int socketCPU = iniciar_servidor(CPU_CONFIG.IP_MEMORIA, CPU_CONFIG.PUERTO_ESCUCHA_DISPATCH);
+	int socketCPU = iniciar_servidor(CPU_CONFIG.IP_CPU, CPU_CONFIG.PUERTO_ESCUCHA_DISPATCH);
 	log_info(logger, "Módulo CPU listo para recibir el Módulo Kernel");
 	return socketCPU;
 }

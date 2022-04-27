@@ -9,6 +9,7 @@ typedef struct CPU_Config
   char *REEMPLAZO_TLB;
   char *RETARDO_NOOP;
   char *IP_MEMORIA;
+  char *IP_CPU;
   char *PUERTO_MEMORIA;
   char *PUERTO_ESCUCHA_DISPATCH;
   char *PUERTO_ESCUCHA_INTERRUPT;
