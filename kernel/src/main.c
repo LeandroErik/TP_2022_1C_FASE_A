@@ -4,11 +4,13 @@
 
 void conectar_cpu(void);
 void conectar_memoria(void);
-void *recibir_mensajes(int);
+int recibir_mensajes(int);
 
 int main(int argc, char *argv[])
 {
     logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
+
+    conectar_memoria();
 
     int socketKernel = iniciar_servidor_kernel(logger);
 
@@ -37,12 +39,13 @@ void conectar_memoria(void)
 {
     int socketKernelCliente = crear_conexion_con_memoria();
 
-    enviar_mensaje("soy kernel, envio un mensaje al modulo Memoria", socketKernelCliente);
+    char *nombre = strdup("Kernel");
+    enviar_mensaje(nombre, socketKernelCliente);
 
-    liberar_conexion_con_servidor(socketKernelCliente);
+    // liberar_conexion_con_servidor(socketKernelCliente);
 }
 
-void *recibir_mensajes(int socketCliente)
+int recibir_mensajes(int socketCliente)
 {
 
     t_log *logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);

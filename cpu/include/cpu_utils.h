@@ -2,6 +2,7 @@
 #define UTILS_H_
 
 #include <socket/servidor.h>
+#include <socket/cliente.h>
 #include <commons/log.h>
 
 t_log *logger;
@@ -35,14 +36,14 @@ void apagar_servidor_cpu(int socketCPU, t_log *logger);
 
 /**
  * @brief Crear conexion con el modulo Memoria.
- * 
+ *
  * @return Socket de Memoria.
  */
 int crear_conexion_con_memoria(void);
 
 /**
  * @brief Liberar la conexion con el modulo Memoria.
- * 
+ *
  * @param socketCpu Socket del CPU.
  */
 void liberar_conexion_con_memoria(int socketCpu);

@@ -4,6 +4,7 @@
 #include <socket/servidor.h>
 #include <socket/cliente.h>
 #include <commons/log.h>
+#include <pthread.h>
 
 t_log *logger;
 
@@ -28,10 +29,10 @@ int obtener_socket_cpu(int socketMemoria, t_log *logger);
 
 /**
  * @brief Obtener el modulo de Kernel.
- * 
+ *
  * @param socketMemoria Socket del servidor Memoria (int).
  * @param logger Logger de Memoria.
- * 
+ *
  * @return Socket de Kernel (int).
  */
 int obtener_socket_kernel(int socketMemoria, t_log *logger);

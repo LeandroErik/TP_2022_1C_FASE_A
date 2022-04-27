@@ -6,11 +6,11 @@ int main(int argc, char *argv[])
 {
   logger = log_create("CPU.log", "CPU", true, LOG_LEVEL_DEBUG);
 
+  conectar_memoria();
+
   int socketCPU = iniciar_servidor_cpu(logger);
   int socketKernel = obtener_socket_kernel(socketCPU, logger);
   char *mensaje;
-
-  conectar_memoria();
 
   while (true)
   {
@@ -36,9 +36,9 @@ int main(int argc, char *argv[])
 
 void conectar_memoria(void)
 {
-    int socketCpuCliente = crear_conexion_con_memoria();
+  int socketCpuCliente = crear_conexion_con_memoria();
 
-    enviar_mensaje("soy CPU, pa", socketCpuCliente);
+  enviar_mensaje("CPU", socketCpuCliente);
 
-    liberar_conexion_con_memoria(socketCpuCliente);
+  // liberar_conexion_con_memoria(socketCpuCliente);
 }
