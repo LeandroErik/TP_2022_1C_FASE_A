@@ -1,30 +1,37 @@
 # TP Sistemas Operativos
+
 ## Grupo Fase A
 
-* **F**eli
-* **A**gus
-* **S**eba
-* **E**rik
--
-* **A**gus
+- **F**eli
+- **A**gus
+- **S**eba
+- **E**rik
+
+*
+
+- **A**gus
 
 ## ¿Cómo correr los módulos?
+
 `make start`
 
 ## Convenciones
 
 #### nombres de funciones:
-	 una_funcion 
+
+     una_funcion
 
 #### nombres de variables:
-	 unNombreDeVariable 
+
+     unNombreDeVariable
 
 #### constantes:
-	 UN_NOMBRE_DE_CONSTANTE 
 
+     UN_NOMBRE_DE_CONSTANTE
 
 ## Cómo se conectan los módulos entre sí
- - consola --> kernel ✅   
- - kernel --> cpu ✅
- - kernel --> memoria/swap
- - cpu --> memoria/swap
+
+- consola --> kernel ✅
+- kernel --> cpu ✅
+- kernel --> memoria/swap ✅
+- cpu --> memoria/swap ✅
