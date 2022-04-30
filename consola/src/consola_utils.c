@@ -10,55 +10,54 @@ void liberar_conexion_con_kernel(int socketConsola)
 	liberar_conexion_con_servidor(socketConsola);
 }
 
-t_linea_codigo *parser_archivo_codigo(char *rutaArchivo)
+t_linea_codigo *parsear_archivo_codigo(char *rutaArchivo)
 {
 	FILE *archivoCodigo = fopen(rutaArchivo, "r");
-	puts("reading file...");
 	t_list *lineasCodigo = list_create();
 
 	while (!feof(archivoCodigo))
 	{
-		char *linea = leerLinea(archivoCodigo);
-		char **tokens = obtenerTokens(linea);
+		char *linea = leer_linea(archivoCodigo);
+		char **tokens = obtener_tokens(linea);
 
 		t_linea_codigo *lineaCodigo = malloc(sizeof(t_linea_codigo *));
 		lineaCodigo->identificador = string_new();
 		lineaCodigo->parametros[0] = -1;
 		lineaCodigo->parametros[1] = -1;
 
-		if (cantidadTokens(linea) > 0)
+		if (cantidad_de_tokens(linea) > 0)
 			lineaCodigo->identificador = tokens[0];
 
-		if (cantidadTokens(linea) > 1)
+		if (cantidad_de_tokens(linea) > 1)
 			lineaCodigo->parametros[0] = atoi(tokens[1]);
 
-		if (cantidadTokens(linea) > 2)
+		if (cantidad_de_tokens(linea) > 2)
 			lineaCodigo->parametros[1] = atoi(tokens[2]);
 
 		list_add(lineasCodigo, lineaCodigo);
 	}
-
+	terminar_parseo(archivoCodigo, lineasCodigo);
 	return lineasCodigo;
 }
 
-void eliminarSaltoDeLinea(char *text)
+void eliminar_salto_de_linea(char *text)
 {
 	if (text[string_length(text) - 1] == '\n')
 		text[string_length(text) - 1] = '\0';
 }
 
-char *leerLinea(FILE *archivo)
+char *leer_linea(FILE *archivo)
 {
 	char *linea = string_new();
 	int tamanioBuffer = 0;
 	getline(&linea, &tamanioBuffer, archivo);
 
-	eliminarSaltoDeLinea(linea);
+	eliminar_salto_de_linea(linea);
 
 	return linea;
 }
 
-int vecesQueAparece(char *cadena, char caracter)
+int apariciones(char *cadena, char caracter)
 {
 	int contador = 0;
 
@@ -69,17 +68,17 @@ int vecesQueAparece(char *cadena, char caracter)
 	return contador;
 }
 
-int cantidadTokens(char *string)
+int cantidad_de_tokens(char *string)
 {
-	return vecesQueAparece(string, ' ') + 1;
+	return apariciones(string, ' ') + 1;
 }
 
-char **obtenerTokens(char *string)
+char **obtener_tokens(char *string)
 {
-	return string_n_split(string, cantidadTokens(string), " ");
+	return string_n_split(string, cantidad_de_tokens(string), " ");
 }
 
-void terminateProgram(FILE *file, t_list *list)
+void terminar_parseo(FILE *file, t_list *list)
 {
 	list_destroy(list);
 	txt_close_file(file);

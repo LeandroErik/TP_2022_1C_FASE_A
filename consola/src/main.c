@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     char *rutaArchivo = argv[1];
     int tamanioProceso = atoi(argv[2]);
 
-    t_linea_codigo *lineasCodigo = parser_archivo_codigo(rutaArchivo);
+    t_linea_codigo *lineasCodigo = parsear_archivo_codigo(rutaArchivo);
 
     int socketConsola = crear_conexion_con_kernel();
 

@@ -32,17 +32,17 @@ typedef struct
 } t_linea_codigo;
 
 // TODO: agregar briefs
-t_linea_codigo *parser_archivo_codigo(char *rutaArchivo);
+t_linea_codigo *parsear_archivo_codigo(char *rutaArchivo);
 
-void eliminarSaltoDeLinea(char *);
+void eliminar_salto_de_linea(char *);
 
-char *leerLinea(FILE *);
+char *leer_linea(FILE *);
 
-int vecesQueAparece(char *, char);
+int apariciones(char *, char);
 
-int cantidadTokens(char *);
+int cantidad_de_tokens(char *);
 
-char **obtenerTokens(char *);
+char **obtener_tokens(char *);
 
 bool orderByRegion(void *, void *);
 
@@ -52,6 +52,6 @@ bool orderByRegionAndAge(void *, void *);
 
 t_log *initLogger();
 
-void terminateProgram(FILE *, t_list *);
+void terminar_parseo(FILE *, t_list *);
 
 #endif
