@@ -3,3 +3,4 @@ obj/
 *.log
 .vscode/
 .ghc
+.DS_Store
