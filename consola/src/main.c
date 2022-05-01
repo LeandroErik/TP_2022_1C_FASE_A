@@ -10,7 +10,22 @@ int main(int argc, char *argv[])
     char *rutaArchivo = argv[1];
     int tamanioProceso = atoi(argv[2]);
 
-    t_linea_codigo *lineasCodigo = parsear_archivo_codigo(rutaArchivo);
+    FILE *archivoCodigo = fopen(rutaArchivo, "r");
+    t_list *listaLineasCodigo = list_create();
+
+    while (!feof(archivoCodigo))
+    {
+        t_linea_codigo *lineaCodigo = malloc(sizeof(t_linea_codigo));
+        leer_lineas_codigo(archivoCodigo, lineaCodigo, listaLineasCodigo);
+    }
+
+    for (int i = 0; i < list_size(listaLineasCodigo); i++)
+    {
+        t_linea_codigo *lineaCodigo = list_get(listaLineasCodigo, i);
+        printf("%s %d %d\n", lineaCodigo->identificador, lineaCodigo->parametros[0], lineaCodigo->parametros[1]);
+    }
+
+    terminar_parseo(archivoCodigo, listaLineasCodigo);
 
     int socketConsola = crear_conexion_con_kernel();
 

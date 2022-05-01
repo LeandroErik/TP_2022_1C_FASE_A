@@ -32,23 +32,29 @@ typedef struct
 } t_linea_codigo;
 
 // TODO: agregar briefs
-t_linea_codigo *parsear_archivo_codigo(char *rutaArchivo);
+/**
+ * @brief Leer las lineas de código del archivo de código.
+ *
+ * @param archivoCodigo Archivo de código.
+ * @param lineasCodigo Lineas de código.
+ * @param listaLineasCodigo Lista de lineas de código.
+ */
+void leer_lineas_codigo(FILE *archivoCodigo, t_linea_codigo *lineasCodigo, t_list *listaLineasCodigo);
 
 void eliminar_salto_de_linea(char *);
 
 char *leer_linea(FILE *);
 
-int apariciones(char *, char);
+int apariciones(char *string, char caracter);
 
+/**
+ * @brief Obtener la cantidad de tokens de una cadena.
+ *
+ * @return int - Cantidad de tokens.
+ */
 int cantidad_de_tokens(char *);
 
 char **obtener_tokens(char *);
-
-bool orderByRegion(void *, void *);
-
-bool orderByAge(void *, void *);
-
-bool orderByRegionAndAge(void *, void *);
 
 t_log *initLogger();
 

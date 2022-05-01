@@ -10,34 +10,34 @@ void liberar_conexion_con_kernel(int socketConsola)
 	liberar_conexion_con_servidor(socketConsola);
 }
 
-t_linea_codigo *parsear_archivo_codigo(char *rutaArchivo)
+void leer_lineas_codigo(FILE *archivoCodigo, t_linea_codigo *lineaCodigo, t_list *listaLineasCodigo)
 {
-	FILE *archivoCodigo = fopen(rutaArchivo, "r");
-	t_list *lineasCodigo = list_create();
+	char *linea = leer_linea(archivoCodigo);
+	char **tokens = obtener_tokens(linea);
 
-	while (!feof(archivoCodigo))
+	int cantidadTokens = cantidad_de_tokens(linea);
+	lineaCodigo->parametros[0] = -1;
+	lineaCodigo->parametros[1] = -1;
+
+	if (cantidadTokens > 0)
+		lineaCodigo->identificador = tokens[0];
+	if (cantidadTokens > 1)
 	{
-		char *linea = leer_linea(archivoCodigo);
-		char **tokens = obtener_tokens(linea);
+		lineaCodigo->parametros[0] = atoi(tokens[1]);
 
-		t_linea_codigo *lineaCodigo = malloc(sizeof(t_linea_codigo *));
-		lineaCodigo->identificador = string_new();
-		lineaCodigo->parametros[0] = -1;
-		lineaCodigo->parametros[1] = -1;
+		if (strcmp(tokens[0], "NO_OP") == 0)
+		{
+			lineaCodigo->parametros[0] = -1;
 
-		if (cantidad_de_tokens(linea) > 0)
-			lineaCodigo->identificador = tokens[0];
-
-		if (cantidad_de_tokens(linea) > 1)
-			lineaCodigo->parametros[0] = atoi(tokens[1]);
-
-		if (cantidad_de_tokens(linea) > 2)
-			lineaCodigo->parametros[1] = atoi(tokens[2]);
-
-		list_add(lineasCodigo, lineaCodigo);
+			for (int i = 0; i < atoi(tokens[1]) - 1; i++)
+				list_add(listaLineasCodigo, lineaCodigo);
+		}
 	}
-	terminar_parseo(archivoCodigo, lineasCodigo);
-	return lineasCodigo;
+
+	if (cantidadTokens > 2)
+		lineaCodigo->parametros[1] = atoi(tokens[2]);
+
+	list_add(listaLineasCodigo, lineaCodigo);
 }
 
 void eliminar_salto_de_linea(char *text)
@@ -49,7 +49,7 @@ void eliminar_salto_de_linea(char *text)
 char *leer_linea(FILE *archivo)
 {
 	char *linea = string_new();
-	int tamanioBuffer = 0;
+	unsigned int tamanioBuffer = 0;
 	getline(&linea, &tamanioBuffer, archivo);
 
 	eliminar_salto_de_linea(linea);
