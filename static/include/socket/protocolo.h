@@ -28,6 +28,7 @@ typedef enum
 	MENSAJE_CLIENTE_P,
 	IMAGEN_PCB_P,
 	INICIAR_PROCESO_P,
+	ENVIAR_PROGRAMA
 
 } cod_op;
 
