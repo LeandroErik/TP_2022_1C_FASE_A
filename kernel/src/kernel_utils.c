@@ -74,10 +74,10 @@ void *recibir_mensajes(int socketCliente)
 
     while (true)
     {
-        cod_protocolo codOp = obtener_codigo_operacion(socketCliente);
+        cod_op codOp = recibir_operacion(socketCliente);
         switch (codOp)
         {
-        case INICIAR_PROCESO:
+        case INICIAR_PROCESO_P:
             listaInstrucciones = list_create();
 
             recibir_lista_intrucciones(socketCliente, listaInstrucciones);
@@ -87,11 +87,11 @@ void *recibir_mensajes(int socketCliente)
             iniciar_proceso(listaInstrucciones);
 
             break;
-        case MENSAJE_P:
+        case MENSAJE_CLIENTE_P:
             mensaje = obtener_mensaje(socketCliente);
             log_info(logger, "Recibí el mensaje: %s", mensaje);
             break;
-        case DESCONEXION_P:
+        case DESCONEXION_CLIENTE_P:
             log_info(logger, "Se DESCONECTO un cliente");
             break;
         default:

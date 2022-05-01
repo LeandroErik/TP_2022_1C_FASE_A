@@ -5,6 +5,8 @@
 #include <socket/cliente.h>
 #include <cpu_config.h>
 #include <commons/log.h>
+#include <socket/protocolo.h>
+#include <commons/collections/list.h>
 
 t_log *logger;
 

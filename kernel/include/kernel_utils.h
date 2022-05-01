@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <proceso.h>
 #include <socket/protocolo.h>
+#include <commons/collections/list.h>
 
 typedef struct
 {
