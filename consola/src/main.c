@@ -1,19 +1,46 @@
 #include <consola_utils.h>
+#include <socket/protocolo.h>
 
 int main(int argc, char *argv[])
 {
-    int socketConsola = crear_conexion_con_kernel();
+    // si no se proporcionan los argumentos necesarios
+    // el proceso falla.
+    if (argc < 3)
+        return EXIT_FAILURE;
 
-    char *input = readline("> ");
+    char *rutaArchivo = argv[1];
+    int tamanioProceso = atoi(argv[2]);
 
-    while (strcmp(input, ""))
+    FILE *archivoCodigo = fopen(rutaArchivo, "r");
+    t_list *listaLineasCodigo = list_create();
+
+    t_paquete *paquetePrograma = crear_paquete(ENVIAR_PROGRAMA);
+
+    while (!feof(archivoCodigo))
     {
-        enviar_mensaje(input, socketConsola);
-        free(input);
-        input = readline("> ");
+        t_linea_codigo *lineaCodigo = malloc(sizeof(t_linea_codigo));
+        leer_lineas_codigo(archivoCodigo, lineaCodigo, listaLineasCodigo);
     }
 
-    liberar_conexion_con_kernel(socketConsola);
+    int cantidadLineas = list_size(listaLineasCodigo);
 
-    return 0;
+    agregar_a_paquete(paquetePrograma, tamanioProceso, sizeof(int));
+    agregar_a_paquete(paquetePrograma, cantidadLineas, sizeof(int));
+
+    for (int i = 0; i < cantidadLineas; i++)
+    {
+        t_linea_codigo *lineaCodigo = list_get(listaLineasCodigo, i);
+        agregar_a_paquete(paquetePrograma, lineaCodigo->identificador, strlen(lineaCodigo->identificador) + 1);
+        agregar_a_paquete(paquetePrograma, lineaCodigo->parametros[0], sizeof(int));
+        agregar_a_paquete(paquetePrograma, lineaCodigo->parametros[1], sizeof(int));
+    }
+
+    int socketConsola = crear_conexion_con_kernel();
+
+    enviar_paquete(socketConsola, paquetePrograma);
+
+    liberar_conexion_con_kernel(socketConsola);
+    terminar_parseo(archivoCodigo, listaLineasCodigo);
+
+    return EXIT_SUCCESS;
 }
