@@ -22,21 +22,11 @@ int main(int argc, char *argv[])
     for (int i = 0; i < list_size(listaLineasCodigo); i++)
     {
         t_linea_codigo *lineaCodigo = list_get(listaLineasCodigo, i);
-        printf("%s %d %d\n", lineaCodigo->identificador, lineaCodigo->parametros[0], lineaCodigo->parametros[1]);
     }
 
     terminar_parseo(archivoCodigo, listaLineasCodigo);
 
     int socketConsola = crear_conexion_con_kernel();
-
-    char *input = readline("> ");
-
-    while (strcmp(input, ""))
-    {
-        enviar_mensaje(input, socketConsola);
-        free(input);
-        input = readline("> ");
-    }
 
     liberar_conexion_con_kernel(socketConsola);
 
