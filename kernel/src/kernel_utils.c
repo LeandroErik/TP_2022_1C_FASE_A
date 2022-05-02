@@ -20,7 +20,6 @@ void cargar_configuracion(void)
     valores_config.ALFA = config_get_double_value(config, "ALFA");
     valores_config.GRADO_MULTIPROGRAMACION = config_get_int_value(config, "GRADO_MULTIPROGRAMACION");
     valores_config.TIEMPO_MAXIMO_BLOQUEADO = config_get_int_value(config, "TIEMPO_MAXIMO_BLOQUEADO");
-    // config_destroy(config);
 }
 
 int iniciar_servidor_kernel(t_log *logger)

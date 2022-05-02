@@ -35,7 +35,7 @@ int recibir_mensaje_dispatch(t_log *logger)
       break;
 
     case DESCONEXION_CLIENTE_P:
-      // apagar_servidor_cpu(socketCPUDispatch, logger);
+
       break;
     default:
       log_warning(logger, "Operación desconocida.");
@@ -63,7 +63,7 @@ int recibir_mensaje_interrupt(t_log *logger)
       break;
 
     case DESCONEXION_CLIENTE:
-      // apagar_servidor_cpu(socketCPUInterrupt, logger);
+
       break;
     default:
       log_warning(logger, "Operación desconocida.");
@@ -77,9 +77,6 @@ int main(int argc, char *argv[])
   obtener_configuraciones_cpu();
 
   logger = log_create("CPU.log", "CPU", true, LOG_LEVEL_DEBUG);
-
-  // int socketCPU = iniciar_servidor_cpu(logger);
-  // int socketKernel = obtener_socket_kernel(socketCPU, logger);
 
   pthread_t hiloEscuchaDispatch;
   pthread_t hiloEscuchaInterrupt;
