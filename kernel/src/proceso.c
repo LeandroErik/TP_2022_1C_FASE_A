@@ -13,6 +13,7 @@ void iniciar_proceso(t_list *listaInstrucciones)
 
 void generar_estructura_PCB(pcb *nuevo_pcb, t_list *listaInstrucciones, int tamanioProceso)
 {
+
     nuevo_pcb->pid = id_proceso_total;
     nuevo_pcb->tamanio = tamanioProceso;
     nuevo_pcb->lista_instrucciones = listaInstrucciones;
