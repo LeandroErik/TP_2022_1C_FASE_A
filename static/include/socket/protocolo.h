@@ -22,6 +22,7 @@ typedef struct
 	t_list *lista_instrucciones;
 
 } pcb;
+
 typedef enum
 {
 	DESCONEXION_CLIENTE_P = -1,
@@ -29,7 +30,6 @@ typedef enum
 	IMAGEN_PCB_P,
 	INICIAR_PROCESO_P,
 	ENVIAR_PROGRAMA
-
 } cod_op;
 
 void *recibir_buffer(int *, int);

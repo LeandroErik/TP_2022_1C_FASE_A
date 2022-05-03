@@ -3,7 +3,10 @@
 
 #include <socket/servidor.h>
 #include <socket/cliente.h>
+#include <cpu_config.h>
 #include <commons/log.h>
+#include <socket/protocolo.h>
+#include <commons/collections/list.h>
 
 t_log *logger;
 
@@ -11,10 +14,11 @@ t_log *logger;
  * @brief Iniciar el servidor del módulo CPU para conectar el Módulo de Kernel (como cliente).
  *
  * @param logger Logger de CPU.
+ * @param puerto Puerto de CPU (Dispatch o Interrupt)
  *
  * @return Socket del servidor CPU (int).
  */
-int iniciar_servidor_cpu(t_log *logger);
+int iniciar_servidor_cpu(t_log *logger, char *puerto);
 
 /**
  * @brief Obtener el socket del Módulo de Kernel.
