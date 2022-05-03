@@ -14,22 +14,22 @@
 
 typedef struct
 {
-    int pid;
-    int tamanio;
-    int proxima_instruccion;
-    int tabla_de_paginas;
-    float estimacion_rafaga;
-    t_list *lista_instrucciones;
+	int pid;
+	int tamanio;
+	int proxima_instruccion;
+	int tabla_de_paginas;
+	float estimacion_rafaga;
+	t_list *lista_instrucciones;
 
 } pcb;
 
 typedef enum
 {
-    DESCONEXION_CLIENTE_P = -1,
-    MENSAJE_CLIENTE_P,
-    IMAGEN_PCB_P,
-    INICIAR_PROCESO_P,
-
+	DESCONEXION_CLIENTE_P = -1,
+	MENSAJE_CLIENTE_P,
+	IMAGEN_PCB_P,
+	INICIAR_PROCESO_P,
+	ENVIAR_PROGRAMA
 } cod_op;
 
 void *recibir_buffer(int *, int);
