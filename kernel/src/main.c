@@ -6,6 +6,7 @@ void conectar_cpu_dispatch(char *mensaje);
 void conectar_cpu_interrupt(char *mensaje);
 void crear_pcb(pcb *);
 void enviar_pcb(pcb *, int, t_log *);
+void agregar_lista_a_paquete(t_paquete *, pcb *);
 
 int main(int argc, char *argv[])
 {
@@ -81,21 +82,24 @@ void enviar_pcb(pcb *proceso, int socketCPU, t_log *logger)
     agregar_a_paquete(paquete, &(proceso->tabla_de_paginas), sizeof(int));
     agregar_a_paquete(paquete, &(proceso->estimacion_rafaga), sizeof(float));
 
-    int tamanio_lista = list_size(proceso->lista_instrucciones);
+    agregar_lista_a_paquete(paquete, proceso);
 
+    enviar_paquete(paquete, socketCPU);
+
+    eliminar_paquete(paquete);
+}
+
+void agregar_lista_a_paquete(t_paquete *paquete, pcb *proceso)
+{
+    int tamanio_lista = list_size(proceso->lista_instrucciones);
     agregar_a_paquete(paquete, &(tamanio_lista), sizeof(int));
 
     for (int i = 0; i < tamanio_lista; i++)
     {
-
         char *instruccion = malloc(strlen(list_get(proceso->lista_instrucciones, i)) + 1);
 
         instruccion = list_get(proceso->lista_instrucciones, i);
 
         agregar_a_paquete(paquete, instruccion, strlen(instruccion) + 1);
     }
-
-    enviar_paquete(paquete, socketCPU);
-
-    eliminar_paquete(paquete);
 }

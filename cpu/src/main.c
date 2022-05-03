@@ -5,6 +5,7 @@
 void conectar_memoria(void);
 pcb deserializar_pcb(t_list *);
 void imprimir_pcb(pcb *, t_log *);
+void agregar_instrucciones_a_pcb(pcb *, t_list *);
 
 int recibir_mensaje_dispatch(t_log *logger)
 {
@@ -107,17 +108,22 @@ pcb deserializar_pcb(t_list *listaRecibida)
   proceso.tabla_de_paginas = *(int *)list_get(listaRecibida, 3);
   proceso.estimacion_rafaga = *(float *)list_get(listaRecibida, 4);
 
-  proceso.lista_instrucciones = list_create();
+  agregar_instrucciones_a_pcb(&proceso, listaRecibida);
+  return proceso;
+}
 
+void agregar_instrucciones_a_pcb(pcb *proceso, t_list *listaRecibida)
+{
   int tamanio_lista = *(int *)list_get(listaRecibida, 5);
+
+  proceso->lista_instrucciones = list_create();
 
   for (int i = 0; i < tamanio_lista; i++)
   {
     char *instruccion = string_new();
     instruccion = (char *)list_get(listaRecibida, 6 + i);
-    list_add(proceso.lista_instrucciones, instruccion);
+    list_add(proceso->lista_instrucciones, instruccion);
   }
-  return proceso;
 }
 
 void imprimir_pcb(pcb *proceso, t_log *logger)
