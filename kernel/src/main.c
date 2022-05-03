@@ -84,6 +84,7 @@ void enviar_pcb(pcb *proceso, int socketCPU, t_log *logger)
     int tamanio_lista = list_size(proceso->lista_instrucciones);
 
     agregar_a_paquete(paquete, &(tamanio_lista), sizeof(int));
+
     for (int i = 0; i < tamanio_lista; i++)
     {
 

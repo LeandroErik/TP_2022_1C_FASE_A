@@ -100,11 +100,13 @@ void conectar_memoria(void)
 pcb deserializar_pcb(t_list *listaRecibida)
 {
   pcb proceso;
+
   proceso.pid = *(int *)list_get(listaRecibida, 0);
   proceso.tamanio = *(int *)list_get(listaRecibida, 1);
   proceso.proxima_instruccion = *(int *)list_get(listaRecibida, 2);
   proceso.tabla_de_paginas = *(int *)list_get(listaRecibida, 3);
   proceso.estimacion_rafaga = *(float *)list_get(listaRecibida, 4);
+
   proceso.lista_instrucciones = list_create();
 
   int tamanio_lista = *(int *)list_get(listaRecibida, 5);

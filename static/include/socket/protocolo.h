@@ -22,6 +22,7 @@ typedef struct
     t_list *lista_instrucciones;
 
 } pcb;
+
 typedef enum
 {
     DESCONEXION_CLIENTE_P = -1,
