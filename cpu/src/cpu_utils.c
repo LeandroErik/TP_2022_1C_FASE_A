@@ -1,9 +1,8 @@
 #include <cpu_utils.h>
 
-
-int iniciar_servidor_cpu(t_log *logger)
+int iniciar_servidor_cpu(t_log *logger, char *puerto)
 {
-	int socketCPU = iniciar_servidor("127.0.0.1", "5001");
+	int socketCPU = iniciar_servidor(CPU_CONFIG.IP_CPU, puerto);
 	log_info(logger, "Módulo CPU listo para recibir el Módulo Kernel");
 	return socketCPU;
 }
@@ -24,7 +23,7 @@ void apagar_servidor_cpu(int socketCPU, t_log *logger)
 
 int crear_conexion_con_memoria(void)
 {
-	return crear_conexion_con_servidor("127.0.0.1", "5002");
+	return crear_conexion_con_servidor(CPU_CONFIG.IP_MEMORIA, CPU_CONFIG.PUERTO_MEMORIA);
 }
 
 void liberar_conexion_con_memoria(int socketCpu)
