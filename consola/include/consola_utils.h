@@ -10,7 +10,7 @@
 #include <commons/string.h>
 #include <commons/txt.h>
 #include <commons/collections/list.h>
-#include "protocolo.h"
+#include <socket/protocolo.h>
 
 /**
  * @brief Conectar la Consola con el servidor de Kernel.
