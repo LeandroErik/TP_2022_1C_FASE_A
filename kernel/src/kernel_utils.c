@@ -92,6 +92,16 @@ void *recibir_mensajes(int socketCliente)
             break;
         case DESCONEXION_CLIENTE_P:
             log_info(logger, "Se DESCONECTO un cliente");
+            return;
+        case ENVIAR_PROGRAMA:
+            log_info(logger, "Recibi programa");
+            listaInstrucciones = recibir_paquete(socketCliente);
+            int primerElemento = *(int *)list_get(listaInstrucciones, 0);
+            int segundoElemento = *(int *)list_get(listaInstrucciones, 1);
+
+            // loguear los primeros dos elementos
+            log_info(logger, "Recibi el primer elemento: %d", primerElemento);
+            log_info(logger, "Recibi el segundo elemento: %d", segundoElemento);
             break;
         default:
             log_warning(logger, "Operación desconocida.");

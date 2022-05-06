@@ -10,6 +10,7 @@
 #include <commons/string.h>
 #include <commons/txt.h>
 #include <commons/collections/list.h>
+#include "protocolo.h"
 
 /**
  * @brief Conectar la Consola con el servidor de Kernel.
@@ -24,12 +25,6 @@ int crear_conexion_con_kernel(void);
  * @param socketConsola Socket de la Consola (int).
  */
 void liberar_conexion_con_kernel(int socketConsola);
-
-typedef struct
-{
-	char *identificador;
-	int parametros[2];
-} t_linea_codigo;
 
 // TODO: agregar briefs
 /**
