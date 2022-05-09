@@ -86,23 +86,26 @@ void recibir_mensajes(int socketCliente)
         case DESCONEXION_CLIENTE_P:
             log_info(logger, "Se DESCONECTO un cliente");
             return;
-        case ENVIAR_PROGRAMA:
-            log_info(logger, "Recibi programa");
-            listaRecibida = recibir_paquete(socketCliente);
-            int primerElemento = *(int *)list_get(listaRecibida, 0);
-            listaInstrucciones = deserializar_lineas_codigo(listaRecibida);
 
+        case ENVIAR_PROGRAMA:
+            log_info(logger, "Recibi un proceso nuevo!");
+            listaRecibida = recibir_paquete(socketCliente);
+            int tamanioProceso = *(int *)list_get(listaRecibida, 0);
+            // loguear los primeros dos elementos
+            log_info(logger, "Recibi el primer elemento: %d", tamanioProceso);
+
+            listaInstrucciones = deserializar_lineas_codigo(listaRecibida);
             for (int i = 0; i < list_size(listaInstrucciones); i++)
             {
                 t_linea_codigo *linea = malloc(sizeof(t_linea_codigo *));
                 linea = list_get(listaInstrucciones, i);
                 log_info(logger, "linea %i ,identificador %s ,parametro 1: %i,parametro 2 : %i", i, linea->identificador, linea->parametros[0], linea->parametros[1]);
             }
-
-            // loguear los primeros dos elementos
-            log_info(logger, "Recibi el primer elemento: %d", primerElemento);
-
+            pcb *nuevoProceso;
+            nuevoProceso = generar_PCB(listaInstrucciones, tamanioProceso);
+            log_info(logger, "Nuevo proceso creado con PID: %d .", nuevoProceso->pid);
             break;
+
         default:
             log_warning(logger, "Operación desconocida.");
             break;

@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 
     // pthread_create(&hiloConexionInterrupt, NULL, (void *)conectar_cpu_interrupt, (void *)"Soy Kernel a CPU Interrupt");
     // pthread_join(hiloConexionInterrupt, NULL);
+    inicializar_semaforos();
 
     int socketKernel = iniciar_servidor_kernel(logger);
     pthread_t hiloEscucha;
@@ -60,16 +61,6 @@ void conectar_cpu_interrupt(char *mensaje)
 
     enviar_mensaje(mensaje, socketKernelClienteInterrupt);
     liberar_conexion_con_servidor(socketKernelClienteInterrupt);
-}
-void crear_pcb(pcb *proceso)
-{
-    t_list *listaInstrucciones = list_create();
-
-    list_add(listaInstrucciones, "Instruccion 1");
-    list_add(listaInstrucciones, "Instruccion 2");
-    list_add(listaInstrucciones, "Instruccion 3");
-
-    generar_estructura_PCB(proceso, listaInstrucciones, 110);
 }
 
 void enviar_pcb(pcb *proceso, int socketCPU, t_log *logger)

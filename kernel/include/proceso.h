@@ -9,11 +9,17 @@
 #include <stdlib.h>
 #include <kernel_utils.h>
 #include <socket/protocolo.h>
+#include <pthread.h>
 
-void iniciar_proceso();
+/*semaforos*/
+pthread_mutex_t mutex_numero_proceso;
 
-void generar_estructura_PCB(pcb *, t_list *, int);
+/*Funciones*/
+void inicializar_semaforos();
+pcb *generar_PCB(t_list *, int);
 
-void recibir_lista_intrucciones(int, t_list *);
+void liberar_instruccion(t_linea_codigo *);
+
+void liberar_PCB(pcb *);
 
 #endif

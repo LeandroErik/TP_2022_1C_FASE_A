@@ -1,15 +1,15 @@
 #ifndef KERNEL_UTILS_H_
 #define KERNEL_UTILS_H_
 
-#include <socket/servidor.h>
-#include <socket/cliente.h>
 #include <commons/config.h>
-#include <commons/log.h>
-#include <pthread.h>
-#include <proceso.h>
-#include <socket/protocolo.h>
 #include <commons/collections/list.h>
 #include <commons/string.h>
+#include <commons/log.h>
+#include <socket/servidor.h>
+#include <socket/cliente.h>
+#include <socket/protocolo.h>
+#include <pthread.h>
+#include <proceso.h>
 
 typedef struct
 {
