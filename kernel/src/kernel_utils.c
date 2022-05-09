@@ -63,35 +63,45 @@ int crear_conexion_con_memoria(void)
     return crear_conexion_con_servidor(valores_config.IP_MEMORIA, valores_config.PUERTO_MEMORIA);
 }
 
-void *recibir_mensajes(int socketCliente)
+void recibir_mensajes(int socketCliente)
 {
 
     t_log *logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
 
     char *mensaje;
+    t_list *listaRecibida;
     t_list *listaInstrucciones;
 
     while (true)
     {
         cod_op codOp = recibir_operacion(socketCliente);
+
         switch (codOp)
         {
-        case INICIAR_PROCESO_P:
-            listaInstrucciones = list_create();
 
-            recibir_lista_intrucciones(socketCliente, listaInstrucciones);
-
-            log_info(logger, "Recibi INICIAR_PROCESO y  la lista de instrucciones");
-
-            iniciar_proceso(listaInstrucciones);
-
-            break;
         case MENSAJE_CLIENTE_P:
             mensaje = obtener_mensaje(socketCliente);
             log_info(logger, "Recibí el mensaje: %s", mensaje);
             break;
         case DESCONEXION_CLIENTE_P:
             log_info(logger, "Se DESCONECTO un cliente");
+            return;
+        case ENVIAR_PROGRAMA:
+            log_info(logger, "Recibi programa");
+            listaRecibida = recibir_paquete(socketCliente);
+            int primerElemento = *(int *)list_get(listaRecibida, 0);
+            listaInstrucciones = deserializar_lineas_codigo(listaRecibida);
+
+            for (int i = 0; i < list_size(listaInstrucciones); i++)
+            {
+                t_linea_codigo *linea = malloc(sizeof(t_linea_codigo *));
+                linea = list_get(listaInstrucciones, i);
+                log_info(logger, "linea %i ,identificador %s ,parametro 1: %i,parametro 2 : %i", i, linea->identificador, linea->parametros[0], linea->parametros[1]);
+            }
+
+            // loguear los primeros dos elementos
+            log_info(logger, "Recibi el primer elemento: %d", primerElemento);
+
             break;
         default:
             log_warning(logger, "Operación desconocida.");
@@ -119,4 +129,27 @@ void conectar_memoria(void)
     enviar_mensaje("soy kernel, envio un mensaje al modulo Memoria", socketKernelCliente);
 
     liberar_conexion_con_servidor(socketKernelCliente);
+}
+
+t_list *deserializar_lineas_codigo(t_list *listaRecibida)
+{
+    t_list *listaLineas = list_create();
+
+    int tamanioLista = *(int *)list_get(listaRecibida, 1);
+    int base = 2;
+    for (int i = 0; i < tamanioLista; i++)
+    {
+        t_linea_codigo *linea = malloc(sizeof(t_linea_codigo));
+
+        linea->identificador = (char *)list_get(listaRecibida, base);
+        linea->parametros[0] = *(int *)list_get(listaRecibida, base + 1);
+        linea->parametros[1] = *(int *)list_get(listaRecibida, base + 2);
+        base += 3;
+        list_add(listaLineas, linea);
+
+        free(linea->identificador);
+        free(linea);
+    }
+
+    return listaLineas;
 }

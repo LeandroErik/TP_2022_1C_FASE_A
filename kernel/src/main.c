@@ -16,23 +16,23 @@ int main(int argc, char *argv[])
 
     logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
 
-    int socketKernelClienteDispatch = crear_conexion_con_cpu_dispatch();
+    // int socketKernelClienteDispatch = crear_conexion_con_cpu_dispatch();
 
-    pcb proceso;
-    crear_pcb(&proceso);
-    enviar_pcb(&proceso, socketKernelClienteDispatch, logger);
-    log_info(logger, "PCB enviado");
+    // pcb proceso;
+    // crear_pcb(&proceso);
+    // enviar_pcb(&proceso, socketKernelClienteDispatch, logger);
+    // log_info(logger, "PCB enviado");
 
-    liberar_conexion_con_servidor(socketKernelClienteDispatch);
+    // liberar_conexion_con_servidor(socketKernelClienteDispatch);
 
-    pthread_t hiloConexionDispatch;
-    pthread_t hiloConexionInterrupt;
+    // pthread_t hiloConexionDispatch;
+    // pthread_t hiloConexionInterrupt;
 
-    pthread_create(&hiloConexionDispatch, NULL, (void *)conectar_cpu_dispatch, (void *)"Soy Kernel a CPU Dispatch");
-    pthread_join(hiloConexionDispatch, NULL);
+    // pthread_create(&hiloConexionDispatch, NULL, (void *)conectar_cpu_dispatch, (void *)"Soy Kernel a CPU Dispatch");
+    // pthread_join(hiloConexionDispatch, NULL);
 
-    pthread_create(&hiloConexionInterrupt, NULL, (void *)conectar_cpu_interrupt, (void *)"Soy Kernel a CPU Interrupt");
-    pthread_join(hiloConexionInterrupt, NULL);
+    // pthread_create(&hiloConexionInterrupt, NULL, (void *)conectar_cpu_interrupt, (void *)"Soy Kernel a CPU Interrupt");
+    // pthread_join(hiloConexionInterrupt, NULL);
 
     int socketKernel = iniciar_servidor_kernel(logger);
     pthread_t hiloEscucha;

@@ -9,6 +9,7 @@
 #include <proceso.h>
 #include <socket/protocolo.h>
 #include <commons/collections/list.h>
+#include <commons/string.h>
 
 typedef struct
 {
@@ -32,6 +33,8 @@ kernel_config valores_config;
 t_log *logger;
 
 int id_proceso_total;
+
+t_list *deserializar_lineas_codigo(t_list *);
 
 /**
  * @brief Carga datos del archivo config en un struct valores_config.
@@ -99,7 +102,7 @@ int crear_conexion_con_memoria(void);
  *
  * @param socket Socket del cual recibe mensajes (int).
  */
-void *recibir_mensajes(int);
+void recibir_mensajes(int);
 
 /**
  * @brief escucha peticiones de conexion.

@@ -14,6 +14,11 @@
 
 typedef struct
 {
+	char *identificador;
+	int parametros[2];
+} t_linea_codigo;
+typedef struct
+{
 	int pid;
 	int tamanio;
 	int proxima_instruccion;
