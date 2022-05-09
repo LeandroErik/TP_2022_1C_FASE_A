@@ -11,15 +11,25 @@
 #include <socket/protocolo.h>
 #include <pthread.h>
 
+/*Listas y colas de procesos*/
+t_queue *cola_nuevos;
+
 /*semaforos*/
 pthread_mutex_t mutex_numero_proceso;
+pthread_mutex_t mutex_nuevo_proceso;
 
-/*Funciones*/
+/*Funciones proceso*/
 void inicializar_semaforos();
+
 pcb *generar_PCB(t_list *, int);
 
 void liberar_instruccion(t_linea_codigo *);
 
 void liberar_PCB(pcb *);
+
+/*Funciones planificacion*/
+void inicializar_colas_procesos();
+
+void agregar_proceso_nuevo(pcb *);
 
 #endif

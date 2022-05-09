@@ -3,6 +3,7 @@
 void inicializar_semaforos()
 {
     pthread_mutex_init(&mutex_numero_proceso, NULL);
+    pthread_mutex_init(&mutex_nuevo_proceso, NULL);
 }
 
 pcb *generar_PCB(t_list *listaInstrucciones, int tamanioProceso)
@@ -32,4 +33,16 @@ void liberar_instruccion(t_linea_codigo *lineaCodigo)
 {
     free(lineaCodigo->identificador);
     free(lineaCodigo);
+}
+
+/*Planificacion*/
+void inicializar_colas_procesos()
+{
+    cola_nuevos = queue_create();
+}
+void agregar_proceso_nuevo(pcb *procesoNuevo)
+{
+    pthread_mutex_unlock(&mutex_nuevo_proceso);
+    queue_push(cola_nuevos, procesoNuevo);
+    pthread_mutex_unlock(&mutex_nuevo_proceso);
 }

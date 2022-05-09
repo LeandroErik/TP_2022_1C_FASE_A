@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     // pthread_create(&hiloConexionInterrupt, NULL, (void *)conectar_cpu_interrupt, (void *)"Soy Kernel a CPU Interrupt");
     // pthread_join(hiloConexionInterrupt, NULL);
     inicializar_semaforos();
+    inicializar_colas_procesos();
 
     int socketKernel = iniciar_servidor_kernel(logger);
     pthread_t hiloEscucha;

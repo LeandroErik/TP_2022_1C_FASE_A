@@ -104,6 +104,11 @@ void recibir_mensajes(int socketCliente)
             pcb *nuevoProceso;
             nuevoProceso = generar_PCB(listaInstrucciones, tamanioProceso);
             log_info(logger, "Nuevo proceso creado con PID: %d .", nuevoProceso->pid);
+
+            agregar_proceso_nuevo(nuevoProceso);
+
+            log_info(logger, "Proceso con PID: %d , agregado a NEW en posicion : %d .", nuevoProceso->pid, queue_size(cola_nuevos));
+
             break;
 
         default:
