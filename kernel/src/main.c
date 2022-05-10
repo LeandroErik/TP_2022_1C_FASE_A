@@ -36,6 +36,8 @@ int main(int argc, char *argv[])
     inicializar_semaforos();
     inicializar_colas_procesos();
 
+    iniciar_planificadores();
+
     int socketKernel = iniciar_servidor_kernel(logger);
     pthread_t hiloEscucha;
 

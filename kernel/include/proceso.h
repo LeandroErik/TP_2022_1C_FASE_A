@@ -13,10 +13,14 @@
 
 /*Listas y colas de procesos*/
 t_queue *cola_nuevos;
+t_queue *cola_listos;
 
 /*semaforos*/
 pthread_mutex_t mutex_numero_proceso;
 pthread_mutex_t mutex_nuevo_proceso;
+
+/*Hilos*/
+pthread_t hilo_planificador_largo_plazo;
 
 /*Funciones proceso*/
 void inicializar_semaforos();
@@ -31,5 +35,9 @@ void liberar_PCB(pcb *);
 void inicializar_colas_procesos();
 
 void agregar_proceso_nuevo(pcb *);
+
+void *planificador_largo_plazo();
+
+void iniciar_planificadores();
 
 #endif

@@ -23,9 +23,10 @@ pcb *generar_PCB(t_list *listaInstrucciones, int tamanioProceso)
 
     return nuevo_pcb;
 }
+
 void liberar_PCB(pcb *proceso)
 {
-    list_destroy_and_destroy_elements(proceso->lista_instrucciones, (void *)liberar_instruccion);
+    list_destroy_and_destroy_elements(proceso->lista_instrucciones, liberar_instruccion);
     free(proceso);
 }
 
@@ -39,10 +40,32 @@ void liberar_instruccion(t_linea_codigo *lineaCodigo)
 void inicializar_colas_procesos()
 {
     cola_nuevos = queue_create();
+    cola_listos = queue_create();
 }
+
 void agregar_proceso_nuevo(pcb *procesoNuevo)
 {
     pthread_mutex_unlock(&mutex_nuevo_proceso);
     queue_push(cola_nuevos, procesoNuevo);
     pthread_mutex_unlock(&mutex_nuevo_proceso);
+}
+
+void iniciar_planificadores()
+{
+    pthread_create(&hilo_planificador_largo_plazo, NULL, planificador_largo_plazo, NULL);
+}
+
+void *planificador_largo_plazo()
+{
+    int largoNuevos = queue_size(cola_nuevos);
+    while (1)
+    {
+        if (largoNuevos != queue_size(cola_nuevos) && queue_size(cola_listos) < valores_config.GRADO_MULTIPROGRAMACION)
+        {
+            pcb *proceso_saliente = queue_pop(cola_nuevos);
+            queue_push(cola_listos, proceso_saliente);
+            printf("agregado proceso %d a listos.", proceso_saliente->pid);
+        }
+        largoNuevos = queue_size(cola_nuevos);
+    }
 }
