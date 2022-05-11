@@ -45,7 +45,7 @@ void inicializar_colas_procesos()
 
 void agregar_proceso_nuevo(pcb *procesoNuevo)
 {
-    pthread_mutex_unlock(&mutex_nuevo_proceso);
+    pthread_mutex_lock(&mutex_nuevo_proceso);
     queue_push(cola_nuevos, procesoNuevo);
     pthread_mutex_unlock(&mutex_nuevo_proceso);
 }
@@ -57,15 +57,24 @@ void iniciar_planificadores()
 
 void *planificador_largo_plazo()
 {
+    pthread_mutex_lock(&mutex_nuevo_proceso);
     int largoNuevos = queue_size(cola_nuevos);
+    pthread_mutex_unlock(&mutex_nuevo_proceso);
+
     while (1)
     {
-        if (largoNuevos != queue_size(cola_nuevos) && queue_size(cola_listos) < valores_config.GRADO_MULTIPROGRAMACION)
+        if (largoNuevos != queue_size(cola_nuevos))
         {
-            pcb *proceso_saliente = queue_pop(cola_nuevos);
-            queue_push(cola_listos, proceso_saliente);
-            printf("agregado proceso %d a listos.", proceso_saliente->pid);
+            printf("cola nuevos: %s \n cola listos: %s \n", leer_cola(cola_nuevos), leer_cola(cola_listos));
+
+            if (queue_size(cola_listos) < valores_config.GRADO_MULTIPROGRAMACION)
+            {
+                pcb *proceso_saliente = queue_pop(cola_nuevos);
+
+                queue_push(cola_listos, proceso_saliente);
+            }
         }
+
         largoNuevos = queue_size(cola_nuevos);
     }
 }

@@ -18,6 +18,7 @@ t_queue *cola_listos;
 /*semaforos*/
 pthread_mutex_t mutex_numero_proceso;
 pthread_mutex_t mutex_nuevo_proceso;
+pthread_mutex_t mutex_proceso_listo;
 
 /*Hilos*/
 pthread_t hilo_planificador_largo_plazo;

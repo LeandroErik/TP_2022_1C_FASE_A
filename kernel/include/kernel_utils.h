@@ -123,4 +123,8 @@ void conectar_cpu(void);
  */
 void conectar_memoria(void);
 
+char *leer_cola(t_queue *cola);
+
+void *queue_peek_at(t_queue *self, int index);
+
 #endif

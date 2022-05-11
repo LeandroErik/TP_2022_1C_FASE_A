@@ -95,19 +95,14 @@ void recibir_mensajes(int socketCliente)
             log_info(logger, "Recibi el primer elemento: %d", tamanioProceso);
 
             listaInstrucciones = deserializar_lineas_codigo(listaRecibida);
-            /*for (int i = 0; i < list_size(listaInstrucciones); i++)
-            {
-                t_linea_codigo *linea = malloc(sizeof(t_linea_codigo *));
-                linea = list_get(listaInstrucciones, i);
-                log_info(logger, "linea %i ,identificador %s ,parametro 1: %i,parametro 2 : %i", i, linea->identificador, linea->parametros[0], linea->parametros[1]);
-            }*/
+
             pcb *nuevoProceso;
             nuevoProceso = generar_PCB(listaInstrucciones, tamanioProceso);
             log_info(logger, "Nuevo proceso creado con PID: %d .", nuevoProceso->pid);
 
             agregar_proceso_nuevo(nuevoProceso);
 
-            log_info(logger, "Proceso con PID: %d , agregado a NEW en posicion : %d .", nuevoProceso->pid, queue_size(cola_nuevos));
+            log_info(logger, "Proceso con PID: %d , agregado a NEW en posicion : %d \n", nuevoProceso->pid, queue_size(cola_nuevos));
 
             break;
 
@@ -160,4 +155,28 @@ t_list *deserializar_lineas_codigo(t_list *listaRecibida)
     }
 
     return listaLineas;
+}
+
+void *queue_peek_at(t_queue *self, int index)
+{
+    return list_get(self->elements, index);
+}
+
+char *leer_cola(t_queue *cola)
+{
+    char *out = string_new();
+
+    for (int i = 0; i < queue_size(cola); i++)
+    {
+
+        pthread_mutex_lock(&mutex_proceso_listo);
+        pcb *proceso_actual = queue_peek_at(cola, i);
+        pthread_mutex_unlock(&mutex_proceso_listo);
+
+        string_append(&out, "[");
+
+        string_append(&out, string_itoa(proceso_actual->pid));
+        string_append(&out, "]");
+    }
+    return out;
 }
