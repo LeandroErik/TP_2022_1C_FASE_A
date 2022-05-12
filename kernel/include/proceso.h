@@ -10,6 +10,7 @@
 #include <kernel_utils.h>
 #include <socket/protocolo.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 /*Listas y colas de procesos*/
 t_queue *cola_nuevos;
@@ -19,6 +20,7 @@ t_queue *cola_listos;
 pthread_mutex_t mutex_numero_proceso;
 pthread_mutex_t mutex_nuevo_proceso;
 pthread_mutex_t mutex_proceso_listo;
+sem_t semaforo_nuevo_proceso;
 
 /*Hilos*/
 pthread_t hilo_planificador_largo_plazo;

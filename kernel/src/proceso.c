@@ -4,6 +4,7 @@ void inicializar_semaforos()
 {
     pthread_mutex_init(&mutex_numero_proceso, NULL);
     pthread_mutex_init(&mutex_nuevo_proceso, NULL);
+    sem_init(&semaforo_nuevo_proceso, 0, 0);
 }
 
 pcb *generar_PCB(t_list *listaInstrucciones, int tamanioProceso)
@@ -48,6 +49,7 @@ void agregar_proceso_nuevo(pcb *procesoNuevo)
     pthread_mutex_lock(&mutex_nuevo_proceso);
     queue_push(cola_nuevos, procesoNuevo);
     pthread_mutex_unlock(&mutex_nuevo_proceso);
+    sem_post(&semaforo_nuevo_proceso);
 }
 
 void iniciar_planificadores()
@@ -60,19 +62,23 @@ void *planificador_largo_plazo()
     pthread_mutex_lock(&mutex_nuevo_proceso);
     int largoNuevos = queue_size(cola_nuevos);
     pthread_mutex_unlock(&mutex_nuevo_proceso);
-
     while (1)
     {
-        if (largoNuevos != queue_size(cola_nuevos))
+        sem_wait(&semaforo_nuevo_proceso);
+        printf("cola nuevos: %s \n cola listos: %s \n", leer_cola(cola_nuevos), leer_cola(cola_listos));
+        pthread_mutex_lock(&mutex_proceso_listo);
+
+        if (queue_size(cola_listos) < valores_config.GRADO_MULTIPROGRAMACION && queue_size(cola_nuevos) > 0)
         {
-            printf("cola nuevos: %s \n cola listos: %s \n", leer_cola(cola_nuevos), leer_cola(cola_listos));
+            pthread_mutex_unlock(&mutex_proceso_listo);
 
-            if (queue_size(cola_listos) < valores_config.GRADO_MULTIPROGRAMACION)
-            {
-                pcb *proceso_saliente = queue_pop(cola_nuevos);
+            pcb *proceso_saliente = queue_pop(cola_nuevos);
 
-                queue_push(cola_listos, proceso_saliente);
-            }
+            queue_push(cola_listos, proceso_saliente);
+        }
+        else
+        {
+            pthread_mutex_unlock(&mutex_proceso_listo);
         }
 
         largoNuevos = queue_size(cola_nuevos);
