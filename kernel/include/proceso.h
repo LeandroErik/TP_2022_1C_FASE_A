@@ -11,19 +11,24 @@
 #include <socket/protocolo.h>
 #include <pthread.h>
 #include <semaphore.h>
+/*Logger de procesos*/
 
 /*Listas y colas de procesos*/
 t_queue *cola_nuevos;
 t_queue *cola_listos;
+t_queue *cola_ejecutando;
 
 /*semaforos*/
 pthread_mutex_t mutex_numero_proceso;
-pthread_mutex_t mutex_nuevo_proceso;
+pthread_mutex_t mutex_cola_nuevos;
+pthread_mutex_t mutex_cola_listos;
 pthread_mutex_t mutex_proceso_listo;
 sem_t semaforo_nuevo_proceso;
+sem_t semaforo_listo_proceso;
 
 /*Hilos*/
 pthread_t hilo_planificador_largo_plazo;
+pthread_t hilo_planificador_corto_plazo;
 
 /*Funciones proceso*/
 void inicializar_semaforos();
@@ -38,6 +43,9 @@ void liberar_PCB(pcb *);
 void inicializar_colas_procesos();
 
 void agregar_proceso_nuevo(pcb *);
+pcb *extraer_proceso_nuevo();
+
+void agregar_proceso_listo(pcb *);
 
 void *planificador_largo_plazo();
 

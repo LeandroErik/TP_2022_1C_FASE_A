@@ -91,7 +91,7 @@ void recibir_mensajes(int socketCliente)
             log_info(logger, "Recibi un proceso nuevo!");
             listaRecibida = recibir_paquete(socketCliente);
             int tamanioProceso = *(int *)list_get(listaRecibida, 0);
-            // loguear los primeros dos elementos
+
             log_info(logger, "Recibi el primer elemento: %d", tamanioProceso);
 
             listaInstrucciones = deserializar_lineas_codigo(listaRecibida);
@@ -101,8 +101,6 @@ void recibir_mensajes(int socketCliente)
             log_info(logger, "Nuevo proceso creado con PID: %d .", nuevoProceso->pid);
 
             agregar_proceso_nuevo(nuevoProceso);
-
-            log_info(logger, "Proceso con PID: %d , agregado a NEW en posicion : %d \n", nuevoProceso->pid, queue_size(cola_nuevos));
 
             break;
 

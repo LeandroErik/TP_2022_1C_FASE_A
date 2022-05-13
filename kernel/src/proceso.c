@@ -1,10 +1,14 @@
 #include <proceso.h>
+#include <kernel_utils.h>
 
 void inicializar_semaforos()
 {
     pthread_mutex_init(&mutex_numero_proceso, NULL);
-    pthread_mutex_init(&mutex_nuevo_proceso, NULL);
+    pthread_mutex_init(&mutex_cola_nuevos, NULL);
+    pthread_mutex_init(&mutex_cola_listos, NULL);
+
     sem_init(&semaforo_nuevo_proceso, 0, 0);
+    sem_init(&semaforo_listo_proceso, 0, 0);
 }
 
 pcb *generar_PCB(t_list *listaInstrucciones, int tamanioProceso)
@@ -42,13 +46,17 @@ void inicializar_colas_procesos()
 {
     cola_nuevos = queue_create();
     cola_listos = queue_create();
+    cola_ejecutando = queue_create();
 }
 
 void agregar_proceso_nuevo(pcb *procesoNuevo)
 {
-    pthread_mutex_lock(&mutex_nuevo_proceso);
+    pthread_mutex_lock(&mutex_cola_nuevos);
     queue_push(cola_nuevos, procesoNuevo);
-    pthread_mutex_unlock(&mutex_nuevo_proceso);
+    pthread_mutex_unlock(&mutex_cola_nuevos);
+
+    log_info(logger, "Proceso con PID: %d , agregado a NEW en posicion : %d .", procesoNuevo->pid, queue_size(cola_nuevos));
+
     sem_post(&semaforo_nuevo_proceso);
 }
 
@@ -59,28 +67,41 @@ void iniciar_planificadores()
 
 void *planificador_largo_plazo()
 {
-    pthread_mutex_lock(&mutex_nuevo_proceso);
-    int largoNuevos = queue_size(cola_nuevos);
-    pthread_mutex_unlock(&mutex_nuevo_proceso);
+
     while (1)
     {
+        printf("\tCola nuevos: %s \n\tCola listos: %s \n", leer_cola(cola_nuevos), leer_cola(cola_listos));
+
         sem_wait(&semaforo_nuevo_proceso);
-        printf("cola nuevos: %s \n cola listos: %s \n", leer_cola(cola_nuevos), leer_cola(cola_listos));
-        pthread_mutex_lock(&mutex_proceso_listo);
 
         if (queue_size(cola_listos) < valores_config.GRADO_MULTIPROGRAMACION && queue_size(cola_nuevos) > 0)
         {
-            pthread_mutex_unlock(&mutex_proceso_listo);
+            pcb *procesoSaliente = extraer_proceso_nuevo();
 
-            pcb *proceso_saliente = queue_pop(cola_nuevos);
-
-            queue_push(cola_listos, proceso_saliente);
+            agregar_proceso_listo(procesoSaliente);
         }
-        else
-        {
-            pthread_mutex_unlock(&mutex_proceso_listo);
-        }
-
-        largoNuevos = queue_size(cola_nuevos);
     }
+}
+
+pcb *extraer_proceso_nuevo()
+{
+    pthread_mutex_lock(&mutex_cola_nuevos);
+
+    pcb *proceso_saliente = queue_pop(cola_nuevos);
+
+    pthread_mutex_unlock(&mutex_cola_nuevos);
+
+    return proceso_saliente;
+}
+
+void agregar_proceso_listo(pcb *procesoListo)
+{
+    pthread_mutex_lock(&mutex_cola_listos);
+
+    queue_push(cola_listos, procesoListo);
+    sem_post(&semaforo_listo_proceso);
+
+    pthread_mutex_unlock(&mutex_cola_listos);
+
+    log_info(logger, "Agregado a READY el proceso : %d .", procesoListo->pid);
 }
