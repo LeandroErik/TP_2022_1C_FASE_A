@@ -6,6 +6,7 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_numero_proceso, NULL);
     pthread_mutex_init(&mutex_cola_nuevos, NULL);
     pthread_mutex_init(&mutex_cola_listos, NULL);
+    pthread_mutex_init(&mutex_cola_ejecutando, NULL);
 
     sem_init(&semaforo_nuevo_proceso, 0, 0);
     sem_init(&semaforo_listo_proceso, 0, 0);
@@ -83,6 +84,18 @@ void *planificador_largo_plazo()
     }
 }
 
+void *planificador_corto_plazo()
+{
+    while (1)
+    {
+        printf("\tCola Ejecutando: %s\n", leer_cola(cola_ejecutando));
+
+        sem_wait(&semaforo_listo_proceso);
+
+        pcb *procesoEjecutar = queue_pop(cola_listos);
+        agregar_proceso_ejecutando(procesoEjecutar);
+    }
+}
 pcb *extraer_proceso_nuevo()
 {
     pthread_mutex_lock(&mutex_cola_nuevos);
@@ -104,4 +117,16 @@ void agregar_proceso_listo(pcb *procesoListo)
     pthread_mutex_unlock(&mutex_cola_listos);
 
     log_info(logger, "Agregado a READY el proceso : %d .", procesoListo->pid);
+}
+
+void agregar_proceso_ejecutando(pcb *procesoEjecutar)
+{
+    pthread_mutex_lock(&mutex_cola_ejecutando);
+
+    queue_push(cola_ejecutando, procesoEjecutar);
+    sem_post(&semaforo_ejecutando_proceso);
+
+    pthread_mutex_unlock(&mutex_cola_ejecutando);
+
+    log_info(logger, "Agregado a ejecutando proceso %d", procesoEjecutar->pid);
 }
