@@ -3,23 +3,24 @@
 
 void inicializar_semaforos()
 {
-    pthread_mutex_init(&mutex_numero_proceso, NULL);
-    pthread_mutex_init(&mutex_cola_nuevos, NULL);
-    pthread_mutex_init(&mutex_cola_listos, NULL);
-    pthread_mutex_init(&mutex_cola_ejecutando, NULL);
+    pthread_mutex_init(&mutexNumeroProceso, NULL);
+    pthread_mutex_init(&mutexColaNuevos, NULL);
+    pthread_mutex_init(&mutexColaListos, NULL);
+    pthread_mutex_init(&mutexColaEjecutando, NULL);
 
-    sem_init(&semaforo_nuevo_proceso, 0, 0);
-    sem_init(&semaforo_listo_proceso, 0, 0);
+    sem_init(&semaforoProcesoNuevo, 0, 0);
+    sem_init(&semaforoProcesoListo, 0, 0);
+    sem_init(&semaforoCantidadProcesosEjecutando, 0, 1);
 }
 
 pcb *generar_PCB(t_list *listaInstrucciones, int tamanioProceso)
 {
     pcb *nuevo_pcb = malloc(sizeof(pcb));
 
-    pthread_mutex_lock(&mutex_numero_proceso);
+    pthread_mutex_lock(&mutexNumeroProceso);
     nuevo_pcb->pid = id_proceso_total;
     id_proceso_total++;
-    pthread_mutex_unlock(&mutex_numero_proceso);
+    pthread_mutex_unlock(&mutexNumeroProceso);
 
     nuevo_pcb->tamanio = tamanioProceso;
     nuevo_pcb->lista_instrucciones = listaInstrucciones;
@@ -45,25 +46,26 @@ void liberar_instruccion(t_linea_codigo *lineaCodigo)
 /*Planificacion*/
 void inicializar_colas_procesos()
 {
-    cola_nuevos = queue_create();
-    cola_listos = queue_create();
-    cola_ejecutando = queue_create();
+    colaNuevos = queue_create();
+    colaListos = queue_create();
+    colaEjecutando = queue_create();
 }
 
 void agregar_proceso_nuevo(pcb *procesoNuevo)
 {
-    pthread_mutex_lock(&mutex_cola_nuevos);
-    queue_push(cola_nuevos, procesoNuevo);
-    pthread_mutex_unlock(&mutex_cola_nuevos);
+    pthread_mutex_lock(&mutexColaNuevos);
+    queue_push(colaNuevos, procesoNuevo);
+    pthread_mutex_unlock(&mutexColaNuevos);
 
-    log_info(logger, "Proceso con PID: %d , agregado a NEW en posicion : %d .", procesoNuevo->pid, queue_size(cola_nuevos));
+    log_info(logger, "Proceso con PID: %d , agregado a NEW en posicion : %d .", procesoNuevo->pid, queue_size(colaNuevos));
 
-    sem_post(&semaforo_nuevo_proceso);
+    sem_post(&semaforoProcesoNuevo);
 }
 
 void iniciar_planificadores()
 {
     pthread_create(&hilo_planificador_largo_plazo, NULL, planificador_largo_plazo, NULL);
+    pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo, NULL);
 }
 
 void *planificador_largo_plazo()
@@ -71,11 +73,11 @@ void *planificador_largo_plazo()
 
     while (1)
     {
-        printf("\tCola nuevos: %s \n\tCola listos: %s \n", leer_cola(cola_nuevos), leer_cola(cola_listos));
+        printf("\tCola nuevos: %s \n\tCola listos: %s \n \tCola ejecutando: %s \n", leer_cola(colaNuevos), leer_cola(colaListos), leer_cola(colaEjecutando));
 
-        sem_wait(&semaforo_nuevo_proceso);
+        sem_wait(&semaforoProcesoNuevo);
 
-        if (queue_size(cola_listos) < valores_config.GRADO_MULTIPROGRAMACION && queue_size(cola_nuevos) > 0)
+        if (queue_size(colaListos) < valoresConfig.GRADO_MULTIPROGRAMACION && queue_size(colaNuevos) > 0)
         {
             pcb *procesoSaliente = extraer_proceso_nuevo();
 
@@ -88,45 +90,36 @@ void *planificador_corto_plazo()
 {
     while (1)
     {
-        printf("\tCola Ejecutando: %s\n", leer_cola(cola_ejecutando));
-
-        sem_wait(&semaforo_listo_proceso);
-
-        pcb *procesoEjecutar = queue_pop(cola_listos);
-        agregar_proceso_ejecutando(procesoEjecutar);
+        sem_wait(&semaforoProcesoListo);
+        sem_wait(&semaforoCantidadProcesosEjecutando);
+        pcb *procesoEjecutar = queue_pop(colaListos);
+        ejecutar(procesoEjecutar);
     }
 }
+
+void ejecutar(pcb *proceso)
+{
+}
+
 pcb *extraer_proceso_nuevo()
 {
-    pthread_mutex_lock(&mutex_cola_nuevos);
+    pthread_mutex_lock(&mutexColaNuevos);
 
-    pcb *proceso_saliente = queue_pop(cola_nuevos);
+    pcb *proceso_saliente = queue_pop(colaNuevos);
 
-    pthread_mutex_unlock(&mutex_cola_nuevos);
+    pthread_mutex_unlock(&mutexColaNuevos);
 
     return proceso_saliente;
 }
 
 void agregar_proceso_listo(pcb *procesoListo)
 {
-    pthread_mutex_lock(&mutex_cola_listos);
+    pthread_mutex_lock(&mutexColaListos);
 
-    queue_push(cola_listos, procesoListo);
-    sem_post(&semaforo_listo_proceso);
+    queue_push(colaListos, procesoListo);
+    sem_post(&semaforoProcesoListo);
 
-    pthread_mutex_unlock(&mutex_cola_listos);
+    pthread_mutex_unlock(&mutexColaListos);
 
     log_info(logger, "Agregado a READY el proceso : %d .", procesoListo->pid);
-}
-
-void agregar_proceso_ejecutando(pcb *procesoEjecutar)
-{
-    pthread_mutex_lock(&mutex_cola_ejecutando);
-
-    queue_push(cola_ejecutando, procesoEjecutar);
-    sem_post(&semaforo_ejecutando_proceso);
-
-    pthread_mutex_unlock(&mutex_cola_ejecutando);
-
-    log_info(logger, "Agregado a ejecutando proceso %d", procesoEjecutar->pid);
 }

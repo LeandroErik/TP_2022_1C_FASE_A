@@ -14,20 +14,21 @@
 /*Logger de procesos*/
 
 /*Listas y colas de procesos*/
-t_queue *cola_nuevos;
-t_queue *cola_listos;
-t_queue *cola_ejecutando;
+t_queue *colaNuevos;
+t_queue *colaListos;
+t_queue *colaEjecutando;
 
 /*semaforos*/
-pthread_mutex_t mutex_numero_proceso;
-pthread_mutex_t mutex_cola_nuevos;
-pthread_mutex_t mutex_cola_listos;
-pthread_mutex_t mutex_cola_ejecutando;
+pthread_mutex_t mutexNumeroProceso;
+pthread_mutex_t mutexColaNuevos;
+pthread_mutex_t mutexColaListos;
+pthread_mutex_t mutexColaEjecutando;
 pthread_mutex_t mutex_proceso_listo;
 
-sem_t semaforo_nuevo_proceso;
-sem_t semaforo_listo_proceso;
-sem_t semaforo_ejecutando_proceso;
+sem_t semaforoProcesoNuevo;
+sem_t semaforoProcesoListo;
+sem_t semaforoProcesoEjecutando;
+sem_t semaforoCantidadProcesosEjecutando;
 
 /*Hilos*/
 pthread_t hilo_planificador_largo_plazo;

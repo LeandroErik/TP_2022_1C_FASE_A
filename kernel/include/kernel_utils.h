@@ -28,7 +28,7 @@ typedef struct
 
 } kernel_config;
 
-kernel_config valores_config;
+kernel_config valoresConfig;
 
 t_log *logger;
 

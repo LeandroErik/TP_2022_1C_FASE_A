@@ -8,23 +8,23 @@ void cargar_configuracion(void)
         perror("archivo kernel.config NO ENCONTRADO");
         return;
     }
-    valores_config.IP_KERNEL = config_get_string_value(config, "IP_KERNEL");
-    valores_config.IP_CPU = config_get_string_value(config, "IP_CPU");
-    valores_config.IP_MEMORIA = config_get_string_value(config, "IP_MEMORIA");
-    valores_config.PUERTO_MEMORIA = config_get_string_value(config, "PUERTO_MEMORIA");
-    valores_config.PUERTO_CPU_DISPATCH = config_get_string_value(config, "PUERTO_CPU_DISPATCH");
-    valores_config.PUERTO_CPU_INTERRUPT = config_get_string_value(config, "PUERTO_CPU_INTERRUPT");
-    valores_config.PUERTO_ESCUCHA = config_get_string_value(config, "PUERTO_ESCUCHA");
-    valores_config.ALGORITMO_PLANIFICACION = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
-    valores_config.ESTIMACION_INICIAL = config_get_int_value(config, "ESTIMACION_INICIAL");
-    valores_config.ALFA = config_get_double_value(config, "ALFA");
-    valores_config.GRADO_MULTIPROGRAMACION = config_get_int_value(config, "GRADO_MULTIPROGRAMACION");
-    valores_config.TIEMPO_MAXIMO_BLOQUEADO = config_get_int_value(config, "TIEMPO_MAXIMO_BLOQUEADO");
+    valoresConfig.IP_KERNEL = config_get_string_value(config, "IP_KERNEL");
+    valoresConfig.IP_CPU = config_get_string_value(config, "IP_CPU");
+    valoresConfig.IP_MEMORIA = config_get_string_value(config, "IP_MEMORIA");
+    valoresConfig.PUERTO_MEMORIA = config_get_string_value(config, "PUERTO_MEMORIA");
+    valoresConfig.PUERTO_CPU_DISPATCH = config_get_string_value(config, "PUERTO_CPU_DISPATCH");
+    valoresConfig.PUERTO_CPU_INTERRUPT = config_get_string_value(config, "PUERTO_CPU_INTERRUPT");
+    valoresConfig.PUERTO_ESCUCHA = config_get_string_value(config, "PUERTO_ESCUCHA");
+    valoresConfig.ALGORITMO_PLANIFICACION = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
+    valoresConfig.ESTIMACION_INICIAL = config_get_int_value(config, "ESTIMACION_INICIAL");
+    valoresConfig.ALFA = config_get_double_value(config, "ALFA");
+    valoresConfig.GRADO_MULTIPROGRAMACION = config_get_int_value(config, "GRADO_MULTIPROGRAMACION");
+    valoresConfig.TIEMPO_MAXIMO_BLOQUEADO = config_get_int_value(config, "TIEMPO_MAXIMO_BLOQUEADO");
 }
 
 int iniciar_servidor_kernel(t_log *logger)
 {
-    int socketKernel = iniciar_servidor(valores_config.IP_KERNEL, valores_config.PUERTO_ESCUCHA);
+    int socketKernel = iniciar_servidor(valoresConfig.IP_KERNEL, valoresConfig.PUERTO_ESCUCHA);
     log_info(logger, "Módulo Kernel listo para recibir el Módulo Consola");
     return socketKernel;
 }
@@ -45,12 +45,12 @@ void apagar_servidor_kernel(int socketKernel, t_log *logger)
 
 int crear_conexion_con_cpu_dispatch(void)
 {
-    return crear_conexion_con_servidor(valores_config.IP_CPU, valores_config.PUERTO_CPU_DISPATCH);
+    return crear_conexion_con_servidor(valoresConfig.IP_CPU, valoresConfig.PUERTO_CPU_DISPATCH);
 }
 
 int crear_conexion_con_cpu_interrupt(void)
 {
-    return crear_conexion_con_servidor(valores_config.IP_CPU, valores_config.PUERTO_CPU_INTERRUPT);
+    return crear_conexion_con_servidor(valoresConfig.IP_CPU, valoresConfig.PUERTO_CPU_INTERRUPT);
 }
 
 void liberar_conexion_con_cpu(int socketKernel)
@@ -60,7 +60,7 @@ void liberar_conexion_con_cpu(int socketKernel)
 
 int crear_conexion_con_memoria(void)
 {
-    return crear_conexion_con_servidor(valores_config.IP_MEMORIA, valores_config.PUERTO_MEMORIA);
+    return crear_conexion_con_servidor(valoresConfig.IP_MEMORIA, valoresConfig.PUERTO_MEMORIA);
 }
 
 void recibir_mensajes(int socketCliente)
