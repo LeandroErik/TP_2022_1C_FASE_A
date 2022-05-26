@@ -36,7 +36,9 @@ cod_op_servidor obtener_codigo_operacion(int socketCliente)
 {
   cod_op_servidor codigoOperacion;
   if (recv(socketCliente, &codigoOperacion, sizeof(int), MSG_WAITALL) > 0)
+  {
     return codigoOperacion;
+  }
   else
   {
     close(socketCliente);

@@ -116,3 +116,32 @@ void liberar_conexion(int socket_cliente)
 {
     close(socket_cliente);
 }
+
+pcb *deserializar_pcb_p(t_list *listaRecibida)
+{
+    pcb *proceso = malloc(sizeof(pcb));
+
+    proceso->pid = *(int *)list_get(listaRecibida, 0);
+    proceso->tamanio = *(int *)list_get(listaRecibida, 1);
+    proceso->proxima_instruccion = *(int *)list_get(listaRecibida, 2);
+    proceso->tabla_de_paginas = *(int *)list_get(listaRecibida, 3);
+    proceso->estimacion_rafaga = *(float *)list_get(listaRecibida, 4);
+    proceso->estado = *(int *)list_get(listaRecibida, 5);
+
+    agregar_instrucciones_a_pcb_p(proceso, listaRecibida);
+    return proceso;
+}
+
+void agregar_instrucciones_a_pcb_p(pcb *proceso, t_list *listaRecibida)
+{
+    int tamanio_lista = *(int *)list_get(listaRecibida, 6);
+
+    proceso->lista_instrucciones = list_create();
+
+    for (int i = 0; i < tamanio_lista; i++)
+    {
+        char *instruccion = string_new();
+        instruccion = (char *)list_get(listaRecibida, 7 + i);
+        list_add(proceso->lista_instrucciones, instruccion);
+    }
+}

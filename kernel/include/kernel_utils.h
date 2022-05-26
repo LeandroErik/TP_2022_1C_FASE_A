@@ -32,7 +32,11 @@ kernel_config valoresConfig;
 
 t_log *logger;
 
+int socketKernelClienteDispatch;
+
 int id_proceso_total;
+
+t_paquete *serializar_pcb(pcb *proceso);
 
 t_list *deserializar_lineas_codigo(t_list *);
 
@@ -126,5 +130,11 @@ void conectar_memoria(void);
 char *leer_cola(t_queue *cola);
 
 void *queue_peek_at(t_queue *self, int index);
+
+void agregar_lista_a_paquete(t_paquete *paquete, pcb *proceso);
+
+void enviar_pcb(pcb *, int, t_log *);
+
+void recibir_imagen_pcb(int);
 
 #endif

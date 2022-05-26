@@ -4,9 +4,7 @@
 
 void conectar_cpu_dispatch(char *mensaje);
 void conectar_cpu_interrupt(char *mensaje);
-void crear_pcb(pcb *);
-void enviar_pcb(pcb *, int, t_log *);
-void agregar_lista_a_paquete(t_paquete *, pcb *);
+void escuchar_a_cpu_dispatch();
 
 int main(int argc, char *argv[])
 {
@@ -16,29 +14,22 @@ int main(int argc, char *argv[])
 
     logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
 
-    // int socketKernelClienteDispatch = crear_conexion_con_cpu_dispatch();
-
-    // pcb proceso;
-    // crear_pcb(&proceso);
-    // enviar_pcb(&proceso, socketKernelClienteDispatch, logger);
-    // log_info(logger, "PCB enviado");
-
-    // liberar_conexion_con_servidor(socketKernelClienteDispatch);
-
-    // pthread_t hiloConexionDispatch;
+    pthread_t hiloConexionDispatch;
     // pthread_t hiloConexionInterrupt;
 
-    // pthread_create(&hiloConexionDispatch, NULL, (void *)conectar_cpu_dispatch, (void *)"Soy Kernel a CPU Dispatch");
-    // pthread_join(hiloConexionDispatch, NULL);
+    pthread_create(&hiloConexionDispatch, NULL, (void *)escuchar_a_cpu_dispatch, NULL);
+
+    pthread_join(hiloConexionDispatch, NULL);
 
     // pthread_create(&hiloConexionInterrupt, NULL, (void *)conectar_cpu_interrupt, (void *)"Soy Kernel a CPU Interrupt");
     // pthread_join(hiloConexionInterrupt, NULL);
-    inicializar_semaforos();
-    inicializar_colas_procesos();
-
-    iniciar_planificadores();
 
     int socketKernel = iniciar_servidor_kernel(logger);
+    socketKernelClienteDispatch = crear_conexion_con_cpu_dispatch();
+
+    inicializar_semaforos();
+    inicializar_colas_procesos();
+    iniciar_planificadores();
     pthread_t hiloEscucha;
 
     pthread_create(&hiloEscucha, NULL, (void *)iniciar_escucha, (void *)socketKernel);
@@ -49,13 +40,36 @@ int main(int argc, char *argv[])
     return EXIT_SUCCESS;
 }
 
-void conectar_cpu_dispatch(char *mensaje)
+void escuchar_a_cpu_dispatch()
 {
-    int socketKernelClienteDispatch = crear_conexion_con_cpu_dispatch();
 
-    enviar_mensaje(mensaje, socketKernelClienteDispatch);
+    int socketCliente = esperar_cliente(socketKernelClienteDispatch);
+    log_info(logger, "Se conectó el CPU Dispatch...");
 
-    liberar_conexion_con_servidor(socketKernelClienteDispatch);
+    char *mensaje;
+
+    while (true)
+    {
+        cod_op codOp = obtener_codigo_operacion(socketCliente);
+
+        switch (codOp)
+        {
+        case MENSAJE_CLIENTE_P:
+            mensaje = obtener_mensaje(socketCliente);
+            log_info(logger, "Recibí el mensaje: %s", mensaje);
+            break;
+
+        case DESCONEXION_CLIENTE_P:
+            log_info(logger, "Se desconectó el CPU Dispatch... %d", codOp);
+
+            break;
+
+        default:
+            log_warning(logger, "Operación desconocida.");
+            break;
+        }
+    }
+    // recibir_mensajes(socketKernelClienteDispatch);
 }
 
 void conectar_cpu_interrupt(char *mensaje)
@@ -64,23 +78,6 @@ void conectar_cpu_interrupt(char *mensaje)
 
     enviar_mensaje(mensaje, socketKernelClienteInterrupt);
     liberar_conexion_con_servidor(socketKernelClienteInterrupt);
-}
-
-void enviar_pcb(pcb *proceso, int socketCPU, t_log *logger)
-{
-    t_paquete *paquete = crear_paquete(IMAGEN_PCB_P);
-
-    agregar_a_paquete(paquete, &(proceso->pid), sizeof(int));
-    agregar_a_paquete(paquete, &(proceso->tamanio), sizeof(int));
-    agregar_a_paquete(paquete, &(proceso->proxima_instruccion), sizeof(int));
-    agregar_a_paquete(paquete, &(proceso->tabla_de_paginas), sizeof(int));
-    agregar_a_paquete(paquete, &(proceso->estimacion_rafaga), sizeof(float));
-
-    agregar_lista_a_paquete(paquete, proceso);
-
-    enviar_paquete(paquete, socketCPU);
-
-    eliminar_paquete(paquete);
 }
 
 void agregar_lista_a_paquete(t_paquete *paquete, pcb *proceso)

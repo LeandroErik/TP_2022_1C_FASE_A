@@ -1,12 +1,17 @@
 #include <proceso.h>
 #include <kernel_utils.h>
 
+void ejecutar(pcb *proceso);
+
 void inicializar_semaforos()
 {
     pthread_mutex_init(&mutexNumeroProceso, NULL);
     pthread_mutex_init(&mutexColaNuevos, NULL);
     pthread_mutex_init(&mutexColaListos, NULL);
     pthread_mutex_init(&mutexColaEjecutando, NULL);
+    pthread_mutex_init(&mutexColaBloqueados, NULL);
+    pthread_mutex_init(&mutexColaSuspendidoBloqueado, NULL);
+    pthread_mutex_init(&mutexColaSuspendidoListo, NULL);
 
     sem_init(&semaforoProcesoNuevo, 0, 0);
     sem_init(&semaforoProcesoListo, 0, 0);
@@ -27,6 +32,7 @@ pcb *generar_PCB(t_list *listaInstrucciones, int tamanioProceso)
     nuevo_pcb->proxima_instruccion = 1;
     nuevo_pcb->tabla_de_paginas = 1;
     nuevo_pcb->estimacion_rafaga = 1.1;
+    nuevo_pcb->estado = NUEVO;
 
     return nuevo_pcb;
 }
@@ -49,6 +55,9 @@ void inicializar_colas_procesos()
     colaNuevos = queue_create();
     colaListos = queue_create();
     colaEjecutando = queue_create();
+    colaBloqueados = queue_create();
+    colaSuspendidoBloqueado = queue_create();
+    colaSuspendidoListo = queue_create();
 }
 
 void agregar_proceso_nuevo(pcb *procesoNuevo)
@@ -62,6 +71,33 @@ void agregar_proceso_nuevo(pcb *procesoNuevo)
     sem_post(&semaforoProcesoNuevo);
 }
 
+void agregar_proceso_bloqueado(pcb *procesoBloqueado)
+{
+    pthread_mutex_lock(&mutexColaBloqueados);
+    queue_push(colaBloqueados, procesoBloqueado);
+    pthread_mutex_unlock(&mutexColaBloqueados);
+
+    log_info(logger, "Proceso con PID: %d , agregado a BLOQUEADO en posicion : %d .", procesoBloqueado->pid, queue_size(colaBloqueados));
+}
+
+void agregar_proceso_suspendido_bloqueado(pcb *procesoSuspendidoBloqueado)
+{
+    pthread_mutex_lock(&mutexColaSuspendidoBloqueado);
+    queue_push(colaSuspendidoBloqueado, procesoSuspendidoBloqueado);
+    pthread_mutex_unlock(&mutexColaSuspendidoBloqueado);
+
+    log_info(logger, "Proceso con PID: %d , agregado a SUSPENDIDO-BLOQUEADO en posicion : %d .", procesoSuspendidoBloqueado->pid, queue_size(colaSuspendidoBloqueado));
+}
+
+void agregar_proceso_suspendido_listo(pcb *procesoSuspendidoListo)
+{
+    pthread_mutex_lock(&mutexColaSuspendidoListo);
+    queue_push(colaSuspendidoBloqueado, procesoSuspendidoListo);
+    pthread_mutex_unlock(&mutexColaSuspendidoListo);
+
+    log_info(logger, "Proceso con PID: %d , agregado a SUSPENDIDO-LISTO en posicion : %d .", procesoSuspendidoListo->pid, queue_size(colaSuspendidoListo));
+}
+
 void iniciar_planificadores()
 {
     pthread_create(&hilo_planificador_largo_plazo, NULL, planificador_largo_plazo, NULL);
@@ -70,17 +106,19 @@ void iniciar_planificadores()
 
 void *planificador_largo_plazo()
 {
-
     while (1)
     {
         printf("\tCola nuevos: %s \n\tCola listos: %s \n \tCola ejecutando: %s \n", leer_cola(colaNuevos), leer_cola(colaListos), leer_cola(colaEjecutando));
 
         sem_wait(&semaforoProcesoNuevo);
 
-        if (queue_size(colaListos) < valoresConfig.GRADO_MULTIPROGRAMACION && queue_size(colaNuevos) > 0)
+        int procesosEnMemoria = queue_size(colaListos) + queue_size(colaEjecutando) + queue_size(colaBloqueados);
+
+        if (procesosEnMemoria < valoresConfig.GRADO_MULTIPROGRAMACION && queue_size(colaNuevos) > 0)
         {
             pcb *procesoSaliente = extraer_proceso_nuevo();
 
+            procesoSaliente->estado = LISTO;
             agregar_proceso_listo(procesoSaliente);
         }
     }
@@ -93,12 +131,15 @@ void *planificador_corto_plazo()
         sem_wait(&semaforoProcesoListo);
         sem_wait(&semaforoCantidadProcesosEjecutando);
         pcb *procesoEjecutar = queue_pop(colaListos);
+        queue_push(colaEjecutando, procesoEjecutar);
         ejecutar(procesoEjecutar);
     }
 }
 
 void ejecutar(pcb *proceso)
 {
+    proceso->estado = EJECUTANDO;
+    enviar_pcb(proceso, socketKernelClienteDispatch, logger);
 }
 
 pcb *extraer_proceso_nuevo()
@@ -122,4 +163,15 @@ void agregar_proceso_listo(pcb *procesoListo)
     pthread_mutex_unlock(&mutexColaListos);
 
     log_info(logger, "Agregado a READY el proceso : %d .", procesoListo->pid);
+}
+
+void agregar_proceso_ejecutando(pcb *procesoEjecutando)
+{
+    pthread_mutex_lock(&mutexColaEjecutando);
+
+    queue_push(colaEjecutando, procesoEjecutando);
+
+    pthread_mutex_unlock(&mutexColaEjecutando);
+
+    log_info(logger, "Agregado a EJECUTANDO el proceso : %d .", procesoEjecutando->pid);
 }

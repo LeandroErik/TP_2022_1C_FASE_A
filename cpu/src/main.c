@@ -26,6 +26,8 @@ int recibir_mensaje_dispatch(t_log *logger)
       paqueteLista = recibir_paquete(socketKernelDispatch);
       proceso = deserializar_pcb(paqueteLista);
 
+      enviar_mensaje("OK", socketKernelDispatch);
+
       imprimir_pcb(&proceso, logger);
       list_destroy_and_destroy_elements(paqueteLista, free);
 
@@ -66,6 +68,7 @@ int recibir_mensaje_interrupt(t_log *logger)
     case DESCONEXION_CLIENTE:
 
       break;
+
     default:
       log_warning(logger, "Operación desconocida.");
       break;
@@ -107,6 +110,7 @@ pcb deserializar_pcb(t_list *listaRecibida)
   proceso.proxima_instruccion = *(int *)list_get(listaRecibida, 2);
   proceso.tabla_de_paginas = *(int *)list_get(listaRecibida, 3);
   proceso.estimacion_rafaga = *(float *)list_get(listaRecibida, 4);
+  proceso.estado = *(int *)list_get(listaRecibida, 5);
 
   agregar_instrucciones_a_pcb(&proceso, listaRecibida);
   return proceso;
@@ -114,14 +118,14 @@ pcb deserializar_pcb(t_list *listaRecibida)
 
 void agregar_instrucciones_a_pcb(pcb *proceso, t_list *listaRecibida)
 {
-  int tamanio_lista = *(int *)list_get(listaRecibida, 5);
+  int tamanio_lista = *(int *)list_get(listaRecibida, 6);
 
   proceso->lista_instrucciones = list_create();
 
   for (int i = 0; i < tamanio_lista; i++)
   {
     char *instruccion = string_new();
-    instruccion = (char *)list_get(listaRecibida, 6 + i);
+    instruccion = (char *)list_get(listaRecibida, 7 + i);
     list_add(proceso->lista_instrucciones, instruccion);
   }
 }

@@ -24,9 +24,22 @@ typedef struct
 	int proxima_instruccion;
 	int tabla_de_paginas;
 	float estimacion_rafaga;
+	int estado;
 	t_list *lista_instrucciones;
 
 } pcb;
+
+typedef enum
+{
+	NUEVO,
+	LISTO,
+	EJECUTANDO,
+	BLOQUEADO,
+	FINALIZADO,
+	SUSPENDIDO_LISTO,
+	SUSPENDIDO_BLOQUEADO
+
+} estadosCpu;
 
 typedef enum
 {
@@ -49,5 +62,7 @@ void agregar_a_paquete(t_paquete *paquete, void *valor, int tamanio);
 void enviar_paquete(t_paquete *paquete, int socket_cliente);
 void liberar_conexion(int socket_cliente);
 void eliminar_paquete(t_paquete *paquete);
+
+pcb deserializar_pcb(t_list *listaRecibida);
 
 #endif
