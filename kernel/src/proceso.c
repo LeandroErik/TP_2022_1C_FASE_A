@@ -12,6 +12,7 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutexColaBloqueados, NULL);
     pthread_mutex_init(&mutexColaSuspendidoBloqueado, NULL);
     pthread_mutex_init(&mutexColaSuspendidoListo, NULL);
+    pthread_mutex_init(&mutex_proceso_listo, NULL);
 
     sem_init(&semaforoProcesoNuevo, 0, 0);
     sem_init(&semaforoProcesoListo, 0, 0);
@@ -139,7 +140,27 @@ void *planificador_corto_plazo()
 void ejecutar(pcb *proceso)
 {
     proceso->estado = EJECUTANDO;
+
     enviar_pcb(proceso, socketKernelClienteDispatch, logger);
+
+    cod_op codOp = recibir_operacion(socketKernelClienteDispatch);
+    char *mensaje;
+    switch (codOp)
+    {
+    case MENSAJE_CLIENTE_P:
+        mensaje = obtener_mensaje(socketKernelClienteDispatch);
+        log_info(logger, "Recibí el mensaje: %s", mensaje);
+        break;
+
+    case DESCONEXION_CLIENTE_P:
+        log_info(logger, "Se desconectó el CPU Dispatch... %d", codOp);
+        return 1;
+        break;
+
+    default:
+        log_warning(logger, "Operación desconocida.");
+        break;
+    }
 }
 
 pcb *extraer_proceso_nuevo()

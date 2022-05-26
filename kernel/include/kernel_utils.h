@@ -133,8 +133,8 @@ void *queue_peek_at(t_queue *self, int index);
 
 void agregar_lista_a_paquete(t_paquete *paquete, pcb *proceso);
 
-void enviar_pcb(pcb *, int, t_log *);
-
 void recibir_imagen_pcb(int);
+
+void enviar_pcb(pcb *, int, t_log *);
 
 #endif

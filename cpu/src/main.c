@@ -26,10 +26,8 @@ int recibir_mensaje_dispatch(t_log *logger)
       paqueteLista = recibir_paquete(socketKernelDispatch);
       proceso = deserializar_pcb(paqueteLista);
 
+      log_info(logger, "Me llego un proceso");
       enviar_mensaje("OK", socketKernelDispatch);
-
-      imprimir_pcb(&proceso, logger);
-      list_destroy_and_destroy_elements(paqueteLista, free);
 
       break;
     case MENSAJE_CLIENTE_P:
@@ -38,10 +36,11 @@ int recibir_mensaje_dispatch(t_log *logger)
       break;
 
     case DESCONEXION_CLIENTE_P:
-
+      return 1;
       break;
     default:
       log_warning(logger, "Operación desconocida.");
+
       break;
     }
   }
@@ -112,7 +111,7 @@ pcb deserializar_pcb(t_list *listaRecibida)
   proceso.estimacion_rafaga = *(float *)list_get(listaRecibida, 4);
   proceso.estado = *(int *)list_get(listaRecibida, 5);
 
-  agregar_instrucciones_a_pcb(&proceso, listaRecibida);
+  // agregar_instrucciones_a_pcb(&proceso, listaRecibida); Aca me lanzaba error de deserializacion
   return proceso;
 }
 

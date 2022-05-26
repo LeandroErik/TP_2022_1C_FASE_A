@@ -8,24 +8,24 @@ void escuchar_a_cpu_dispatch();
 
 int main(int argc, char *argv[])
 {
+
     id_proceso_total = 0;
-
     cargar_configuracion();
-
     logger = log_create("Kernel.log", "Kernel", true, LOG_LEVEL_DEBUG);
 
-    pthread_t hiloConexionDispatch;
-    // pthread_t hiloConexionInterrupt;
+    int socketKernel = iniciar_servidor_kernel(logger);
 
-    pthread_create(&hiloConexionDispatch, NULL, (void *)escuchar_a_cpu_dispatch, NULL);
+    socketKernelClienteDispatch = crear_conexion_con_cpu_dispatch();
 
-    pthread_join(hiloConexionDispatch, NULL);
+    // pthread_t hiloConexionDispatch;
+    //  pthread_t hiloConexionInterrupt;
+
+    // pthread_create(&hiloConexionDispatch, NULL, (void *)escuchar_a_cpu_dispatch, NULL);
+
+    //    pthread_join(hiloConexionDispatch, NULL);
 
     // pthread_create(&hiloConexionInterrupt, NULL, (void *)conectar_cpu_interrupt, (void *)"Soy Kernel a CPU Interrupt");
     // pthread_join(hiloConexionInterrupt, NULL);
-
-    int socketKernel = iniciar_servidor_kernel(logger);
-    socketKernelClienteDispatch = crear_conexion_con_cpu_dispatch();
 
     inicializar_semaforos();
     inicializar_colas_procesos();
@@ -43,25 +43,23 @@ int main(int argc, char *argv[])
 void escuchar_a_cpu_dispatch()
 {
 
-    int socketCliente = esperar_cliente(socketKernelClienteDispatch);
-    log_info(logger, "Se conectó el CPU Dispatch...");
-
     char *mensaje;
 
     while (true)
     {
-        cod_op codOp = obtener_codigo_operacion(socketCliente);
+        log_info(logger, "Esperando mensaje de CPU dispatch (se bloquea el socke kernel dispatch)....");
+        cod_op codOp = obtener_codigo_operacion(socketKernelClienteDispatch);
 
         switch (codOp)
         {
         case MENSAJE_CLIENTE_P:
-            mensaje = obtener_mensaje(socketCliente);
+            mensaje = obtener_mensaje(socketKernelClienteDispatch);
             log_info(logger, "Recibí el mensaje: %s", mensaje);
             break;
 
         case DESCONEXION_CLIENTE_P:
             log_info(logger, "Se desconectó el CPU Dispatch... %d", codOp);
-
+            return 1;
             break;
 
         default:

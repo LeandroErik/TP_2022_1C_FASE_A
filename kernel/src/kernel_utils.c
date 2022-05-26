@@ -104,72 +104,12 @@ void recibir_mensajes(int socketCliente)
 
             break;
 
-        case IMAGEN_PCB_P:
-            log_info(logger, "Recibi una imagen de un proceso");
-            recibir_imagen_pcb(socketCliente);
-            break;
-
         default:
             log_warning(logger, "Operación desconocida.");
             break;
         }
     }
     log_destroy(logger);
-}
-
-void recibir_imagen_pcb(int socket)
-{
-
-    t_list *listaPcb = recibir_paquete(socket);
-    pcb *proceso = deserializar_pcb_p(listaPcb);
-
-    int estadoProceso = proceso->estado;
-
-    // segun el estado del proceso vamos a cambiarlo de cola
-    //
-
-    queue_pop(colaEjecutando);
-    switch (estadoProceso)
-    {
-    case LISTO:
-        agregar_proceso_listo(proceso);
-        break;
-
-    case EJECUTANDO: // cuando la instruccion es NO-OP
-        // no hacemos nada
-        agregar_proceso_ejecutando(proceso);
-        break;
-
-    case BLOQUEADO:
-        agregar_proceso_bloqueado(proceso);
-        break;
-
-    case SUSPENDIDO_LISTO:
-        agregar_proceso_suspendido_listo(proceso);
-        break;
-
-    case SUSPENDIDO_BLOQUEADO:
-        agregar_proceso_suspendido_bloqueado(proceso);
-        break;
-
-    case FINALIZADO:
-        // no hacemos nada
-        break;
-
-    default:
-        log_info(logger, "Estado de proceso no valido");
-
-        break;
-    }
-}
-
-void sacar_de_cola_ejecutando()
-{
-    pthread_mutex_lock(&mutexColaEjecutando);
-
-    queue_pop(colaEjecutando);
-
-    pthread_mutex_unlock(&mutexColaEjecutando);
 }
 
 void *iniciar_escucha(int socketServidor)
@@ -227,9 +167,9 @@ char *leer_cola(t_queue *cola)
     for (int i = 0; i < queue_size(cola); i++)
     {
 
-        pthread_mutex_lock(&mutex_cola);
+        pthread_mutex_lock(&mutex_proceso_listo);
         pcb *proceso_actual = queue_peek_at(cola, i);
-        pthread_mutex_unlock(&mutex_cola);
+        pthread_mutex_unlock(&mutex_proceso_listo);
 
         string_append(&out, "[");
 
@@ -239,7 +179,7 @@ char *leer_cola(t_queue *cola)
     return out;
 }
 
-void enviar_pcb(pcb *proceso, int socket, t_log *logger)
+void enviar_pcb(pcb *proceso, int socketCPU, t_log *logger)
 {
     t_paquete *paquete = crear_paquete(IMAGEN_PCB_P);
 
@@ -248,11 +188,10 @@ void enviar_pcb(pcb *proceso, int socket, t_log *logger)
     agregar_a_paquete(paquete, &(proceso->proxima_instruccion), sizeof(int));
     agregar_a_paquete(paquete, &(proceso->tabla_de_paginas), sizeof(int));
     agregar_a_paquete(paquete, &(proceso->estimacion_rafaga), sizeof(float));
-    agregar_a_paquete(paquete, &(proceso->estado), sizeof(int));
 
     agregar_lista_a_paquete(paquete, proceso);
 
-    enviar_paquete(paquete, socket);
+    enviar_paquete(paquete, socketCPU);
 
-    // TODO: liberar la memoria correspondiente al paquete.
+    eliminar_paquete(paquete);
 }

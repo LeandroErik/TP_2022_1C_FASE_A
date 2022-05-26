@@ -23,6 +23,7 @@ t_queue *colaSuspendidoListo;
 
 /*semaforos*/
 pthread_mutex_t mutexNumeroProceso;
+pthread_mutex_t mutex_proceso_listo;
 
 pthread_mutex_t mutexColaNuevos;
 pthread_mutex_t mutexColaListos;
