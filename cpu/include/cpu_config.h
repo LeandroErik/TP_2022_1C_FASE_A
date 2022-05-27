@@ -1,26 +1,25 @@
 #ifndef CPU_CONFIG_H
 #define CPU_CONFIG_H
 
-#include <commons/config.h>
+#include <protocol.h>
 
-typedef struct CPU_Config
+typedef struct CpuConfig
 {
-  char *ENTRADAS_TLB;
-  char *REEMPLAZO_TLB;
-  char *RETARDO_NOOP;
-  char *IP_MEMORIA;
-  char *IP_CPU;
-  char *PUERTO_MEMORIA;
-  char *PUERTO_ESCUCHA_DISPATCH;
-  char *PUERTO_ESCUCHA_INTERRUPT;
+  int TLB_INPUTS;
+  char *TLB_REPLACE;
+  int NOOP_DELAY;
+  char *IP_MEMORY;
+  char *PORT_MEMORY;
+  char *PORT_KERNEL_DISPATCH;
+  char *PORT_KERNEL_INTERRUPT;
+} CpuConfig;
 
-} CPU_Config;
-
-CPU_Config CPU_CONFIG;
+CpuConfig CPU_CONFIG;
 
 /**
- * @brief Obtiene los parámetros dados por el archivo de configuración "CPU.config"
+ * @brief Fills CPU_CONFIG variable with CPU configurations by file.
  *
+ * @param config Configuration object.
  */
-void obtener_configuraciones_cpu(void);
+void fill_cpu_config(Config *config);
 #endif

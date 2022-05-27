@@ -1,55 +1,53 @@
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef CPU_UTILS_H
+#define CPU_UTILS_H
 
-#include <socket/servidor.h>
-#include <socket/cliente.h>
+#include <socket/client.h>
+#include <socket/server.h>
 #include <cpu_config.h>
-#include <commons/log.h>
-#include <socket/protocolo.h>
-#include <commons/collections/list.h>
-
-t_log *logger;
+#include <cpu_thread.h>
 
 /**
- * @brief Iniciar el servidor del módulo CPU para conectar el Módulo de Kernel (como cliente).
+ * @brief Initializes a logger in CPU Module.
  *
- * @param logger Logger de CPU.
- * @param puerto Puerto de CPU (Dispatch o Interrupt)
- *
- * @return Socket del servidor CPU (int).
+ * @return Logger object.
  */
-int iniciar_servidor_cpu(t_log *logger, char *puerto);
+Logger *init_cpu_logger(void);
 
 /**
- * @brief Obtener el socket del Módulo de Kernel.
+ * @brief Starts a Server CPU in dispatch port.
  *
- * @param socketCPU Socket del servidor CPU (int).
- * @param logger Logger de CPU.
- *
- * @return Socket de Kernel (int).
+ * @return Socket of client.
  */
-int obtener_socket_kernel(int socketCPU, t_log *logger);
+int start_cpu_dispatch_server(void);
 
 /**
- * @brief Apagar el servidor de CPU.
+ * @brief Starts a Server CPU in interrupt port.
  *
- * @param socketKernel Socket del servidor CPU (int).
- * @param logger Logger de CPU.
+ * @return Socket of client.
  */
-void apagar_servidor_cpu(int socketCPU, t_log *logger);
+int start_cpu_interrupt_server(void);
 
 /**
- * @brief Crear conexion con el modulo Memoria.
+ * @brief Creates a connection with Server Memory.
  *
- * @return Socket de Memoria.
+ * @return Socket of client.
  */
-int crear_conexion_con_memoria(void);
+int connect_to_memory_server();
 
 /**
- * @brief Liberar la conexion con el modulo Memoria.
+ * @brief Persists instruction lines in logger.
  *
- * @param socketCpu Socket del CPU.
+ * @param logger Logger.
+ * @param instructionsList Instructions list.
  */
-void liberar_conexion_con_memoria(int socketCpu);
+void show_instruction_lines(Logger *logger, List *instructionsList);
+
+/**
+ * @brief Persists PCB in logger.
+ *
+ * @param logger Logger.
+ * @param pcb PCB.
+ */
+void show_PCB(Logger *logger, Pcb *pcb);
 
 #endif

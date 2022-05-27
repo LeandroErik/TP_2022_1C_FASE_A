@@ -1,126 +1,72 @@
-#ifndef KERNEL_UTILS_H_
-#define KERNEL_UTILS_H_
+#ifndef KERNEL_UTILS_H
+#define KERNEL_UTILS_H
 
-#include <socket/servidor.h>
-#include <socket/cliente.h>
-#include <commons/config.h>
-#include <commons/log.h>
-#include <pthread.h>
-#include <proceso.h>
-#include <socket/protocolo.h>
-#include <commons/collections/list.h>
+#include <socket/server.h>
+#include <socket/client.h>
+#include <kernel_config.h>
+#include <kernel_thread.h>
 #include <commons/string.h>
 
-typedef struct
-{
-    char *IP_KERNEL;
-    char *IP_CPU;
-    char *IP_MEMORIA;
-    char *PUERTO_MEMORIA;
-    char *PUERTO_CPU_DISPATCH;
-    char *PUERTO_CPU_INTERRUPT;
-    char *PUERTO_ESCUCHA;
-    char *ALGORITMO_PLANIFICACION;
-    int ESTIMACION_INICIAL;
-    double ALFA;
-    int GRADO_MULTIPROGRAMACION;
-    int TIEMPO_MAXIMO_BLOQUEADO;
-
-} kernel_config;
-
-kernel_config valores_config;
-
-t_log *logger;
-
-int id_proceso_total;
-
-t_list *deserializar_lineas_codigo(t_list *);
+int globalProgramID;
 
 /**
- * @brief Carga datos del archivo config en un struct valores_config.
+ * @brief Initializes a logger in Kernel Module.
  *
+ * @return Logger object.
  */
-void cargar_configuracion(void);
+Logger *init_kernel_logger(void);
 
 /**
- * @brief Iniciar el servidor del módulo Kernel para conectar el Módulo de Consola (como cliente).
+ * @brief Starts a Server Kernel.
  *
- * @param logger Logger de Kernel.
- *
- * @return Socket del servidor Kernel (int).
+ * @return Socket of client.
  */
-int iniciar_servidor_kernel(t_log *logger);
+int start_kernel_server(void);
 
 /**
- * @brief Obtener el socket del Módulo de Consola.
+ * @brief Fills the instruction lines of a package and returns its process size.
  *
- * @param socketKernel Socket del servidor Kernel (int).
- * @param logger Logger de Kernel.
- *
- * @return Socket de Consola (int).
+ * @param instructionList Instruction lines.
+ * @param clientSocket Socket of client.
+ * @return Process size.
  */
-int obtener_socket_consola(int socketKernel, t_log *logger);
+int fill_instruction_lines(List *instructionList, int clientSocket);
 
 /**
- * @brief Apagar el servidor de Kernel.
+ * @brief Creates a PCB object.
  *
- * @param socketKernel Socket del servidor Kernel (int).
- * @param logger Logger de Kernel.
+ * @param instructionsList Instructions list.
+ * @param processSize Process size.
+ * @return PCB.
  */
-void apagar_servidor_kernel(int socketKernel, t_log *logger);
+Pcb *create_PCB(List *instructionsList, int processSize);
 
 /**
- * @brief Conectar Kernel con el servidor de CPU a través del puerto Dispatch.
+ * @brief Generates a PCB using the instructions list passed by client.
  *
- * @return Socket de Kernel.
+ * @param clientSocket Socket of client.
  */
-int crear_conexion_con_cpu_dispatch(void);
+Pcb *generate_PCB(int clientSocket);
 
 /**
- * @brief Conectar Kernel con el servidor de CPU a través del puerto Interrupt.
+ * @brief Creates a connection with Server CPU using Dispatch Port.
  *
- * @return Socket de Kernel.
+ * @return Socket of client.
  */
-int crear_conexion_con_cpu_interrupt(void);
+int connect_to_cpu_dispatch_server(void);
 
 /**
- * @brief Liberar la conexión con el servidor del CPU.
+ * @brief Creates a connection with Server CPU using Interrupt Port.
  *
- * @param socketKernel Socket del Kernel (int).
+ * @return Socket of client.
  */
-void liberar_conexion_con_cpu(int socketKernel);
+int connect_to_cpu_interrupt_server(void);
 
 /**
- * @brief Conectar Kernel con el servidor de Memoria.
+ * @brief Creates a connection with Server Memory.
  *
- * @return Socket de Kernel.
+ * @return Socket of client.
  */
-int crear_conexion_con_memoria(void);
-
-/**
- * @brief escucha mensajes de un determinado socket.
- *
- * @param socket Socket del cual recibe mensajes (int).
- */
-void recibir_mensajes(int);
-
-/**
- * @brief escucha peticiones de conexion.
- *
- * @param socketServidor Socket del servidor para aceptar clientes (int).
- */
-void *iniciar_escucha(int);
-
-/**
- * @brief conexion con cpu
- *
- */
-void conectar_cpu(void);
-
-/**
- * @brief conexion con memoria
- *
- */
-void conectar_memoria(void);
+int connect_to_memory_server(void);
 
 #endif

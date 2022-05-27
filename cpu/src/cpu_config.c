@@ -1,14 +1,12 @@
 #include <cpu_config.h>
 
-void obtener_configuraciones_cpu(void)
+void fill_cpu_config(Config *config)
 {
-  t_config *config = config_create("CPU.config");
-  CPU_CONFIG.ENTRADAS_TLB = config_get_string_value(config, "ENTRADAS_TLB");
-  CPU_CONFIG.REEMPLAZO_TLB = config_get_string_value(config, "REEMPLAZO_TLB");
-  CPU_CONFIG.RETARDO_NOOP = config_get_string_value(config, "RETARDO_NOOP");
-  CPU_CONFIG.IP_MEMORIA = config_get_string_value(config, "IP_MEMORIA");
-  CPU_CONFIG.IP_CPU = CPU_CONFIG.IP_MEMORIA;
-  CPU_CONFIG.PUERTO_MEMORIA = config_get_string_value(config, "PUERTO_MEMORIA");
-  CPU_CONFIG.PUERTO_ESCUCHA_DISPATCH = config_get_string_value(config, "PUERTO_ESCUCHA_DISPATCH");
-  CPU_CONFIG.PUERTO_ESCUCHA_INTERRUPT = config_get_string_value(config, "PUERTO_ESCUCHA_INTERRUPT");
+  CPU_CONFIG.TLB_INPUTS = config_get_int_value(config, "TLB_INPUTS");
+  CPU_CONFIG.TLB_REPLACE = config_get_string_value(config, "TLB_REPLACE");
+  CPU_CONFIG.NOOP_DELAY = config_get_int_value(config, "NOOP_DELAY");
+  CPU_CONFIG.IP_MEMORY = config_get_string_value(config, "IP_MEMORY");
+  CPU_CONFIG.PORT_MEMORY = config_get_string_value(config, "PORT_MEMORY");
+  CPU_CONFIG.PORT_KERNEL_DISPATCH = config_get_string_value(config, "PORT_KERNEL_DISPATCH");
+  CPU_CONFIG.PORT_KERNEL_INTERRUPT = config_get_string_value(config, "PORT_KERNEL_INTERRUPT");
 }

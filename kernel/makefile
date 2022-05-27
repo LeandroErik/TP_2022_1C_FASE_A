@@ -42,7 +42,7 @@ release: $(BIN)
 
 .PHONY: clean
 clean:
-	-rm -rfv obj bin
+	-rm -rfv obj bin *.log
 
 .PHONY: watch
 watch:

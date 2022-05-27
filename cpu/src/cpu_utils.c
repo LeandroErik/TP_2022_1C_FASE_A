@@ -1,32 +1,45 @@
 #include <cpu_utils.h>
 
-int iniciar_servidor_cpu(t_log *logger, char *puerto)
+Logger *init_cpu_logger(void)
 {
-	int socketCPU = iniciar_servidor(CPU_CONFIG.IP_CPU, puerto);
-	log_info(logger, "Módulo CPU listo para recibir el Módulo Kernel");
-	return socketCPU;
+  return log_create("CPU.log", "CPU", true, LOG_LEVEL_INFO);
 }
 
-int obtener_socket_kernel(int socketCPU, t_log *logger)
+int start_cpu_dispatch_server(void)
 {
-	int socketCliente = esperar_cliente(socketCPU);
-	log_info(logger, "Se conectó el Módulo de Kernel...");
-
-	return socketCliente;
+  return start_server(CPU_CONFIG.IP_MEMORY, CPU_CONFIG.PORT_KERNEL_DISPATCH);
 }
 
-void apagar_servidor_cpu(int socketCPU, t_log *logger)
+int start_cpu_interrupt_server(void)
 {
-	apagar_servidor(socketCPU);
-	log_error(logger, "Kernel se desconectó. Apagando Servidor CPU.");
+  return start_server(CPU_CONFIG.IP_MEMORY, CPU_CONFIG.PORT_KERNEL_INTERRUPT);
 }
 
-int crear_conexion_con_memoria(void)
+int connect_to_memory_server(void)
 {
-	return crear_conexion_con_servidor(CPU_CONFIG.IP_MEMORIA, CPU_CONFIG.PUERTO_MEMORIA);
+  return create_server_connection(CPU_CONFIG.IP_MEMORY, CPU_CONFIG.PORT_MEMORY);
 }
 
-void liberar_conexion_con_memoria(int socketCpu)
+void show_instruction_lines(Logger *logger, List *instructions)
 {
-	liberar_conexion_con_servidor(socketCpu);
+  InstructionLine *instruction;
+
+  for (int i = 0; i < list_size(instructions); i++)
+  {
+    instruction = list_get(instructions, i);
+    log_info(logger, "Instruction Nº %d: %s\t- Param 1: %d\t- Param 2: %d", i, instruction->instructionName, instruction->params[0], instruction->params[1]);
+  }
+
+  delete_instruction_line(instruction);
+  list_destroy(instructions);
+}
+
+void show_PCB(Logger *logger, Pcb *pcb)
+{
+  log_info(logger, "PCB Nº %d", pcb->pid);
+  log_info(logger, "Process Size: %d", pcb->size);
+  log_info(logger, "Burst Estimation: %f", pcb->burstEstimation);
+  log_info(logger, "State: %d", pcb->scene->state);
+  log_info(logger, "I/O Blocked Time: %d", pcb->scene->ioBlockedTime);
+  show_instruction_lines(logger, pcb->instructions);
 }

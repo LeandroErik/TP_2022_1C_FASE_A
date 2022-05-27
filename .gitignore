@@ -1,6 +1,6 @@
 bin/
 obj/
 *.log
+*.txt
 .vscode/
-.ghc
-.DS_Store
+commons/

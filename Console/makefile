@@ -61,6 +61,7 @@ obj/%.o: src/%.c $(SRCS_H) $(DEPS) | $(dir $(OBJS))
 $(DEPS): $$(shell find $$(patsubst %bin/,%src/,$$(dir $$@)) -iname "*.c") \
 	$$(shell find $$(patsubst %bin/,%include/,$$(dir $$@)) -iname "*.h")
 	make --no-print-directory -C $(patsubst %bin/,%,$(dir $@))
+	> $@.log
 
 $(sort $(dir $(BIN) $(OBJS))):
 	mkdir -pv $@
