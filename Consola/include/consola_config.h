@@ -17,4 +17,5 @@ ConsolaConfig CONSOLA_CONFIG;
  * @param config Configuración.
  */
 void rellenar_configuracion_consola(Config *config);
+
 #endif

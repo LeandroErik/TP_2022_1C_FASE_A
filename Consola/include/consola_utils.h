@@ -114,7 +114,7 @@ void rellenar_lista_de_instrucciones(Lista *lista, FILE *file);
  * @brief Termina un módulo de Consola.
  *
  * @param socket Socket.
- * @param config Config.
+ * @param config Configuración.
  * @param logger Logger.
  * @param lista Lista.
  * @param archivo Archivo.
