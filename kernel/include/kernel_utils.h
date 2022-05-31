@@ -67,7 +67,6 @@ int conectar_con_cpu_dispatch();
 int conectar_con_cpu_interrupt();
 
 /**
- * @brief Creates a connection with Server Memory.
  * @brief Conecta con Memoria.
  *
  * @return Socket de Memoria.
