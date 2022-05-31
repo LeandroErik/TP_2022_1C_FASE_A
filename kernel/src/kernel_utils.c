@@ -26,7 +26,7 @@ Pcb *crear_pcb(Lista *listaInstrucciones, int tamanioProceso)
 {
   Pcb *pcb = malloc(sizeof(Pcb));
 
-  pcb->pid = ++idProcesoGlobal;
+  pcb->pid = idProcesoGlobal++;
   pcb->tamanio = tamanioProceso;
   pcb->contadorPrograma = 0;
   pcb->tablaPaginas = 0;
