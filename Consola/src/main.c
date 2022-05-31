@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
   // char* direccionArchivo = argv[1];
   //  int tamanioProceso = atoi(argv[2]);
 
-  char *direccionArchivo = "/pseudocodigo.txt";
+  char *direccionArchivo = "./pseudocodigo.txt";
   int tamanioProceso = 100;
 
   log_info(logger, "Conectando con Servidor Kernel...");
@@ -25,22 +25,29 @@ int main(int argc, char *argv[])
 
   if (socketKernel < 0)
   {
-    log_error(logger, "Conexión rechazada. El servidor no está disponible.");
+    log_error(logger, "Conexión rechazada. El Servidor Kernel no está disponible.");
     return EXIT_FAILURE;
   }
 
   log_info(logger, "Conexión aceptada. Iniciando cliente...");
 
   FILE *pseudocodigo = fopen(direccionArchivo, "r");
+
+  if (pseudocodigo == NULL)
+  {
+    log_error(logger, "No se pudo abrir el archivo de pseudocódigo.");
+    return EXIT_FAILURE;
+  }
+
   Lista *listaInstrucciones = list_create();
   rellenar_lista_de_instrucciones(listaInstrucciones, pseudocodigo);
 
   Paquete *paquete = crear_paquete(LINEAS_CODIGO);
   serializar_lista_de_instrucciones(paquete, listaInstrucciones, tamanioProceso);
   enviar_paquete_a_servidor(paquete, socketKernel);
-  log_info(logger, "Enviando lista de instrucciones...");
+  log_info(logger, "Enviando Lista de Instrucciones al Servidor Kernel...");
 
-  log_warning(logger, "Saliendo del servidor...");
+  log_warning(logger, "Saliendo del Servidor Kernel...");
   terminar_consola(socketKernel, config, logger, listaInstrucciones, pseudocodigo, paquete);
 
   return EXIT_SUCCESS;
