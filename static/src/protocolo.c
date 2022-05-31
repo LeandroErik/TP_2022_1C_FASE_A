@@ -27,7 +27,7 @@ void eliminar_linea_instruccion(LineaInstruccion *lineaInstruccion)
   }
 }
 
-void eliminar_PCB(Pcb *pcb)
+void eliminar_pcb(Pcb *pcb)
 {
   if (pcb != NULL)
   {
@@ -204,7 +204,7 @@ void deserializar_lista_de_instrucciones(Lista *listaInstrucciones, Lista *lista
   }
 }
 
-void serializar_PCB(Paquete *paquete, Pcb *pcb)
+void serializar_pcb(Paquete *paquete, Pcb *pcb)
 {
   int cantidadInstrucciones = list_size(pcb->instrucciones);
 
