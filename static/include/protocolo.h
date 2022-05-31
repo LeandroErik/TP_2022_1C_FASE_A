@@ -23,10 +23,21 @@ typedef enum CodigoOperacion
 typedef enum Estado
 {
   EJECUTANDO,
-  ENTRADA_SALIDA,
+  BLOQUEADO_IO,
   INTERRUPCION_EXTERNA,
   TERMINADO
 } Estado;
+
+typedef enum TipoEjecucion
+{
+  DESCONOCIDO = -1,
+  NOOP,
+  IO,
+  READ,
+  COPY,
+  WRITE,
+  EXIT
+} TipoEjecucion;
 typedef struct Escenario
 {
   Estado estado;
