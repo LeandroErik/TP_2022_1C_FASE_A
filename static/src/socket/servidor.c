@@ -19,10 +19,10 @@ int iniciar_servidor(char *ip, char *puerto)
 
   bind(socketServidor, servinfo->ai_addr, servinfo->ai_addrlen);
 
-  int escucha = listen(socketServidor, SOMAXCONN);
+  bool escucha = !(listen(socketServidor, SOMAXCONN));
   free(servinfo);
 
-  return escucha < 0 ? DESCONEXION : socketServidor;
+  return escucha ? socketServidor : DESCONEXION;
 }
 
 int esperar_cliente(int socketServidor)

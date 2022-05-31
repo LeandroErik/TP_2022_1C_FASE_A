@@ -15,10 +15,10 @@ int crear_conexion_con_servidor(char *ip, char *puerto)
                              servinfo->ai_socktype,
                              servinfo->ai_protocol);
 
-  int conexion = connect(socketCliente, servinfo->ai_addr, servinfo->ai_addrlen);
+  bool conexion = !(connect(socketCliente, servinfo->ai_addr, servinfo->ai_addrlen));
   freeaddrinfo(servinfo);
 
-  return conexion < 0 ? DESCONEXION : socketCliente;
+  return conexion ? socketCliente : DESCONEXION;
 }
 
 void liberar_conexion_con_servidor(int socketCliente)
