@@ -49,7 +49,7 @@ void rellenar_parametros_de_instruccion(char **tokens, int cantidadTokens)
 char **obtener_tokens(char *string)
 {
   short cantidadTokens = cantidad_de_tokens(string);
-  char **tokens = string_n_split(string, cantidadTokens, "");
+  char **tokens = string_n_split(string, cantidadTokens, " ");
 
   rellenar_parametros_de_instruccion(tokens, cantidadTokens);
 
