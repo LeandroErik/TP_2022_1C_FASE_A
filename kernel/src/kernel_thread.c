@@ -8,6 +8,13 @@ void esperar_consola(int socketKernel)
     log_info(logger, "Esperando conexiones de Consola...");
     int socketConsola = esperar_cliente(socketKernel);
 
+    if (socketConsola < 0)
+    {
+      log_warning(logger, "Consola desconectada.");
+      log_destroy(logger);
+      return;
+    }
+
     log_info(logger, "Conexión de Consola establecida.");
     log_destroy(logger);
 
@@ -42,7 +49,6 @@ void manejar_paquete_consola(int socketConsola)
     default:
       break;
     }
-    log_destroy(logger);
   }
 }
 
@@ -54,6 +60,7 @@ int manejar_envio_pcb(Logger *logger, int socketConsola)
   if (socketDispatch < 0)
   {
     log_error(logger, "Conexión rechazada. El Servidor CPU/Puerto Dispatch no está disponible.");
+    log_destroy(logger);
     return EXIT_FAILURE;
   }
 
@@ -83,6 +90,7 @@ void manejar_conexion_cpu_interrupcion()
   if (socketInterrupcion < 0)
   {
     log_error(logger, "Conexión rechazada. El Servidor CPU/Puerto Interrupción no está disponible.");
+    log_destroy(logger);
     return;
   }
 
@@ -103,9 +111,10 @@ void manejar_conexion_memoria()
   log_info(logger, "Conectando con Servidor Memoria...");
   int socketMemoria = conectar_con_memoria();
 
-  if (socketMemoria <= 0)
+  if (socketMemoria < 0)
   {
     log_error(logger, "Conexión rechazada. El Servidor Memoria no está disponible.");
+    log_destroy(logger);
     return;
   }
 
@@ -113,6 +122,7 @@ void manejar_conexion_memoria()
 
   log_info(logger, "Enviando Mensaje de inicio al Servidor Memoria...");
   enviar_mensaje_a_servidor("Kernel", socketMemoria);
+  log_info(logger, "Mensaje de inicio enviado.");
 
   log_info(logger, "Saliendo del Servidor Memoria...");
   liberar_conexion_con_servidor(socketMemoria);
