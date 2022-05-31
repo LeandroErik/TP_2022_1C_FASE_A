@@ -4,37 +4,39 @@
 #include <kernel_utils.h>
 
 /**
- * @brief Waits a console to enter the server and receives its instruction lines.
+ * @brief Espera a que una consola se conecte al servidor y recibe sus instrucciones.
  *
- * @param kernelSocket Socket of Kernel.
+ * @param socketKernel Socket de Kernel.
  */
-void wait_console(int kernelSocket);
+void esperar_consola(int socketKernel);
 
 /**
- * @brief Manages a package sent by a console.
+ * @brief Maneja un paquete enviado por consola.
  *
- * @param consoleSocket Socket of Console.
+ * @param socketConsola Socket de Consola.
  */
-void manage_console_package(int consoleSocket);
+void manejar_paquete_consola(int socketConsola);
 
 /**
- * @brief Manages a PCB received and send it to CPU via Dispatch.
+ * @brief Maneja la generación un PCB en base a lo recibido por consola y el envío al CPU via Dispatch.
  *
  * @param logger Logger.
- * @param consoleSocket Socket of Console.
+ * @param socketConsola Socket de Consola.
+ *
+ * @return 0 si el PCB fue enviado correctamente, 1 en caso contrario.
  */
-void manage_PCB(Logger *logger, int consoleSocket);
+int manejar_envio_pcb(Logger *logger, int socketConsola);
 
 /**
- * @brief Manages a connection to CPU using Interrupt port.
+ * @brief Maneja una conexión con CPU usando el puerto de Interrupción.
  *
  */
-void manage_connection_interrupt(void);
+void manejar_conexion_cpu_interrupcion();
 
 /**
- * @brief Manages a connection to Memory.
+ * @brief Maneja una conexión con Memoria.
  *
  */
-void manage_connection_memory(void);
+void manejar_conexion_memoria();
 
 #endif

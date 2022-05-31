@@ -1,66 +1,65 @@
 #include <kernel_utils.h>
 
-Logger *init_kernel_logger(void)
+Logger *iniciar_logger_kernel()
 {
-  return log_create("Kernel.log", "Kernel", true, LOG_LEVEL_INFO);
+  return log_create("Kernel.log", "Kernel", 1, LOG_LEVEL_INFO);
 }
 
-int start_kernel_server()
+int iniciar_servidor_kernel()
 {
-  return start_server(KERNEL_CONFIG.IP, KERNEL_CONFIG.PORT_KERNEL);
+  return iniciar_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_KERNEL);
 }
 
-int fill_instruction_lines(List *instructionsList, int clientSocket)
+int rellenar_lista_instrucciones(Lista *listaInstrucciones, int socketCliente)
 {
-  List *flattenProperties = get_package_as_list(clientSocket);
+  Lista *listaPlana = obtener_paquete_como_lista(socketCliente);
 
-  int processSize = *(int *)list_get(flattenProperties, 0);
-  deserialize_instruction_lines(instructionsList, flattenProperties, 1, 1);
+  int tamanioProceso = *(int *)list_get(listaPlana, 0);
+  deserializar_lista_de_instrucciones(listaInstrucciones, listaPlana, 1, 1);
 
-  list_destroy(flattenProperties);
+  list_destroy(listaPlana);
 
-  return processSize;
+  return tamanioProceso;
 }
 
-Pcb *create_PCB(List *instructionsList, int processSize)
+Pcb *crear_pcb(Lista *listaInstrucciones, int tamanioProceso)
 {
   Pcb *pcb = malloc(sizeof(Pcb));
 
-  pcb->pid = globalProgramID;
-  pcb->size = processSize;
-  pcb->programCounter = 0;
-  pcb->pageTable = 0;
-  pcb->burstEstimation = KERNEL_CONFIG.INITIAL_ESTIMATION;
-  pcb->scene = malloc(sizeof(Scene));
-  pcb->scene->state = EXECUTING;
-  pcb->scene->ioBlockedTime = 0;
-  pcb->instructions = list_duplicate(instructionsList);
+  pcb->pid = ++idProcesoGlobal;
+  pcb->tamanio = tamanioProceso;
+  pcb->contadorPrograma = 0;
+  pcb->tablaPaginas = 0;
+  pcb->estimacionRafaga = KERNEL_CONFIG.ESTIMACION_INICIAL;
+  pcb->escenario = malloc(sizeof(Escenario));
+  pcb->escenario->estado = EJECUTANDO;
+  pcb->escenario->tiempoBloqueadoIO = 0;
+  pcb->instrucciones = list_duplicate(listaInstrucciones);
 
-  list_destroy(instructionsList);
-  globalProgramID++;
+  list_destroy(listaInstrucciones);
 
   return pcb;
 }
 
-Pcb *generate_PCB(int clientSocket)
+Pcb *generar_pcb(int socketCliente)
 {
-  List *instructionsList = list_create();
-  int processSize = fill_instruction_lines(instructionsList, clientSocket);
+  Lista *listaInstrucciones = list_create();
+  int tamanioProceso = rellenar_lista_instrucciones(listaInstrucciones, socketCliente);
 
-  return create_PCB(instructionsList, processSize);
+  return crear_pcb(listaInstrucciones, tamanioProceso);
 }
 
-int connect_to_cpu_dispatch_server(void)
+int conectar_con_cpu_dispatch()
 {
-  return create_server_connection(KERNEL_CONFIG.IP, KERNEL_CONFIG.PORT_CPU_DISPATCH);
+  return crear_conexion_con_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
 }
 
-int connect_to_cpu_interrupt_server(void)
+int conectar_con_cpu_interrupt()
 {
-  return create_server_connection(KERNEL_CONFIG.IP, KERNEL_CONFIG.PORT_CPU_INTERRUPT);
+  return crear_conexion_con_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
 }
 
-int connect_to_memory_server(void)
+int conectar_con_memoria()
 {
-  return create_server_connection(KERNEL_CONFIG.IP, KERNEL_CONFIG.PORT_MEMORY);
+  return crear_conexion_con_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_MEMORIA);
 }

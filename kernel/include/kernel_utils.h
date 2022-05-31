@@ -1,72 +1,77 @@
 #ifndef KERNEL_UTILS_H
 #define KERNEL_UTILS_H
 
-#include <socket/server.h>
-#include <socket/client.h>
+#include <socket/servidor.h>
+#include <socket/cliente.h>
 #include <kernel_config.h>
 #include <kernel_thread.h>
 #include <commons/string.h>
 
-int globalProgramID;
+int idProcesoGlobal;
 
 /**
- * @brief Initializes a logger in Kernel Module.
+ * @brief Iniciar un logger en el Módulo Kernel.
  *
- * @return Logger object.
+ * @return Logger.
  */
-Logger *init_kernel_logger(void);
+Logger *iniciar_logger_kernel();
 
 /**
- * @brief Starts a Server Kernel.
+ * @brief Inicia el Servidor Kernel.
  *
- * @return Socket of client.
+ * @return Socket del cliente.
  */
-int start_kernel_server(void);
+int iniciar_servidor_kernel();
 
 /**
- * @brief Fills the instruction lines of a package and returns its process size.
+ * @brief Rellena las líneas de instrucciones de un paquete y devuelve el tamaño del proceso.
  *
- * @param instructionList Instruction lines.
- * @param clientSocket Socket of client.
- * @return Process size.
+ * @param listaInstrucciones Lista de instrucciones.
+ * @param socketConsola Socket de Consola.
+ *
+ * @return Tamaño del proceso.
  */
-int fill_instruction_lines(List *instructionList, int clientSocket);
+int rellenar_lista_instrucciones(Lista *listaInstrucciones, int socketCliente);
 
 /**
- * @brief Creates a PCB object.
+ * @brief Crea un PCB.
  *
- * @param instructionsList Instructions list.
- * @param processSize Process size.
+ * @param listaInstrucciones Lista de instrucciones.
+ * @param tamanioProceso Tamaño del proceso.
+ *
  * @return PCB.
  */
-Pcb *create_PCB(List *instructionsList, int processSize);
+Pcb *crear_pcb(Lista *listaInstrucciones, int tamanioProceso);
 
 /**
- * @brief Generates a PCB using the instructions list passed by client.
+ * @brief Genera un PCB usando la lista de instrucciones pasada por el cliente.
  *
- * @param clientSocket Socket of client.
+ * @param socketConsola Socket de Consola.
+ *
+ * @return PCB.
  */
-Pcb *generate_PCB(int clientSocket);
+Pcb *generar_pcb(int socketCliente);
 
 /**
- * @brief Creates a connection with Server CPU using Dispatch Port.
+ * @brief Conecta con CPU usando el puerto de Dispatch.
  *
- * @return Socket of client.
+ * @return Socket de CPU en el puerto de Dispatch.
  */
-int connect_to_cpu_dispatch_server(void);
+int conectar_con_cpu_dispatch();
 
 /**
- * @brief Creates a connection with Server CPU using Interrupt Port.
+ * @brief Conecta con CPU usando el puerto de Interrupt.
  *
- * @return Socket of client.
+ * @return Socket de CPU en el puerto de Interrupt.
  */
-int connect_to_cpu_interrupt_server(void);
+int conectar_con_cpu_interrupt();
 
 /**
  * @brief Creates a connection with Server Memory.
+ * @brief Conecta con Memoria.
  *
- * @return Socket of client.
+ * @return Socket de Memoria.
  */
-int connect_to_memory_server(void);
+int conectar_con_memoria();
 
 #endif

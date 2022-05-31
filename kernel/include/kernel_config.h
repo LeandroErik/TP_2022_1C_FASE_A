@@ -1,29 +1,30 @@
 #ifndef KERNEL_CONFIG_H
 #define KERNEL_CONFIG_H
 
-#include <protocol.h>
+#include <protocolo.h>
 
 typedef struct KernelConfig
 {
   char *IP;
-  char *PORT_MEMORY;
-  char *PORT_CPU_DISPATCH;
-  char *PORT_CPU_INTERRUPT;
-  char *PORT_KERNEL;
-  char *PLANNING_ALGORITHM;
-  unsigned int INITIAL_ESTIMATION;
-  float ALPHA;
-  unsigned int MULTIPROGRAMMING_LEVEL;
-  unsigned int MAX_TIME_BLOCKED;
+  char *PUERTO_MEMORIA;
+  char *PUERTO_CPU_DISPATCH;
+  char *PUERTO_CPU_INTERRUPT;
+  char *PUERTO_KERNEL;
+  char *ALGORITMO_PLANIFICACION;
+  unsigned int ESTIMACION_INICIAL;
+  float ALFA;
+  unsigned int GRADO_MULTIPROGRAMACION;
+  unsigned int TIEMPO_MAXIMO_BLOQUEADO;
 
 } KernelConfig;
 
 KernelConfig KERNEL_CONFIG;
 
 /**
- * @brief Fills KERNEL_CONFIG variable with kernel configurations by file.
+ * @brief Rellena la variable KERNEL_CONFIG con las configuraciones del kernel por archivo.
  *
- * @param config Configuration object.
+ * @param config Configuración.
  */
-void fill_kernel_config(Config *config);
+void rellenar_configuracion_kernel(Config *config);
+
 #endif

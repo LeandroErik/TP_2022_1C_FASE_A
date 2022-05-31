@@ -1,86 +1,120 @@
 #include <kernel_thread.h>
 
-void wait_console(int kernelSocket)
+void esperar_consola(int socketKernel)
 {
   while (true)
   {
-    Logger *logger = init_kernel_logger();
-    log_info(logger, "Waiting a console to connect...");
-    int consoleSocket = wait_client(kernelSocket);
+    Logger *logger = iniciar_logger_kernel();
+    log_info(logger, "Esperando conexiones de Consola...");
+    int socketConsola = esperar_cliente(socketKernel);
 
-    log_info(logger, "New console connected to server.");
+    log_info(logger, "Conexión de Consola establecida.");
     log_destroy(logger);
 
-    Thread consoleThread;
-    pthread_create(&consoleThread, NULL, (void *)manage_console_package, (void *)consoleSocket);
-    pthread_join(consoleThread, NULL);
+    Hilo hiloConsola;
+    pthread_create(&hiloConsola, NULL, (void *)manejar_paquete_consola, (void *)socketConsola);
+    pthread_join(hiloConsola, NULL);
   }
 }
 
-void manage_console_package(int consoleSocket)
+void manejar_paquete_consola(int socketConsola)
 {
   while (true)
   {
-    Logger *logger = init_kernel_logger();
-    char *message;
+    Logger *logger = iniciar_logger_kernel();
 
-    switch (get_operation_code(consoleSocket))
+    switch (obtener_codigo_operacion(socketConsola))
     {
-    case MESSAGE:
-      message = get_message_from_client(consoleSocket);
-      log_info(logger, "A console sent: %s.", message);
-      free(message);
-      break;
-
-    case CODE_LINES:
-      manage_PCB(logger, consoleSocket);
-      break;
-
-    case DISCONNECTION:
-      log_warning(logger, "A console just left my server.");
+    case DESCONEXION:
+      log_warning(logger, "Conexión de Consola terminada.");
+      log_destroy(logger);
       return;
-
+    case MENSAJE:
+      log_info(logger, "Mensaje recibido de Consola.");
+      log_info(logger, "Mensaje: %s", obtener_mensaje_del_cliente(socketConsola));
+      break;
+    case LINEAS_CODIGO:
+      log_info(logger, "Lineas de Código recibidas de Consola.");
+      if (manejar_envio_pcb(logger, socketConsola))
+        return;
+      else
+        break;
     default:
       break;
     }
+    log_destroy(logger);
   }
 }
 
-void manage_PCB(Logger *logger, int consoleSocket)
+int manejar_envio_pcb(Logger *logger, int socketConsola)
 {
+  log_info(logger, "Conectando con Servidor CPU via Dispatch en IP: %s y Puerto: %s", KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
+  int socketDispatch = conectar_con_cpu_dispatch();
 
-  log_info(logger, "Connecting to CPU Server using Dispatch port...");
-  int kernelDispatchSocket = connect_to_cpu_dispatch_server();
-
-  if (kernelDispatchSocket < 0)
+  if (socketDispatch < 0)
   {
-    log_error(logger, "Connection refused. Server not initialized.");
+    log_error(logger, "Conexión rechazada. El Servidor CPU/Puerto Dispatch no está disponible.");
+    return EXIT_FAILURE;
+  }
+
+  log_info(logger, "Conexión con Dispatch establecida.");
+
+  log_info(logger, "Generando PCB...");
+  Paquete *paquete = crear_paquete(PCB);
+  serializar_pcb(paquete, generar_pcb(socketConsola));
+
+  log_info(logger, "Enviando PCB al Servidor CPU...");
+  enviar_paquete_a_servidor(paquete, socketDispatch);
+
+  log_warning(logger, "Saliendo del Puerto Dispatch...");
+  liberar_conexion_con_servidor(socketDispatch);
+  log_destroy(logger);
+
+  return EXIT_SUCCESS;
+}
+
+void manejar_conexion_cpu_interrupcion()
+{
+  Logger *logger = iniciar_logger_kernel();
+
+  log_info(logger, "Conectando con Servidor CPU via Interrupción en IP: %s, Puerto: %s", KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
+  int socketInterrupcion = conectar_con_cpu_interrupt();
+
+  if (socketInterrupcion < 0)
+  {
+    log_error(logger, "Conexión rechazada. El Servidor CPU/Puerto Interrupción no está disponible.");
     return;
   }
 
-  log_info(logger, "Generating PCB...");
-  Package *package = create_package(PCB);
+  log_info(logger, "Conexión con Interrupción establecida.");
 
-  serialize_PCB(package, generate_PCB(consoleSocket));
+  log_info(logger, "Enviando Interrupción al Servidor CPU...");
+  enviar_mensaje_a_servidor("Interrupción externa", socketInterrupcion);
 
-  log_info(logger, "Sending PCB...");
-  send_package(package, kernelDispatchSocket);
-
-  log_info(logger, "Exiting Server.");
-  release_server_connection(kernelDispatchSocket);
+  log_warning(logger, "Saliendo del Puerto Interrupt...");
+  liberar_conexion_con_servidor(socketInterrupcion);
   log_destroy(logger);
 }
 
-void manage_connection_interrupt(void)
+void manejar_conexion_memoria()
 {
-  int kernelInterruptSocket = connect_to_cpu_interrupt_server();
-  send_message_to_server("An external interruption", kernelInterruptSocket);
-  release_server_connection(kernelInterruptSocket);
-}
+  Logger *logger = iniciar_logger_kernel();
 
-void manage_connection_memory(void)
-{
-  int kernelSocket = connect_to_memory_server();
-  send_message_to_server("Kernel", kernelSocket);
-  release_server_connection(kernelSocket);
+  log_info(logger, "Conectando con Servidor Memoria...");
+  int socketMemoria = conectar_con_memoria();
+
+  if (socketMemoria <= 0)
+  {
+    log_error(logger, "Conexión rechazada. El Servidor Memoria no está disponible.");
+    return;
+  }
+
+  log_info(logger, "Conexión con Memoria establecida.");
+
+  log_info(logger, "Enviando Mensaje de inicio al Servidor Memoria...");
+  enviar_mensaje_a_servidor("Kernel", socketMemoria);
+
+  log_info(logger, "Saliendo del Servidor Memoria...");
+  liberar_conexion_con_servidor(socketMemoria);
+  log_destroy(logger);
 }

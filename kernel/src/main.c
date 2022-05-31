@@ -2,34 +2,39 @@
 
 int main(void)
 {
-  globalProgramID = 0;
+  idProcesoGlobal = 0;
+
   Config *config = config_create("Kernel.config");
-  Logger *logger = init_kernel_logger();
+  Logger *logger = iniciar_logger_kernel();
 
-  fill_kernel_config(config);
+  rellenar_configuracion_kernel(config);
 
-  log_info(logger, "Starting Kernel Server...");
-  int kernelSocket = start_kernel_server();
+  log_info(logger, "Iniciando Servidor Kernel...");
+  int socketKernel = iniciar_servidor_kernel();
 
-  if (kernelSocket < 0)
+  if (socketKernel < 0)
   {
-    log_error(logger, "Error trying to start server.");
+    log_error(logger, "Error intentando iniciar servidor.");
     return EXIT_FAILURE;
   }
 
-  Thread consolesThread;
-  Thread connectInterruptThread;
-  Thread connectMemoryThread;
+  log_info(logger, "Servidor Kernel iniciado correctamente.");
 
-  pthread_create(&consolesThread, NULL, (void *)wait_console, (void *)kernelSocket);
-  pthread_create(&connectInterruptThread, NULL, (void *)manage_connection_interrupt, NULL);
-  pthread_create(&connectMemoryThread, NULL, (void *)manage_connection_memory, NULL);
+  Hilo hiloConsolas;
+  Hilo hiloConexionInterrupt;
+  // Hilo hiloConexionMemoria;
 
-  pthread_join(consolesThread, NULL);
-  pthread_join(connectInterruptThread, NULL);
-  pthread_join(connectMemoryThread, NULL);
+  pthread_create(&hiloConsolas, NULL, (void *)esperar_consola, (void *)socketKernel);
+  pthread_create(&hiloConexionInterrupt, NULL, (void *)manejar_conexion_cpu_interrupcion, NULL);
+  // pthread_create(&hiloConexionMemoria, NULL, (void *)manejar_conexion_memoria, NULL);
 
-  shutdown_server(kernelSocket);
+  pthread_join(hiloConsolas, NULL);
+  pthread_join(hiloConexionInterrupt, NULL);
+  // pthread_join(hiloConexionMemoria, NULL);
+
+  apagar_servidor(socketKernel);
+  log_info(logger, "Servidor Kernel finalizado.");
+
   log_destroy(logger);
   config_destroy(config);
 
