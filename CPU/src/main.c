@@ -13,7 +13,7 @@ int main(void)
 
   if (socketCpuDispatch < 0 || socketCpuInterrupt < 0)
   {
-    log_error(logger, "No se pudo iniciar el Servidor CPU.");
+    log_error(logger, "Error intentando iniciar Servidor CPU.");
     log_destroy(logger);
     return EXIT_FAILURE;
   }
