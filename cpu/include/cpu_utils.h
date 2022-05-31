@@ -1,53 +1,53 @@
 #ifndef CPU_UTILS_H
 #define CPU_UTILS_H
 
-#include <socket/client.h>
-#include <socket/server.h>
+#include <socket/cliente.h>
+#include <socket/servidor.h>
 #include <cpu_config.h>
 #include <cpu_thread.h>
 
 /**
- * @brief Initializes a logger in CPU Module.
+ * @brief Iniciar un logger en el Módulo CPU.
  *
- * @return Logger object.
+ * @return Logger.
  */
-Logger *init_cpu_logger(void);
+Logger *iniciar_logger_cpu();
 
 /**
- * @brief Starts a Server CPU in dispatch port.
+ * @brief Inicia un Servidor CPU en el puerto de Dispatch.
  *
- * @return Socket of client.
+ * @return Socket de Kernel en el puerto de Dispatch.
  */
-int start_cpu_dispatch_server(void);
+int iniciar_servidor_cpu_dispatch();
 
 /**
- * @brief Starts a Server CPU in interrupt port.
+ * @brief Inicia un Servidor CPU en el puerto de Interrupt.
  *
- * @return Socket of client.
+ * @return Socket de Kernel en el puerto de Interrupt.
  */
-int start_cpu_interrupt_server(void);
+int iniciar_servidor_cpu_interrupt();
 
 /**
- * @brief Creates a connection with Server Memory.
+ * @brief Conecta con Memoria.
  *
- * @return Socket of client.
+ * @return Socket de Memoria.
  */
-int connect_to_memory_server();
+int conectar_con_memoria();
 
 /**
- * @brief Persists instruction lines in logger.
+ * @brief Persiste las líneas de instrucciones en el logger.
  *
  * @param logger Logger.
- * @param instructionsList Instructions list.
+ * @param listaInstrucciones Lista de instrucciones.
  */
-void show_instruction_lines(Logger *logger, List *instructionsList);
+void mostrar_lineas_instrucciones(Logger *logger, Lista *listaInstrucciones);
 
 /**
- * @brief Persists PCB in logger.
+ * @brief Persiste el PCB en el logger.
  *
  * @param logger Logger.
  * @param pcb PCB.
  */
-void show_PCB(Logger *logger, Pcb *pcb);
+void mostrar_pcb(Logger *logger, Pcb *pcb);
 
 #endif

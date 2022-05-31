@@ -1,45 +1,45 @@
 #include <cpu_utils.h>
 
-Logger *init_cpu_logger(void)
+Logger *iniciar_logger_cpu()
 {
   return log_create("CPU.log", "CPU", true, LOG_LEVEL_INFO);
 }
 
-int start_cpu_dispatch_server(void)
+int iniciar_servidor_cpu_dispatch()
 {
-  return start_server(CPU_CONFIG.IP_MEMORY, CPU_CONFIG.PORT_KERNEL_DISPATCH);
+  return iniciar_servidor(CPU_CONFIG.IP, CPU_CONFIG.PUERTO_KERNEL_DISPATCH);
 }
 
-int start_cpu_interrupt_server(void)
+int iniciar_servidor_cpu_interrupt()
 {
-  return start_server(CPU_CONFIG.IP_MEMORY, CPU_CONFIG.PORT_KERNEL_INTERRUPT);
+  return iniciar_servidor(CPU_CONFIG.IP, CPU_CONFIG.PUERTO_KERNEL_INTERRUPT);
 }
 
-int connect_to_memory_server(void)
+int conectar_con_memoria()
 {
-  return create_server_connection(CPU_CONFIG.IP_MEMORY, CPU_CONFIG.PORT_MEMORY);
+  return crear_conexion_con_servidor(CPU_CONFIG.IP, CPU_CONFIG.PUERTO_MEMORIA);
 }
 
-void show_instruction_lines(Logger *logger, List *instructions)
+void mostrar_lineas_instrucciones(Logger *logger, Lista *listaInstrucciones)
 {
-  InstructionLine *instruction;
+  LineaInstruccion *lineaInstruccion;
 
-  for (int i = 0; i < list_size(instructions); i++)
+  for (int i = 0; i < list_size(listaInstrucciones); i++)
   {
-    instruction = list_get(instructions, i);
-    log_info(logger, "Instruction Nº %d: %s\t- Param 1: %d\t- Param 2: %d", i, instruction->instructionName, instruction->params[0], instruction->params[1]);
+    lineaInstruccion = list_get(listaInstrucciones, i);
+    log_info(logger, "Instrucción Nº %d: %s\t- Parámetro 1: %d\t- Parámetro 2: %d", i, lineaInstruccion->identificador, lineaInstruccion->parametros[0], lineaInstruccion->parametros[1]);
   }
 
-  delete_instruction_line(instruction);
-  list_destroy(instructions);
+  eliminar_linea_instruccion(lineaInstruccion);
+  list_destroy(listaInstrucciones);
 }
 
-void show_PCB(Logger *logger, Pcb *pcb)
+void mostrar_pcb(Logger *logger, Pcb *pcb)
 {
   log_info(logger, "PCB Nº %d", pcb->pid);
-  log_info(logger, "Process Size: %d", pcb->size);
-  log_info(logger, "Burst Estimation: %f", pcb->burstEstimation);
-  log_info(logger, "State: %d", pcb->scene->state);
-  log_info(logger, "I/O Blocked Time: %d", pcb->scene->ioBlockedTime);
-  show_instruction_lines(logger, pcb->instructions);
+  log_info(logger, "Tamaño del Proceso: %d", pcb->tamanio);
+  log_info(logger, "Estimación de Ráfaga: %f", pcb->estimacionRafaga);
+  log_info(logger, "Estado: %d", pcb->escenario->estado);
+  log_info(logger, "Tiempo de Bloqueo de I/O: %d", pcb->escenario->tiempoBloqueadoIO);
+  mostrar_lineas_instrucciones(logger, pcb->instrucciones);
 }

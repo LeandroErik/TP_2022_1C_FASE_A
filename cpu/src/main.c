@@ -3,31 +3,32 @@
 int main(void)
 {
   Config *config = config_create("CPU.config");
-  Logger *logger = init_cpu_logger();
+  Logger *logger = iniciar_logger_cpu();
 
-  fill_cpu_config(config);
+  rellenar_configuracion_cpu(config);
 
-  log_info(logger, "Starting CPU Server...");
-  int cpuDispatchSocket = start_cpu_dispatch_server();
-  int cpuInterruptSocket = start_cpu_interrupt_server();
+  log_info(logger, "Iniciando Servidor CPU...");
+  int socketCpuDispatch = iniciar_servidor_cpu_dispatch();
+  int socketCpuInterrupt = iniciar_servidor_cpu_interrupt();
 
-  if (cpuDispatchSocket < 0 || cpuInterruptSocket < 0)
+  if (socketCpuDispatch < 0 || socketCpuInterrupt < 0)
   {
-    log_error(logger, "Error trying to start server.");
+    log_error(logger, "No se pudo iniciar el Servidor CPU.");
+    log_destroy(logger);
     return EXIT_FAILURE;
   }
 
-  Thread kernelDispatchThread;
-  Thread kernelInterruptThread;
-  Thread connectMemoryThread;
+  Hilo hiloKernelDispatch;
+  Hilo hiloKernelInterrupt;
+  Hilo hiloConexionMemoria;
 
-  pthread_create(&kernelDispatchThread, NULL, (void *)wait_kernel_dispatch, (void *)cpuDispatchSocket);
-  pthread_create(&kernelInterruptThread, NULL, (void *)wait_kernel_interrupt, (void *)cpuInterruptSocket);
+  pthread_create(&hiloKernelDispatch, NULL, (void *)esperar_kernel_dispatch, (void *)socketCpuDispatch);
+  pthread_create(&hiloKernelInterrupt, NULL, (void *)esperar_kernel_interrupt, (void *)socketCpuInterrupt);
+  pthread_create(&hiloConexionMemoria, NULL, (void *)manejar_conexion_memoria, NULL);
 
-  pthread_create(&connectMemoryThread, NULL, (void *)manage_connection_memory, NULL);
-
-  pthread_join(kernelDispatchThread, NULL);
-  pthread_join(kernelInterruptThread, NULL);
+  pthread_join(hiloKernelDispatch, NULL);
+  pthread_join(hiloKernelInterrupt, NULL);
+  pthread_join(hiloConexionMemoria, NULL);
 
   log_destroy(logger);
   config_destroy(config);

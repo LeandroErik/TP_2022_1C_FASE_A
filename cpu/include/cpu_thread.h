@@ -4,37 +4,37 @@
 #include <cpu_utils.h>
 
 /**
- * @brief Waits Kernel to enter the server and receives PCBs.
+ * @brief Espera a Kernel a que se conecte al servidor y recibe sus PCBs.
  *
- * @param cpuSocket Socket of CPU in Dispatch port.
+ * @param socketCpu Socket de CPU en el puerto de Dispatch.
  */
-void wait_kernel_dispatch(int cpuSocket);
+void esperar_kernel_dispatch(int socketCpu);
 
 /**
- * @brief Waits Kernel to enter the server and receives Interrupts.
+ * @brief Espera a Kernel a que se conecte al servidor y recibe sus Interrupciones.
  *
- * @param cpuSocket Socket of CPU in Interrupt port.
+ * @param socketCpu Socket de CPU en el puerto de Interrupt.
  */
-void wait_kernel_interrupt(int cpuSocket);
+void esperar_kernel_interrupt(int socketCpu);
 
 /**
- * @brief Manages a PCB sent by Kernel.
+ * @brief Maneja un PCB enviado por Kernel.
  *
- * @param kernelSocket Socket of Kernel connected to Dispatch port.
+ * @param socketKernel Socket de Kernel conectado al puerto de Dispatch.
  */
-void manage_kernel_dispatch_package(int kernelSocket);
+void manejar_paquete_kernel_dispatch(int socketKernel);
 
 /**
- * @brief Manages an Interrupt sent by Kernel.
+ * @brief Maneja una interrupción enviada por Kernel.
  *
- * @param kernelSocket Socket of Kernel connected to Interrupt port.
+ * @param socketKernel Socket de Kernel conectado al puerto de Interrupt.
  */
-void manage_kernel_interrupt_package(int kernelSocket);
+void manejar_paquete_kernel_interrupt(int socketKernel);
 
 /**
- * @brief Manages a connection to Memory.
+ * @brief Maneja una conexión con Memoria.
  *
  */
-void manage_connection_memory(void);
+void manejar_conexion_memoria();
 
 #endif
