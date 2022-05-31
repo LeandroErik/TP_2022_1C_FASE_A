@@ -10,7 +10,7 @@
 int idProcesoGlobal;
 
 /**
- * @brief Iniciar un logger en el Módulo Kernel.
+ * @brief Inicia un logger en el Módulo Kernel.
  *
  * @return Logger.
  */
