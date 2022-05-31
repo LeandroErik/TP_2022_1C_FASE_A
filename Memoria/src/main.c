@@ -1,27 +1,31 @@
-#include <memory_utils.h>
+#include <memoria_utils.h>
 
 int main(void)
 {
-  Config *config = config_create("Memory.config");
-  Logger *logger = init_memory_logger();
+  Config *config = config_create("Memoria.config");
+  Logger *logger = iniciar_logger_memoria();
 
-  fill_memory_config(config);
+  rellenar_config_memoria(config);
 
-  log_info(logger, "Starting Memory Server...");
-  int memorySocket = start_memory_server();
+  log_info(logger, "Iniciando Servidor Memoria...");
+  int socketMemoria = iniciar_servidor_memoria();
 
-  if (memorySocket < 0)
+  if (socketMemoria < 0)
   {
-    log_error(logger, "Error trying to start server.");
+    log_error(logger, "Error intentando iniciar Servidor Memoria.");
     return EXIT_FAILURE;
   }
 
-  Thread clientThread;
+  log_info(logger, "Servidor Memoria iniciado correctamente.");
+
+  Hilo hiloCliente;
 
   while (true)
   {
-    int clientSocket = wait_client(memorySocket);
-    pthread_create(&clientThread, NULL, (void *)manage_clients_packages, (void *)clientSocket);
+    int socketCliente = esperar_cliente(socketMemoria);
+
+    pthread_create(&hiloCliente, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
+    pthread_join(hiloCliente, NULL);
   }
 
   return EXIT_SUCCESS;
