@@ -14,7 +14,7 @@ int main(void)
 
   if (socketKernel < 0)
   {
-    log_error(logger, "Error intentando iniciar servidor.");
+    log_error(logger, "Error intentando iniciar Servidor Kernel.");
     return EXIT_FAILURE;
   }
 
