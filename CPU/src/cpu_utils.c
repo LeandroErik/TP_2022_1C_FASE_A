@@ -29,9 +29,6 @@ void mostrar_lineas_instrucciones(Logger *logger, Lista *listaInstrucciones)
     lineaInstruccion = list_get(listaInstrucciones, i);
     log_info(logger, "Instrucción Nº %d: %s\t- Parámetro 1: %d\t- Parámetro 2: %d", i, lineaInstruccion->identificador, lineaInstruccion->parametros[0], lineaInstruccion->parametros[1]);
   }
-
-  // eliminar_linea_instruccion(lineaInstruccion);
-  // list_destroy(listaInstrucciones);
 }
 
 void mostrar_pcb(Logger *logger, Pcb *pcb)
@@ -44,7 +41,7 @@ void mostrar_pcb(Logger *logger, Pcb *pcb)
   mostrar_lineas_instrucciones(logger, pcb->instrucciones);
 }
 
-TipoEjecucion obtener_tipo_ejecucion(char *instruccion)
+Instruccion obtener_tipo_ejecucion(char *instruccion)
 {
   if (!strcmp(instruccion, "NO_OP"))
     return NOOP;
@@ -59,13 +56,13 @@ TipoEjecucion obtener_tipo_ejecucion(char *instruccion)
   else if (!strcmp(instruccion, "EXIT"))
     return EXIT;
   else
-    return DESCONOCIDO;
+    return DESCONOCIDA;
 }
 
 void ejecutar_noop()
 {
-  int tiempo = CPU_CONFIG.RETARDO_NOOP / 1000;
-  sleep(tiempo);
+  int tiempoEnSegundos = CPU_CONFIG.RETARDO_NOOP / 1000;
+  sleep(tiempoEnSegundos);
 }
 
 void ejecutar_io(Pcb *pcb, int tiempoBloqueadoIO, int socketKernel)
@@ -108,9 +105,9 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
     printf("Contador de Programa: %d\n", pcb->contadorPrograma);
 
     LineaInstruccion *lineaInstruccion = list_get(pcb->instrucciones, pcb->contadorPrograma);
-    TipoEjecucion tipoEjecucion = obtener_tipo_ejecucion(lineaInstruccion->identificador);
+    Instruccion instruccion = obtener_tipo_ejecucion(lineaInstruccion->identificador);
 
-    switch (tipoEjecucion)
+    switch (instruccion)
     {
     case NOOP:
       log_info(logger, "Ejecutando NOOP");
@@ -130,14 +127,14 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       log_info(logger, "Ejecutando EXIT");
       ejecutar_exit(pcb, socketKernel);
       break;
-    case DESCONOCIDO:
+    default:
       log_error(logger, "Instrucción desconocida: %s", lineaInstruccion->identificador);
       return;
     }
 
     pcb->contadorPrograma++;
 
-    if (tipoEjecucion == IO || tipoEjecucion == EXIT)
+    if (instruccion == IO || instruccion == EXIT)
     {
       log_destroy(logger);
       return;

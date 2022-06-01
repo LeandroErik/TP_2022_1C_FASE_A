@@ -56,7 +56,7 @@ void mostrar_pcb(Logger *logger, Pcb *pcb);
  * @param instruccion Instrucción.
  * @return Tipo de ejecución a realizar.
  */
-TipoEjecucion obtener_tipo_ejecucion(char *instruccion);
+Instruccion obtener_tipo_ejecucion(char *instruccion);
 
 /**
  * @brief No hace nada por un tiempo determinado dado por el config.
