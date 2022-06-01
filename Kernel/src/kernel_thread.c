@@ -26,6 +26,7 @@ void esperar_consola(int socketKernel)
 
 void manejar_paquete_consola(int socketConsola)
 {
+  Pcb *proceso;
   while (true)
   {
     Logger *logger = iniciar_logger_kernel();
@@ -42,10 +43,11 @@ void manejar_paquete_consola(int socketConsola)
       break;
     case LINEAS_CODIGO:
       log_info(logger, "Lineas de Código recibidas de Consola.");
-      if (manejar_envio_pcb(logger, socketConsola))
-        return;
-      else
-        break;
+      proceso = generar_pcb(socketConsola);
+      agregar_proceso_nuevo(proceso);
+      log_info(logger, "Se agrego proceso NUEVO!");
+
+      break;
     default:
       break;
     }
