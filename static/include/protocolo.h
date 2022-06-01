@@ -225,4 +225,12 @@ void serializar_pcb(Paquete *paquete, Pcb *pcb);
  */
 Pcb *deserializar_pcb(int socketCliente);
 
+/**
+ * @brief Envía un paquete al cliente conectado.
+ *
+ * @param paquete Paquete a enviar.
+ * @param socketCliente Socket del cliente.
+ */
+void enviar_paquete_a_cliente(Paquete *paquete, int socketCliente);
+
 #endif

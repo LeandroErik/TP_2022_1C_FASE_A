@@ -244,3 +244,8 @@ Pcb *deserializar_pcb(int socketCliente)
 
   return pcb;
 }
+
+void enviar_paquete_a_cliente(Paquete *paquete, int socketCliente)
+{
+  enviar_paquete_a_servidor(paquete, socketCliente);
+}
