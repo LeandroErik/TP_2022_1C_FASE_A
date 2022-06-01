@@ -107,7 +107,7 @@ void *planificador_largo_plazo()
 {
     while (1)
     {
-        log_info(logger, "Cola nuevos: %s \n\tCola listos: %s \n \tCola ejecutando: %s ", leer_cola(colaNuevos), leer_cola(colaListos), leer_cola(colaEjecutando));
+        log_info(logger, "\nCola nuevos: %s \n\tCola listos: %s \n \tCola ejecutando: %s ", leer_cola(colaNuevos), leer_cola(colaListos), leer_cola(colaEjecutando));
         sem_wait(&semaforoProcesoNuevo);
 
         int procesosEnMemoria = queue_size(colaListos) + queue_size(colaEjecutando) + queue_size(colaBloqueados);
