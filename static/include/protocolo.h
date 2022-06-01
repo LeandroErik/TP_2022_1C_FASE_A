@@ -28,16 +28,16 @@ typedef enum Estado
   TERMINADO
 } Estado;
 
-typedef enum TipoEjecucion
+typedef enum Instruccion
 {
-  DESCONOCIDO = -1,
+  DESCONOCIDA = -1,
   NOOP,
   IO,
   READ,
   COPY,
   WRITE,
   EXIT
-} TipoEjecucion;
+} Instruccion;
 typedef struct Escenario
 {
   Estado estado;
