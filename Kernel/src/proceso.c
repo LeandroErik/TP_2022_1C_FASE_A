@@ -12,8 +12,6 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutexColaSuspendidoBloqueado, NULL);
     pthread_mutex_init(&mutexColaSuspendidoListo, NULL);
 
-    pthread_mutex_init(&mutexProcesoListo, NULL); /*Para la lectura de la cola*/
-
     sem_init(&semaforoProcesoNuevo, 0, 0);
     sem_init(&semaforoProcesoListo, 0, 0);
     sem_init(&semaforoCantidadProcesosEjecutando, 0, 1);
@@ -93,9 +91,7 @@ char *leer_cola(t_queue *cola)
     for (int i = 0; i < queue_size(cola); i++)
     {
 
-        pthread_mutex_lock(&mutexProcesoListo);
         Pcb *proceso_actual = queue_peek_at(cola, i);
-        pthread_mutex_unlock(&mutexProcesoListo);
 
         string_append(&out, "[");
 
@@ -111,8 +107,7 @@ void *planificador_largo_plazo()
 {
     while (1)
     {
-        printf("\tCola nuevos: %s \n\tCola listos: %s \n \tCola ejecutando: %s \n", leer_cola(colaNuevos), leer_cola(colaListos), leer_cola(colaEjecutando));
-
+        log_info(logger, "Cola nuevos: %s \n\tCola listos: %s \n \tCola ejecutando: %s ", leer_cola(colaNuevos), leer_cola(colaListos), leer_cola(colaEjecutando));
         sem_wait(&semaforoProcesoNuevo);
 
         int procesosEnMemoria = queue_size(colaListos) + queue_size(colaEjecutando) + queue_size(colaBloqueados);
