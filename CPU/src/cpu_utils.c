@@ -41,7 +41,7 @@ void mostrar_pcb(Logger *logger, Pcb *pcb)
   mostrar_lineas_instrucciones(logger, pcb->instrucciones);
 }
 
-Instruccion obtener_tipo_ejecucion(char *instruccion)
+Instruccion obtener_tipo_instruccion(char *instruccion)
 {
   if (!strcmp(instruccion, "NO_OP"))
     return NOOP;
@@ -105,7 +105,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
     printf("Contador de Programa: %d\n", pcb->contadorPrograma);
 
     LineaInstruccion *lineaInstruccion = list_get(pcb->instrucciones, pcb->contadorPrograma);
-    Instruccion instruccion = obtener_tipo_ejecucion(lineaInstruccion->identificador);
+    Instruccion instruccion = obtener_tipo_instruccion(lineaInstruccion->identificador);
 
     switch (instruccion)
     {

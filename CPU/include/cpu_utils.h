@@ -51,12 +51,12 @@ void mostrar_lineas_instrucciones(Logger *logger, Lista *listaInstrucciones);
 void mostrar_pcb(Logger *logger, Pcb *pcb);
 
 /**
- * @brief Devuelve el el tipo de ejecución (enum) de una instrucción dada.
+ * @brief Devuelve el el tipo de instrucción (enum) de una instrucción dada.
  *
  * @param instruccion Instrucción.
  * @return Tipo de ejecución a realizar.
  */
-Instruccion obtener_tipo_ejecucion(char *instruccion);
+Instruccion obtener_tipo_instruccion(char *instruccion);
 
 /**
  * @brief No hace nada por un tiempo determinado dado por el config.
