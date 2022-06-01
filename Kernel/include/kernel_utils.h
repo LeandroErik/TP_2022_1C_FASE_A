@@ -7,6 +7,11 @@
 #include <kernel_thread.h>
 #include <commons/string.h>
 
+#include <proceso.h>
+
+Logger *logger;
+int socketKernelClienteDispatch;
+
 int idProcesoGlobal;
 
 /**

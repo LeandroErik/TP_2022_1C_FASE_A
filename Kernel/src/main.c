@@ -5,7 +5,7 @@ int main(void)
   idProcesoGlobal = 0;
 
   Config *config = config_create("Kernel.config");
-  Logger *logger = iniciar_logger_kernel();
+  logger = iniciar_logger_kernel();
 
   rellenar_configuracion_kernel(config);
 
@@ -19,6 +19,12 @@ int main(void)
   }
 
   log_info(logger, "Servidor Kernel iniciado correctamente.");
+
+  socketKernelClienteDispatch = conectar_con_cpu_dispatch();
+
+  inicializar_semaforos();
+  inicializar_colas_procesos();
+  iniciar_planificadores();
 
   Hilo hiloConsolas;
   Hilo hiloConexionInterrupt;

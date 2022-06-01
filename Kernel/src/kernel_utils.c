@@ -25,8 +25,9 @@ int rellenar_lista_instrucciones(Lista *listaInstrucciones, int socketCliente)
 Pcb *crear_pcb(Lista *listaInstrucciones, int tamanioProceso)
 {
   Pcb *pcb = malloc(sizeof(Pcb));
-
+  pthread_mutex_lock(&mutexNumeroProceso);
   pcb->pid = idProcesoGlobal++;
+  pthread_mutex_unlock(&mutexNumeroProceso);
   pcb->tamanio = tamanioProceso;
   pcb->contadorPrograma = 0;
   pcb->tablaPaginas = 0;
