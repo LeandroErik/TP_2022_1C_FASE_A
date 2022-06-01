@@ -18,6 +18,16 @@ void esperar_consola(int socketKernel);
 void manejar_paquete_consola(int socketConsola);
 
 /**
+ * @brief Maneja la generación un PCB en base a lo recibido por consola y el envío al CPU via Dispatch.
+ *
+ * @param logger Logger.
+ * @param socketConsola Socket de Consola.
+ *
+ * @return 0 si el PCB fue enviado correctamente, 1 en caso contrario.
+ */
+int manejar_envio_pcb(Logger *logger, int socketConsola);
+
+/**
  * @brief Maneja una conexión con CPU usando el puerto de Interrupción.
  *
  */
