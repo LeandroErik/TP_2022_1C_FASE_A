@@ -74,9 +74,7 @@ void ejecutar_io(Pcb *pcb, int tiempoBloqueadoIO, int socketKernel)
   paquete = crear_paquete(PCB);
   serializar_pcb(paquete, pcb);
 
-  // TODO: enviar a Kernel a través del Puerto Dispatch
-  // enviar_paquete(socketKernel, paquete);
-
+  enviar_paquete_a_cliente(paquete, socketKernel);
   eliminar_paquete(paquete);
 }
 
@@ -88,9 +86,7 @@ void ejecutar_exit(Pcb *pcb, int socketKernel)
   paquete = crear_paquete(PCB);
   serializar_pcb(paquete, pcb);
 
-  // TODO: Ídem que en ejecutar_io()
-  // enviar_paquete(socketKernel, paquete);
-
+  enviar_paquete_a_cliente(paquete, socketKernel);
   eliminar_paquete(paquete);
 }
 
