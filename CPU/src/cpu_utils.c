@@ -45,7 +45,7 @@ Instruccion obtener_tipo_instruccion(char *instruccion)
 {
   if (!strcmp(instruccion, "NO_OP"))
     return NOOP;
-  else if (!strcmp(instruccion, "IO"))
+  else if (!strcmp(instruccion, "I/O"))
     return IO;
   else if (!strcmp(instruccion, "READ"))
     return READ;
