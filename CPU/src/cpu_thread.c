@@ -108,7 +108,7 @@ void manejar_conexion_memoria(int socketCpu)
 
   if (socketMemoria < 0)
   {
-    log_error(logger, "Conexión rechazada. El Servidor Memoria no está disponible.");
+    log_warning(logger, "Conexión rechazada. El Servidor Memoria no está disponible.");
     log_destroy(logger);
     return;
   }
