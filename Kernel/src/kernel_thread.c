@@ -26,7 +26,6 @@ void esperar_consola(int socketKernel)
 
 void manejar_paquete_consola(int socketConsola)
 {
-  Pcb *proceso;
   while (true)
   {
     Logger *logger = iniciar_logger_kernel();
@@ -43,43 +42,12 @@ void manejar_paquete_consola(int socketConsola)
       break;
     case LINEAS_CODIGO:
       log_info(logger, "Lineas de Código recibidas de Consola.");
-      proceso = generar_pcb(socketConsola);
-      agregar_proceso_nuevo(proceso);
-      log_info(logger, "Se agrego proceso NUEVO!");
-
+      agregar_proceso_nuevo(generar_pcb(socketConsola));
       break;
     default:
       break;
     }
   }
-}
-
-int manejar_envio_pcb(Logger *logger, int socketConsola)
-{
-  log_info(logger, "Conectando con Servidor CPU via Dispatch en IP: %s y Puerto: %s", KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
-  int socketDispatch = conectar_con_cpu_dispatch();
-
-  if (socketDispatch < 0)
-  {
-    log_error(logger, "Conexión rechazada. El Servidor CPU/Puerto Dispatch no está disponible.");
-    log_destroy(logger);
-    return EXIT_FAILURE;
-  }
-
-  log_info(logger, "Conexión con Dispatch establecida.");
-
-  log_info(logger, "Generando PCB...");
-  Paquete *paquete = crear_paquete(PCB);
-  serializar_pcb(paquete, generar_pcb(socketConsola));
-
-  log_info(logger, "Enviando PCB al Servidor CPU...");
-  enviar_paquete_a_servidor(paquete, socketDispatch);
-
-  log_warning(logger, "Saliendo del Puerto Dispatch...");
-  liberar_conexion_con_servidor(socketDispatch);
-  log_destroy(logger);
-
-  return EXIT_SUCCESS;
 }
 
 void manejar_conexion_cpu_interrupcion()
@@ -101,7 +69,7 @@ void manejar_conexion_cpu_interrupcion()
   log_info(logger, "Enviando Interrupción al Servidor CPU...");
   enviar_mensaje_a_servidor("Interrupción externa", socketInterrupcion);
 
-  log_warning(logger, "Saliendo del Puerto Interrupt...");
+  log_info(logger, "Saliendo del Puerto Interrupt...");
   liberar_conexion_con_servidor(socketInterrupcion);
   log_destroy(logger);
 }
@@ -115,7 +83,7 @@ void manejar_conexion_memoria()
 
   if (socketMemoria < 0)
   {
-    log_error(logger, "Conexión rechazada. El Servidor Memoria no está disponible.");
+    log_warning(logger, "Conexión rechazada. El Servidor Memoria no está disponible.");
     log_destroy(logger);
     return;
   }

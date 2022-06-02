@@ -20,8 +20,6 @@ int main(void)
 
     log_info(logger, "Servidor Kernel iniciado correctamente.");
 
-    socketKernelClienteDispatch = conectar_con_cpu_dispatch();
-
     inicializar_semaforos();
     inicializar_colas_procesos();
     iniciar_planificadores();
@@ -43,7 +41,6 @@ int main(void)
 
     log_destroy(logger);
     config_destroy(config);
-    // comment
 
     return EXIT_SUCCESS;
 }

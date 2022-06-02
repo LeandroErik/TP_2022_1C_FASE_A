@@ -10,7 +10,6 @@
 #include <proceso.h>
 
 Logger *logger;
-int socketKernelClienteDispatch;
 
 int idProcesoGlobal;
 

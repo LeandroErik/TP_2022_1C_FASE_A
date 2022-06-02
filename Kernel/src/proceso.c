@@ -38,22 +38,28 @@ void ejecutar(Pcb *proceso)
 {
     proceso->escenario->estado = EJECUTANDO;
 
-    enviar_pcb(proceso, socketKernelClienteDispatch);
+    int socketDispatch = conectar_con_cpu_dispatch();
 
-    CodigoOperacion codOperacion = obtener_codigo_operacion(socketKernelClienteDispatch);
+    if (socketDispatch == -1)
+    {
+        log_error(logger, "No se pudo conectar con el CPU Dispatch");
+        return;
+    }
 
-    char *mensaje;
+    enviar_pcb(proceso, socketDispatch);
+
+    CodigoOperacion codOperacion = obtener_codigo_operacion(socketDispatch);
+
     Pcb *procesoRecibido;
 
     switch (codOperacion)
     {
     case PCB:
-        procesoRecibido = deserializar_pcb(socketKernelClienteDispatch);
+        procesoRecibido = deserializar_pcb(socketDispatch);
+
+        manejar_proceso_recibido(procesoRecibido);
+
         log_info(logger, "Recibi el PCB con PID : %d de CPU!", procesoRecibido->pid);
-        break;
-    case MENSAJE:
-        mensaje = obtener_mensaje_del_cliente(socketKernelClienteDispatch);
-        log_info(logger, "Recibí el mensaje: %s", mensaje);
         break;
 
     case DESCONEXION:
@@ -64,17 +70,61 @@ void ejecutar(Pcb *proceso)
         log_warning(logger, "Operación desconocida.");
         break;
     }
+
+    liberar_conexion_con_servidor(socketDispatch);
+}
+
+void manejar_proceso_recibido(Pcb *pcb)
+{
+    sacar_proceso_ejecutando();
+
+    switch (pcb->escenario->estado)
+    {
+    case BLOQUEADO_IO:
+        log_info(logger, "El proceso %d se encuentra bloqueado por IO por %d ms", pcb->pid, pcb->escenario->tiempoBloqueadoIO);
+
+        agregar_proceso_bloqueado(pcb);
+        break;
+    case TERMINADO:
+        log_info(logger, "El proceso %d se encuentra terminado", pcb->pid);
+
+        break;
+
+    default:
+        log_info(logger, "El proceso %d es medio raro", pcb->pid);
+        break;
+    }
+}
+
+void sacar_proceso_ejecutando()
+{
+    pthread_mutex_lock(&mutexColaEjecutando);
+    queue_pop(colaEjecutando);
+    pthread_mutex_unlock(&mutexColaEjecutando);
+    sem_post(&semaforoCantidadProcesosEjecutando);
+}
+
+Pcb *sacar_proceso_listo()
+{
+    Pcb *pcbSaliente = malloc(sizeof(Pcb));
+
+    pthread_mutex_lock(&mutexColaListos);
+    pcbSaliente = queue_pop(colaListos);
+    pthread_mutex_unlock(&mutexColaListos);
+
+    return pcbSaliente;
 }
 
 /*Varios*/
 
-void enviar_pcb(Pcb *proceso, int socketReceptor)
+void enviar_pcb(Pcb *proceso, int socketDispatch)
 {
+
     Paquete *paquete = crear_paquete(PCB);
 
     serializar_pcb(paquete, proceso);
 
-    enviar_paquete_a_servidor(paquete, socketReceptor);
+    enviar_paquete_a_servidor(paquete, socketDispatch);
 
     eliminar_paquete(paquete);
 }
@@ -107,7 +157,6 @@ void *planificador_largo_plazo()
 {
     while (1)
     {
-        log_info(logger, "\nCola nuevos: %s \n\tCola listos: %s \n \tCola ejecutando: %s ", leer_cola(colaNuevos), leer_cola(colaListos), leer_cola(colaEjecutando));
         sem_wait(&semaforoProcesoNuevo);
 
         int procesosEnMemoria = queue_size(colaListos) + queue_size(colaEjecutando) + queue_size(colaBloqueados);
@@ -123,6 +172,17 @@ void *planificador_largo_plazo()
     }
 }
 
+void imprimir_colas()
+{
+
+    log_info(logger, "\
+    \n\tCola nuevos: %s \
+    \n\tCola listos: %s \
+    \n\tCola ejecutando: %s \
+    \n\tCola bloqueados: %s",
+             leer_cola(colaNuevos), leer_cola(colaListos), leer_cola(colaEjecutando), leer_cola(colaBloqueados));
+}
+
 void *planificador_corto_plazo()
 {
     while (1)
@@ -130,8 +190,9 @@ void *planificador_corto_plazo()
         sem_wait(&semaforoProcesoListo);
         sem_wait(&semaforoCantidadProcesosEjecutando);
 
-        Pcb *procesoEjecutar = queue_pop(colaListos);
-        queue_push(colaEjecutando, procesoEjecutar);
+        Pcb *procesoEjecutar = sacar_proceso_listo();
+
+        agregar_proceso_ejecutando(procesoEjecutar);
 
         ejecutar(procesoEjecutar);
     }
@@ -148,6 +209,7 @@ void agregar_proceso_nuevo(Pcb *procesoNuevo)
     log_info(logger, "Proceso con PID: %d , agregado a NEW en posicion : %d .", procesoNuevo->pid, queue_size(colaNuevos));
 
     sem_post(&semaforoProcesoNuevo);
+    imprimir_colas();
 }
 
 void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
@@ -157,6 +219,7 @@ void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
     pthread_mutex_unlock(&mutexColaBloqueados);
 
     log_info(logger, "Proceso con PID: %d , agregado a BLOQUEADO en posicion : %d .", procesoBloqueado->pid, queue_size(colaBloqueados));
+    imprimir_colas();
 }
 
 void agregar_proceso_suspendido_bloqueado(Pcb *procesoSuspendidoBloqueado)
@@ -198,6 +261,7 @@ void agregar_proceso_listo(Pcb *procesoListo)
     pthread_mutex_unlock(&mutexColaListos);
 
     log_info(logger, "Agregado a READY el proceso : %d .", procesoListo->pid);
+    imprimir_colas();
 }
 
 void agregar_proceso_ejecutando(Pcb *procesoEjecutando)
@@ -209,4 +273,5 @@ void agregar_proceso_ejecutando(Pcb *procesoEjecutando)
     pthread_mutex_unlock(&mutexColaEjecutando);
 
     log_info(logger, "Agregado a EJECUTANDO el proceso : %d .", procesoEjecutando->pid);
+    imprimir_colas();
 }

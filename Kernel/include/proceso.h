@@ -35,10 +35,10 @@ pthread_mutex_t mutexColaSuspendidoListo;
 
 pthread_mutex_t mutex_cola;
 
-sem_t semaforoProcesoNuevo;
-sem_t semaforoProcesoListo;
-sem_t semaforoProcesoEjecutando;
-sem_t semaforoCantidadProcesosEjecutando;
+Semaforo semaforoProcesoNuevo;
+Semaforo semaforoProcesoListo;
+Semaforo semaforoProcesoEjecutando;
+Semaforo semaforoCantidadProcesosEjecutando;
 
 /*Hilos*/
 pthread_t hilo_planificador_largo_plazo;
@@ -70,5 +70,25 @@ void agregar_proceso_suspendido_listo(Pcb *);
 void enviar_pcb(Pcb *, int);
 void *queue_peek_at(t_queue *elf, int);
 char *leer_cola(t_queue *);
+
+/**
+ * @brief Imprime las colas de planificacion
+ *
+ */
+void imprimir_colas();
+
+/**
+ * @brief saca al proceso de la cola de ejecucion
+ *
+ */
+void sacar_proceso_ejecutando();
+
+/**
+ * @brief Dependiendo del estado del pcb se lo agrega a una de las colas.
+ *
+ */
+void manejar_proceso_recibido(Pcb *pcb);
+
+Pcb *sacar_proceso_listo();
 
 #endif

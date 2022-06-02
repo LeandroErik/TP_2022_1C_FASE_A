@@ -52,7 +52,22 @@ Pcb *generar_pcb(int socketCliente)
 
 int conectar_con_cpu_dispatch()
 {
-  return crear_conexion_con_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
+  Logger *logger = iniciar_logger_kernel();
+
+  log_info(logger, "Conectando con Servidor CPU via Dispatch en IP: %s y Puerto: %s", KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
+
+  int socketDispatch = crear_conexion_con_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
+
+  if (socketDispatch < 0)
+  {
+    log_error(logger, "Conexión rechazada. El Servidor CPU/Puerto Dispatch no está disponible. %d", socketDispatch);
+    log_destroy(logger);
+    return DESCONEXION;
+  }
+
+  log_info(logger, "Conexión con Dispatch establecida.");
+
+  return socketDispatch;
 }
 
 int conectar_con_cpu_interrupt()
