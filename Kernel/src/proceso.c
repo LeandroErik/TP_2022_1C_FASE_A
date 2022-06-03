@@ -41,7 +41,7 @@ void iniciar_planificadores()
 
     pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo, NULL);
 
-    pthread_create(&hilo_dispositivo_es, NULL, dispositivo_es, NULL);
+    pthread_create(&hilo_dispositivo_io, NULL, dispositivo_io, NULL);
 }
 
 /*Funciones del proceso*/
@@ -149,7 +149,7 @@ char *leer_cola(t_queue *cola)
 
 /*Planificadores*/
 
-void *dispositivo_es()
+void *dispositivo_io()
 {
     while (1)
     {
@@ -159,7 +159,7 @@ void *dispositivo_es()
         Pcb *proceso = queue_peek(colaBloqueados); // Aun la dejo en la cola de bloqueados,pero leo el proceso
         int tiempoBloqueo = proceso->escenario->tiempoBloqueadoIO / 1000;
         log_info(logger, "Duermo PID: %d ,%d segundos", proceso->pid, tiempoBloqueo);
-        sleep(tiempoBloqueo);
+        usleep(tiempoBloqueo);
         proceso = sacar_proceso_bloqueado(); // Aca lo saco de la cola de bloqueados.(CON EL VALOR ACTUALIZADO)
         if (proceso->escenario->estado == SUSPENDIDO)
         {
@@ -178,15 +178,13 @@ void *planificador_largo_plazo()
     while (1)
     {
 
-        // int procesosEnMemoria = queue_size(colaListos) + queue_size(colaEjecutando) + queue_size(colaBloqueados) + queue_size(colaIO);
-
         if (cantidadProcesosEnMemoria < KERNEL_CONFIG.GRADO_MULTIPROGRAMACION && (queue_size(colaNuevos) > 0 || queue_size(colaSuspendidoListo) > 0))
         {
             Pcb *procesoSaliente;
 
-            queue_is_empty(colaSuspendidoListo) ? (procesoSaliente = extraer_proceso_nuevo()) : (procesoSaliente = extraer_proceso_suspendido_listo());
+            procesoSaliente = queue_is_empty(colaSuspendidoListo) ? extraer_proceso_nuevo() : extraer_proceso_suspendido_listo();
 
-            procesoSaliente->escenario->estado = EJECUTANDO; /*En realidad seria LISTO*/
+            procesoSaliente->escenario->estado = LISTO;
 
             agregar_proceso_listo(procesoSaliente);
 
@@ -377,6 +375,7 @@ void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
     pthread_mutex_lock(&mutexColaBloqueados);
     /*agrego tiempo inicial de bloqueo para la calcular la suspension*/
     procesoBloqueado->tiempoInicioBloqueo = obtener_tiempo_actual();
+
     queue_push(colaBloqueados, procesoBloqueado);
     log_info(logger, "Proceso con PID: %d , agregado a BLOQUEADO en posicion : %d ", procesoBloqueado->pid, queue_size(colaBloqueados));
     pthread_mutex_unlock(&mutexColaBloqueados);

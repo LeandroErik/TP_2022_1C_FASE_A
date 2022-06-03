@@ -26,7 +26,8 @@ typedef enum Estado
   BLOQUEADO_IO,
   INTERRUPCION_EXTERNA,
   TERMINADO,
-  SUSPENDIDO
+  SUSPENDIDO,
+  LISTO
 } Estado;
 
 typedef enum Instruccion

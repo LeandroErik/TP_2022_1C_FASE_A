@@ -50,7 +50,7 @@ Semaforo semaforoCantidadProcesosEjecutando;
 Hilo hilo_planificador_largo_plazo;
 Hilo hilo_planificador_mediano_plazo;
 Hilo hilo_planificador_corto_plazo;
-Hilo hilo_dispositivo_es;
+Hilo hilo_dispositivo_io;
 /*Contador de procesos en memoria*/
 int cantidadProcesosEnMemoria;
 
@@ -66,7 +66,8 @@ void inicializar_semaforos();
 void *planificador_largo_plazo();
 void *planificador_mediano_plazo();
 void *planificador_corto_plazo();
-void *dispositivo_es();
+
+void *dispositivo_io();
 
 /*Transiciones*/
 void agregar_proceso_nuevo(Pcb *);
