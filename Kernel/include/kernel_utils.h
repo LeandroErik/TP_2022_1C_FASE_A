@@ -6,6 +6,7 @@
 #include <kernel_config.h>
 #include <kernel_thread.h>
 #include <commons/string.h>
+#include <time.h>
 
 #include <proceso.h>
 

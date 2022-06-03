@@ -21,6 +21,7 @@ t_queue *colaListos;
 t_queue *colaEjecutando;
 t_queue *colaSuspendidoBloqueado;
 t_queue *colaSuspendidoListo;
+t_queue *colaIO;
 
 /*semaforos*/
 pthread_mutex_t mutexNumeroProceso;
@@ -32,17 +33,20 @@ pthread_mutex_t mutexColaBloqueados;
 pthread_mutex_t mutexColaEjecutando;
 pthread_mutex_t mutexColaSuspendidoBloqueado;
 pthread_mutex_t mutexColaSuspendidoListo;
+pthread_mutex_t mutexColaIO;
 
 pthread_mutex_t mutex_cola;
 
 Semaforo semaforoProcesoNuevo;
 Semaforo semaforoProcesoListo;
 Semaforo semaforoProcesoEjecutando;
+
 Semaforo semaforoCantidadProcesosEjecutando;
 
 /*Hilos*/
-pthread_t hilo_planificador_largo_plazo;
-pthread_t hilo_planificador_corto_plazo;
+Hilo hilo_planificador_largo_plazo;
+Hilo hilo_planificador_mediano_plazo;
+Hilo hilo_planificador_corto_plazo;
 
 /*Funciones del proceso*/
 void ejecutar(Pcb *);
@@ -54,6 +58,7 @@ void inicializar_semaforos();
 
 /*Planificadores*/
 void *planificador_largo_plazo();
+void *planificador_mediano_plazo();
 void *planificador_corto_plazo();
 
 /*Transiciones*/
@@ -84,11 +89,28 @@ void imprimir_colas();
 void sacar_proceso_ejecutando();
 
 /**
+ * @brief saca al proceso de la cola de bloqueados
+ *
+ */
+Pcb *sacar_proceso_bloqueado();
+
+/**
  * @brief Dependiendo del estado del pcb se lo agrega a una de las colas.
  *
  */
 void manejar_proceso_recibido(Pcb *pcb);
 
 Pcb *sacar_proceso_listo();
+
+/**
+ * @brief Instante actual
+ *
+ *@returns segundos desde 01 / 01 / 1970
+ */
+int obtener_tiempo_actual();
+
+Pcb *sacar_proceso_IO();
+
+void agregar_proceso_a_IO(Pcb *proceso);
 
 #endif
