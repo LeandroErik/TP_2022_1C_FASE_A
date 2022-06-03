@@ -102,7 +102,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
 
     LineaInstruccion *lineaInstruccion = list_get(pcb->instrucciones, pcb->contadorPrograma);
     Instruccion instruccion = obtener_tipo_instruccion(lineaInstruccion->identificador);
-
+    pcb->contadorPrograma++;
     switch (instruccion)
     {
     case NOOP:
@@ -127,8 +127,6 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       log_error(logger, "Instrucción desconocida: %s", lineaInstruccion->identificador);
       return;
     }
-
-    pcb->contadorPrograma++;
 
     if (instruccion == IO || instruccion == EXIT)
     {
