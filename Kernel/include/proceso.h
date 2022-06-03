@@ -19,9 +19,8 @@ t_queue *colaNuevos;
 t_queue *colaBloqueados;
 t_queue *colaListos;
 t_queue *colaEjecutando;
-t_queue *colaSuspendidoBloqueado;
+t_queue *colaFinalizado;
 t_queue *colaSuspendidoListo;
-t_queue *colaIO;
 
 /*semaforos*/
 pthread_mutex_t mutexNumeroProceso;
@@ -31,15 +30,19 @@ pthread_mutex_t mutexColaNuevos;
 pthread_mutex_t mutexColaListos;
 pthread_mutex_t mutexColaBloqueados;
 pthread_mutex_t mutexColaEjecutando;
-pthread_mutex_t mutexColaSuspendidoBloqueado;
+pthread_mutex_t mutexColaFinalizado;
 pthread_mutex_t mutexColaSuspendidoListo;
-pthread_mutex_t mutexColaIO;
 
 pthread_mutex_t mutex_cola;
+pthread_mutex_t mutexcantidadProcesosMemoria;
 
 Semaforo semaforoProcesoNuevo;
 Semaforo semaforoProcesoListo;
 Semaforo semaforoProcesoEjecutando;
+
+Semaforo contadorBloqueados;
+Semaforo analizarSuspension;
+Semaforo suspensionFinalizada;
 
 Semaforo semaforoCantidadProcesosEjecutando;
 
@@ -47,6 +50,9 @@ Semaforo semaforoCantidadProcesosEjecutando;
 Hilo hilo_planificador_largo_plazo;
 Hilo hilo_planificador_mediano_plazo;
 Hilo hilo_planificador_corto_plazo;
+Hilo hilo_dispositivo_es;
+/*Contador de procesos en memoria*/
+int cantidadProcesosEnMemoria;
 
 /*Funciones del proceso*/
 void ejecutar(Pcb *);
@@ -60,15 +66,18 @@ void inicializar_semaforos();
 void *planificador_largo_plazo();
 void *planificador_mediano_plazo();
 void *planificador_corto_plazo();
+void *dispositivo_es();
 
 /*Transiciones*/
-Pcb *extraer_proceso_nuevo();
 void agregar_proceso_nuevo(Pcb *);
 void agregar_proceso_listo(Pcb *);
 void agregar_proceso_bloqueado(Pcb *);
 void agregar_proceso_ejecutando(Pcb *);
 void agregar_proceso_suspendido_bloqueado(Pcb *);
 void agregar_proceso_suspendido_listo(Pcb *);
+void agregar_proceso_finalizado(Pcb *);
+Pcb *extraer_proceso_nuevo();
+Pcb *extraer_proceso_suspendido_listo();
 
 /*Varios*/
 
@@ -76,6 +85,9 @@ void enviar_pcb(Pcb *, int);
 void *queue_peek_at(t_queue *elf, int);
 char *leer_cola(t_queue *);
 
+/*Monitores de variables globales*/
+void incrementar_cantidad_procesos_memoria();
+void decrementar_cantidad_procesos_memoria();
 /**
  * @brief Imprime las colas de planificacion
  *
@@ -108,9 +120,6 @@ Pcb *sacar_proceso_listo();
  *@returns segundos desde 01 / 01 / 1970
  */
 int obtener_tiempo_actual();
-
-Pcb *sacar_proceso_IO();
-
-void agregar_proceso_a_IO(Pcb *proceso);
+int tiempo_total_bloqueo_proceso();
 
 #endif

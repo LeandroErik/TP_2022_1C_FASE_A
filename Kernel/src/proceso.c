@@ -9,12 +9,17 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutexColaListos, NULL);
     pthread_mutex_init(&mutexColaEjecutando, NULL);
     pthread_mutex_init(&mutexColaBloqueados, NULL);
-    pthread_mutex_init(&mutexColaSuspendidoBloqueado, NULL);
+
     pthread_mutex_init(&mutexColaSuspendidoListo, NULL);
-    pthread_mutex_init(&mutexColaIO, NULL);
+    pthread_mutex_init(&mutexColaFinalizado, NULL);
 
     sem_init(&semaforoProcesoNuevo, 0, 0);
     sem_init(&semaforoProcesoListo, 0, 0);
+
+    sem_init(&contadorBloqueados, 0, 0);
+
+    sem_init(&analizarSuspension, 0, 0);
+    sem_init(&suspensionFinalizada, 0, 0);
 
     sem_init(&semaforoCantidadProcesosEjecutando, 0, 1);
 }
@@ -24,9 +29,8 @@ void inicializar_colas_procesos()
     colaListos = queue_create();
     colaEjecutando = queue_create();
     colaBloqueados = queue_create();
-    colaSuspendidoBloqueado = queue_create();
     colaSuspendidoListo = queue_create();
-    colaIO = queue_create();
+    colaFinalizado = queue_create();
 }
 
 void iniciar_planificadores()
@@ -36,6 +40,8 @@ void iniciar_planificadores()
     pthread_create(&hilo_planificador_mediano_plazo, NULL, planificador_mediano_plazo, NULL);
 
     pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo, NULL);
+
+    pthread_create(&hilo_dispositivo_es, NULL, dispositivo_es, NULL);
 }
 
 /*Funciones del proceso*/
@@ -93,51 +99,16 @@ void manejar_proceso_recibido(Pcb *pcb)
         break;
     case TERMINADO:
         log_info(logger, "El proceso %d se encuentra TERMINADO ", pcb->pid);
-        imprimir_colas();
+        agregar_proceso_finalizado(pcb);
+
+        decrementar_cantidad_procesos_memoria();
+        log_info(logger, "Cantidad procesos en MEMORIA %d", cantidadProcesosEnMemoria);
         break;
 
     default:
         log_info(logger, "El proceso %d es medio raro", pcb->pid);
         break;
     }
-}
-
-void sacar_proceso_ejecutando()
-{
-    pthread_mutex_lock(&mutexColaEjecutando);
-    queue_pop(colaEjecutando);
-    pthread_mutex_unlock(&mutexColaEjecutando);
-
-    sem_post(&semaforoCantidadProcesosEjecutando);
-}
-
-Pcb *sacar_proceso_bloqueado()
-{
-    Pcb *pcbSaliente = malloc(sizeof(Pcb));
-
-    pthread_mutex_lock(&mutexColaBloqueados);
-    if (queue_size(colaBloqueados) <= 0)
-    {
-        log_info(logger, "No hay procesos bloqueados");
-    }
-    else
-    {
-        pcbSaliente = queue_pop(colaBloqueados);
-        pthread_mutex_unlock(&mutexColaBloqueados);
-    }
-
-    return pcbSaliente;
-}
-
-Pcb *sacar_proceso_listo()
-{
-    Pcb *pcbSaliente = malloc(sizeof(Pcb));
-
-    pthread_mutex_lock(&mutexColaListos);
-    pcbSaliente = queue_pop(colaListos);
-    pthread_mutex_unlock(&mutexColaListos);
-
-    return pcbSaliente;
 }
 
 /*Varios*/
@@ -178,20 +149,48 @@ char *leer_cola(t_queue *cola)
 
 /*Planificadores*/
 
+void *dispositivo_es()
+{
+    while (1)
+    {
+
+        sem_wait(&contadorBloqueados);
+        log_info(logger, "ESTOY EJECUTANDO E/S");
+        Pcb *proceso = queue_peek(colaBloqueados); // Aun la dejo en la cola de bloqueados,pero leo el proceso
+        int tiempoBloqueo = proceso->escenario->tiempoBloqueadoIO / 1000;
+        log_info(logger, "Duermo PID: %d ,%d segundos", proceso->pid, tiempoBloqueo);
+        sleep(tiempoBloqueo);
+        proceso = sacar_proceso_bloqueado(); // Aca lo saco de la cola de bloqueados.(CON EL VALOR ACTUALIZADO)
+        if (proceso->escenario->estado == SUSPENDIDO)
+        {
+            /*AGREGAR A SUSPENDED READY*/
+            agregar_proceso_suspendido_listo(proceso);
+        }
+        else
+        {
+            /*sino pasarlo a ready normal*/
+            agregar_proceso_listo(proceso);
+        }
+    }
+}
 void *planificador_largo_plazo()
 {
     while (1)
     {
 
-        int procesosEnMemoria = queue_size(colaListos) + queue_size(colaEjecutando) + queue_size(colaBloqueados) + queue_size(colaIO);
+        // int procesosEnMemoria = queue_size(colaListos) + queue_size(colaEjecutando) + queue_size(colaBloqueados) + queue_size(colaIO);
 
-        if (procesosEnMemoria < KERNEL_CONFIG.GRADO_MULTIPROGRAMACION && queue_size(colaNuevos) > 0)
+        if (cantidadProcesosEnMemoria < KERNEL_CONFIG.GRADO_MULTIPROGRAMACION && (queue_size(colaNuevos) > 0 || queue_size(colaSuspendidoListo) > 0))
         {
-            Pcb *procesoSaliente = extraer_proceso_nuevo();
+            Pcb *procesoSaliente;
+
+            queue_is_empty(colaSuspendidoListo) ? (procesoSaliente = extraer_proceso_nuevo()) : (procesoSaliente = extraer_proceso_suspendido_listo());
 
             procesoSaliente->escenario->estado = EJECUTANDO; /*En realidad seria LISTO*/
 
             agregar_proceso_listo(procesoSaliente);
+
+            incrementar_cantidad_procesos_memoria();
         }
     }
 }
@@ -200,42 +199,35 @@ void *planificador_mediano_plazo()
 {
     while (1)
     {
-        bool hayUnProcesoEjecutandoIO = queue_size(colaIO) > 0;
+        sem_wait(&analizarSuspension);
+        log_info(logger, "Analizando si hay algun proceso para SUSPENDER");
+        pthread_mutex_lock(&mutexColaBloqueados);
 
-        bool hayUnProcesoBloqueado = queue_size(colaBloqueados) > 0;
-
-        if (hayUnProcesoEjecutandoIO)
+        if (queue_size(colaBloqueados) > 0)
         {
-            Pcb *procesoEjecutandoIO = queue_peek(colaIO);
-
-            bool procesoTerminoDeEjecutarIO = procesoEjecutandoIO->instanteQueSeDesbloquea <= obtener_tiempo_actual();
-
-            // log_info(logger, "%d", procesoEjecutandoIO->instanteQueSeDesbloquea - obtener_tiempo_actual());
-
-            if (procesoTerminoDeEjecutarIO)
+            /*Realizar el chequeo si suspende o no*/
+            for (int i = 0; i < queue_size(colaBloqueados); i++)
             {
-                Pcb *procesoSaliente = sacar_proceso_IO();
+                Pcb *procesoActual = malloc(sizeof(Pcb));
+                procesoActual = queue_peek_at(colaBloqueados, i);
 
-                agregar_proceso_listo(procesoSaliente);
+                int tiempoBloqueo = (obtener_tiempo_actual() - procesoActual->tiempoInicioBloqueo);
+                log_info(logger, "Tiempo BLOQUEO proceso %d : %d", procesoActual->pid, tiempoBloqueo);
+
+                if (tiempoBloqueo * 1000 >= KERNEL_CONFIG.TIEMPO_MAXIMO_BLOQUEADO && procesoActual->escenario->estado != SUSPENDIDO)
+                {
+                    log_info(logger, "EL PROCESO SE TENDRIA QUE SUSPENDER ,CON PID : %d (pasaron %d segundos)", procesoActual->pid, tiempoBloqueo);
+                    /*Seteo estado suspendido al proceso que esta bloqueado*/
+                    procesoActual->escenario->estado = SUSPENDIDO;
+                    /*libero espacio en procesos en memoria*/
+                    decrementar_cantidad_procesos_memoria();
+                }
             }
         }
-        else if (hayUnProcesoBloqueado)
-        {
-            Pcb *proceso = sacar_proceso_bloqueado();
-            agregar_proceso_a_IO(proceso);
-        }
+
+        pthread_mutex_unlock(&mutexColaBloqueados);
+        sem_post(&suspensionFinalizada);
     }
-}
-
-Pcb *sacar_proceso_IO()
-{
-    Pcb *procesoSaliente = malloc(sizeof(Pcb));
-
-    pthread_mutex_lock(&mutexColaIO);
-    procesoSaliente = queue_pop(colaIO);
-    pthread_mutex_unlock(&mutexColaIO);
-
-    return procesoSaliente;
 }
 
 void imprimir_colas()
@@ -244,10 +236,11 @@ void imprimir_colas()
     \n\tCola nuevos: %s \
     \n\tCola listos: %s \
     \n\tCola ejecutando: %s \
-    \n\tCola IO: %s \
-    \n\tCola bloqueados: %s ",
+    \n\tCola bloqueados: %s\
+    \n\tCola suspended - ready: % s\
+    \n\tCola terminados: %s",
              leer_cola(colaNuevos),
-             leer_cola(colaListos), leer_cola(colaEjecutando), leer_cola(colaIO), leer_cola(colaBloqueados));
+             leer_cola(colaListos), leer_cola(colaEjecutando), leer_cola(colaBloqueados), leer_cola(colaSuspendidoListo), leer_cola(colaFinalizado));
 }
 
 void *planificador_corto_plazo()
@@ -261,6 +254,8 @@ void *planificador_corto_plazo()
 
         agregar_proceso_ejecutando(procesoEjecutar);
 
+        sem_post(&analizarSuspension);
+        sem_wait(&suspensionFinalizada);
         ejecutar(procesoEjecutar);
     }
 }
@@ -274,57 +269,60 @@ void agregar_proceso_nuevo(Pcb *procesoNuevo)
     log_info(logger, "Proceso con PID: %d , agregado a NEW en posicion : %d .", procesoNuevo->pid, queue_size(colaNuevos));
     pthread_mutex_unlock(&mutexColaNuevos);
 
-    imprimir_colas();
-}
-
-int obtener_tiempo_actual()
-{
-    return time(NULL);
-}
-
-void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
-{
-
-    pthread_mutex_lock(&mutexColaBloqueados);
-    queue_push(colaBloqueados, procesoBloqueado);
-    log_info(logger, "Proceso con PID: %d , agregado a BLOQUEADO en posicion : %d ", procesoBloqueado->pid, queue_size(colaBloqueados));
-    pthread_mutex_unlock(&mutexColaBloqueados);
+    /*Despierto plani de mediano plazo*/
+    sem_post(&analizarSuspension);
+    sem_wait(&suspensionFinalizada);
 
     imprimir_colas();
 }
-
-void agregar_proceso_a_IO(Pcb *proceso)
+void agregar_proceso_finalizado(Pcb *procesoFinalizado)
 {
-
-    int tiempoBloqueadoEnSegundos = proceso->escenario->tiempoBloqueadoIO / 1000;
-
-    proceso->instanteQueSeDesbloquea = obtener_tiempo_actual() + tiempoBloqueadoEnSegundos;
-
-    log_warning(logger, "instante que se desbloquea: %d", proceso->instanteQueSeDesbloquea);
-
-    pthread_mutex_lock(&mutexColaIO);
-    queue_push(colaIO, proceso);
-    log_info(logger, "Proceso con PID: %d , agregado a IO en posicion : %d .", proceso->pid, queue_size(colaIO));
-    pthread_mutex_unlock(&mutexColaIO);
+    pthread_mutex_lock(&mutexColaFinalizado);
+    queue_push(colaFinalizado, procesoFinalizado);
+    log_info(logger, "Proceso con PID: %d , agregado a FIN en posicion : %d .", procesoFinalizado->pid, queue_size(colaFinalizado));
+    pthread_mutex_unlock(&mutexColaFinalizado);
 
     imprimir_colas();
-}
-
-void agregar_proceso_suspendido_bloqueado(Pcb *procesoSuspendidoBloqueado)
-{
-    pthread_mutex_lock(&mutexColaSuspendidoBloqueado);
-    queue_push(colaSuspendidoBloqueado, procesoSuspendidoBloqueado);
-    log_info(logger, "Proceso con PID: %d , agregado a SUSPENDIDO-BLOQUEADO en posicion : %d .", procesoSuspendidoBloqueado->pid, queue_size(colaSuspendidoBloqueado));
-    pthread_mutex_unlock(&mutexColaSuspendidoBloqueado);
 }
 
 void agregar_proceso_suspendido_listo(Pcb *procesoSuspendidoListo)
 {
     pthread_mutex_lock(&mutexColaSuspendidoListo);
-    queue_push(colaSuspendidoBloqueado, procesoSuspendidoListo);
+    queue_push(colaSuspendidoListo, procesoSuspendidoListo);
     log_info(logger, "Proceso con PID: %d , agregado a SUSPENDIDO-LISTO en posicion : %d .", procesoSuspendidoListo->pid, queue_size(colaSuspendidoListo));
-
     pthread_mutex_unlock(&mutexColaSuspendidoListo);
+    imprimir_colas();
+}
+void sacar_proceso_ejecutando()
+{
+    pthread_mutex_lock(&mutexColaEjecutando);
+    queue_pop(colaEjecutando);
+    pthread_mutex_unlock(&mutexColaEjecutando);
+
+    sem_post(&semaforoCantidadProcesosEjecutando);
+}
+
+Pcb *sacar_proceso_bloqueado()
+{
+    Pcb *pcbSaliente = malloc(sizeof(Pcb));
+
+    pthread_mutex_lock(&mutexColaBloqueados);
+    pcbSaliente = queue_pop(colaBloqueados);
+    log_info(logger, "Proceso PID:%d salío de BLOQUEADO.", pcbSaliente->pid);
+    pthread_mutex_unlock(&mutexColaBloqueados);
+
+    return pcbSaliente;
+}
+
+Pcb *sacar_proceso_listo()
+{
+    Pcb *pcbSaliente = malloc(sizeof(Pcb));
+
+    pthread_mutex_lock(&mutexColaListos);
+    pcbSaliente = queue_pop(colaListos);
+    pthread_mutex_unlock(&mutexColaListos);
+
+    return pcbSaliente;
 }
 
 Pcb *extraer_proceso_nuevo()
@@ -338,6 +336,17 @@ Pcb *extraer_proceso_nuevo()
     return proceso_saliente;
 }
 
+Pcb *extraer_proceso_suspendido_listo()
+{
+    pthread_mutex_lock(&mutexColaSuspendidoListo);
+
+    Pcb *proceso_saliente = queue_pop(colaSuspendidoListo);
+
+    pthread_mutex_unlock(&mutexColaSuspendidoListo);
+
+    return proceso_saliente;
+}
+
 void agregar_proceso_listo(Pcb *procesoListo)
 {
     pthread_mutex_lock(&mutexColaListos);
@@ -346,6 +355,7 @@ void agregar_proceso_listo(Pcb *procesoListo)
     log_info(logger, "Agregado a READY el proceso : %d .", procesoListo->pid);
 
     pthread_mutex_unlock(&mutexColaListos);
+
     sem_post(&semaforoProcesoListo);
     imprimir_colas();
 }
@@ -359,4 +369,41 @@ void agregar_proceso_ejecutando(Pcb *procesoEjecutando)
     pthread_mutex_unlock(&mutexColaEjecutando);
 
     imprimir_colas();
+}
+
+void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
+{
+
+    pthread_mutex_lock(&mutexColaBloqueados);
+    /*agrego tiempo inicial de bloqueo para la calcular la suspension*/
+    procesoBloqueado->tiempoInicioBloqueo = obtener_tiempo_actual();
+    queue_push(colaBloqueados, procesoBloqueado);
+    log_info(logger, "Proceso con PID: %d , agregado a BLOQUEADO en posicion : %d ", procesoBloqueado->pid, queue_size(colaBloqueados));
+    pthread_mutex_unlock(&mutexColaBloqueados);
+
+    /*Aviso al dispositivo de E/S*/
+    sem_post(&contadorBloqueados);
+    /*Despierto planificador mediano plazo*/
+    sem_post(&analizarSuspension);
+    sem_wait(&suspensionFinalizada);
+    imprimir_colas();
+}
+
+/*Monitores*/
+void incrementar_cantidad_procesos_memoria()
+{
+    pthread_mutex_lock(&mutexcantidadProcesosMemoria);
+    cantidadProcesosEnMemoria++;
+    pthread_mutex_unlock(&mutexcantidadProcesosMemoria);
+}
+void decrementar_cantidad_procesos_memoria()
+{
+    pthread_mutex_lock(&mutexcantidadProcesosMemoria);
+    cantidadProcesosEnMemoria--;
+    pthread_mutex_unlock(&mutexcantidadProcesosMemoria);
+}
+
+int obtener_tiempo_actual()
+{
+    return time(NULL);
 }

@@ -3,6 +3,7 @@
 int main(void)
 {
     idProcesoGlobal = 0;
+    cantidadProcesosEnMemoria = 0;
 
     Config *config = config_create("Kernel.config");
     logger = iniciar_logger_kernel();
