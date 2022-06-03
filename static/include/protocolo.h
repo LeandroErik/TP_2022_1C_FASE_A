@@ -25,7 +25,9 @@ typedef enum Estado
   EJECUTANDO,
   BLOQUEADO_IO,
   INTERRUPCION_EXTERNA,
-  TERMINADO
+  TERMINADO,
+  SUSPENDIDO,
+  LISTO
 } Estado;
 
 typedef enum Instruccion
@@ -51,7 +53,7 @@ typedef struct Pcb
   unsigned int contadorPrograma;
   unsigned int tablaPaginas;
   float estimacionRafaga;
-  int instanteQueSeDesbloquea;
+  int tiempoInicioBloqueo;
   Escenario *escenario;
   Lista *instrucciones;
 } Pcb;
