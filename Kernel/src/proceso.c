@@ -169,7 +169,10 @@ void *dispositivo_io()
         Pcb *proceso = queue_peek(colaBloqueados); // Aun la dejo en la cola de bloqueados,pero leo el proceso
         int tiempoBloqueo = proceso->escenario->tiempoBloqueadoIO;
         log_info(logger, "Duermo PID: %d ,%d segundos", proceso->pid, tiempoBloqueo);
-        usleep(tiempoBloqueo);
+
+        int tiempoBloqueoEnMicrosegundos = tiempoBloqueo * 1000;
+
+        usleep(tiempoBloqueoEnMicrosegundos);
         proceso = sacar_proceso_bloqueado(); // Aca lo saco de la cola de bloqueados.(CON EL VALOR ACTUALIZADO)
         if (proceso->escenario->estado == SUSPENDIDO)
         {
