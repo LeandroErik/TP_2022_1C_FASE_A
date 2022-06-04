@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <string.h>
 
 #include <commons/log.h>
 #include <commons/collections/list.h>
@@ -17,7 +18,7 @@
 /*Listas y colas de procesos*/
 t_queue *colaNuevos;
 t_queue *colaBloqueados;
-t_queue *colaListos;
+t_list *colaListos;
 t_queue *colaEjecutando;
 t_queue *colaFinalizado;
 t_queue *colaSuspendidoListo;
@@ -49,7 +50,8 @@ Semaforo semaforoCantidadProcesosEjecutando;
 /*Hilos*/
 Hilo hilo_planificador_largo_plazo;
 Hilo hilo_planificador_mediano_plazo;
-Hilo hilo_planificador_corto_plazo;
+Hilo hilo_planificador_corto_plazo_sjf;
+Hilo hilo_planificador_corto_plazo_fifo;
 Hilo hilo_dispositivo_io;
 /*Contador de procesos en memoria*/
 int cantidadProcesosEnMemoria;
@@ -65,7 +67,9 @@ void inicializar_semaforos();
 /*Planificadores*/
 void *planificador_largo_plazo();
 void *planificador_mediano_plazo();
-void *planificador_corto_plazo();
+void *planificador_corto_plazo_fifo();
+
+void *planificador_corto_plazo_sjf();
 
 void *dispositivo_io();
 
@@ -80,11 +84,17 @@ void agregar_proceso_finalizado(Pcb *);
 Pcb *extraer_proceso_nuevo();
 Pcb *extraer_proceso_suspendido_listo();
 
+/*Planificacion SJF*/
+Pcb *sacar_proceso_mas_corto();
+float obtener_tiempo_de_trabajo(Pcb *);
+bool ordenar_segun_tiempo_de_trabajo(void *, void *);
+
 /*Varios*/
 
 void enviar_pcb(Pcb *, int);
 void *queue_peek_at(t_queue *elf, int);
 char *leer_cola(t_queue *);
+char *leer_lista(t_list *);
 
 /*Monitores de variables globales*/
 void incrementar_cantidad_procesos_memoria();

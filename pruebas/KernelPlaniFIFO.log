@@ -1,0 +1,208 @@
+[INFO] 11:43:16:448 Kernel/(2647:2647): Iniciando Servidor Kernel...
+[INFO] 11:43:16:483 Kernel/(2647:2647): Servidor Kernel iniciado correctamente.
+[INFO] 11:43:16:494 Kernel/(2647:2647): CONFIG: FIFO
+[INFO] 11:43:16:511 Kernel/(2647:2650): INICIO PLANIFICACION FIFO
+[INFO] 11:43:16:532 Kernel/(2647:2652): Esperando conexiones de Consola...
+[INFO] 11:43:16:536 Kernel/(2647:2653): Conectando con Servidor CPU via Interrupción en IP: 127.0.0.1, Puerto: 8005
+[INFO] 11:43:16:558 Kernel/(2647:2653): Conexión con Interrupción establecida.
+[INFO] 11:43:16:557 Kernel/(2647:2654): Conectando con Servidor Memoria...
+[WARNING] 11:43:16:564 Kernel/(2647:2654): Conexión rechazada. El Servidor Memoria no está disponible.
+[INFO] 11:43:16:565 Kernel/(2647:2653): Enviando Interrupción al Servidor CPU...
+[INFO] 11:43:16:609 Kernel/(2647:2653): Saliendo del Puerto Interrupt...
+[INFO] 11:43:55:935 Kernel/(2647:2652): Conexión de Consola establecida.
+[INFO] 11:43:55:952 Kernel/(2647:2682): Lineas de Código recibidas de Consola.
+[INFO] 11:43:55:967 Kernel/(2647:2682): Proceso con PID: 0 , agregado a NEW en posicion : 1 .
+[INFO] 11:43:55:976 Kernel/(2647:2648): Agregado a READY el proceso : 0 .
+[INFO] 11:43:55:981 Kernel/(2647:2650): Agregado a EJECUTANDO el proceso : 0 .
+[INFO] 11:43:55:984 Kernel/(2647:2650):     
+	Cola nuevos:      
+	Cola listos:      
+	Cola ejecutando: [0]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:43:55:985 Kernel/(2647:2649): Analizando si hay algun proceso para SUSPENDER
+[INFO] 11:43:55:985 Kernel/(2647:2648):     
+	Cola nuevos:      
+	Cola listos:      
+	Cola ejecutando: [0]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:43:55:988 Kernel/(2647:2682):     
+	Cola nuevos:      
+	Cola listos:      
+	Cola ejecutando: [0]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:43:55:998 Kernel/(2647:2649): Analizando si hay algun proceso para SUSPENDER
+[WARNING] 11:43:55:999 Kernel/(2647:2682): Conexión de Consola terminada.
+[INFO] 11:43:56:009 Kernel/(2647:2652): Esperando conexiones de Consola...
+[INFO] 11:43:56:010 Kernel/(2647:2650): Conectando con Servidor CPU via Dispatch en IP: 127.0.0.1 y Puerto: 8001
+[INFO] 11:43:56:015 Kernel/(2647:2650): Conexión con Dispatch establecida.
+[INFO] 11:43:57:478 Kernel/(2647:2652): Conexión de Consola establecida.
+[INFO] 11:43:57:496 Kernel/(2647:2690): Lineas de Código recibidas de Consola.
+[INFO] 11:43:57:500 Kernel/(2647:2690): Proceso con PID: 1 , agregado a NEW en posicion : 1 .
+[INFO] 11:43:57:502 Kernel/(2647:2649): Analizando si hay algun proceso para SUSPENDER
+[INFO] 11:43:57:503 Kernel/(2647:2690):     
+	Cola nuevos: [1]     
+	Cola listos:      
+	Cola ejecutando: [0]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:43:57:503 Kernel/(2647:2648): Agregado a READY el proceso : 1 .
+[WARNING] 11:43:57:508 Kernel/(2647:2690): Conexión de Consola terminada.
+[INFO] 11:43:57:510 Kernel/(2647:2648):     
+	Cola nuevos:      
+	Cola listos: [1]     
+	Cola ejecutando: [0]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:43:57:514 Kernel/(2647:2652): Esperando conexiones de Consola...
+[INFO] 11:43:58:483 Kernel/(2647:2652): Conexión de Consola establecida.
+[INFO] 11:43:58:498 Kernel/(2647:2692): Lineas de Código recibidas de Consola.
+[INFO] 11:43:58:501 Kernel/(2647:2692): Proceso con PID: 2 , agregado a NEW en posicion : 1 .
+[INFO] 11:43:58:505 Kernel/(2647:2649): Analizando si hay algun proceso para SUSPENDER
+[INFO] 11:43:58:505 Kernel/(2647:2648): Agregado a READY el proceso : 2 .
+[INFO] 11:43:58:506 Kernel/(2647:2648):     
+	Cola nuevos:      
+	Cola listos: [1][2]     
+	Cola ejecutando: [0]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:43:58:506 Kernel/(2647:2692):     
+	Cola nuevos:      
+	Cola listos: [1][2]     
+	Cola ejecutando: [0]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[WARNING] 11:43:58:521 Kernel/(2647:2692): Conexión de Consola terminada.
+[INFO] 11:43:58:525 Kernel/(2647:2652): Esperando conexiones de Consola...
+[INFO] 11:43:59:073 Kernel/(2647:2650): Recibi el PCB con PID : 0 de CPU!
+[INFO] 11:43:59:076 Kernel/(2647:2650): El proceso 0 se encuentra BLOQUEADO por IO por 5000 ms
+[INFO] 11:43:59:078 Kernel/(2647:2650): Proceso con PID: 0 , agregado a BLOQUEADO en posicion : 1 
+[INFO] 11:43:59:083 Kernel/(2647:2651): ESTOY EJECUTANDO E/S
+[INFO] 11:43:59:083 Kernel/(2647:2649): Analizando si hay algun proceso para SUSPENDER
+[INFO] 11:43:59:086 Kernel/(2647:2651): Duermo PID: 0 ,5 segundos
+[INFO] 11:43:59:088 Kernel/(2647:2649): Tiempo BLOQUEO proceso 0 : 0
+[INFO] 11:43:59:091 Kernel/(2647:2650):     
+	Cola nuevos:      
+	Cola listos: [1][2]     
+	Cola ejecutando:      
+	Cola bloqueados: [0]    
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:43:59:094 Kernel/(2647:2650): Agregado a EJECUTANDO el proceso : 1 .
+[INFO] 11:43:59:095 Kernel/(2647:2651): Proceso PID:0 salío de BLOQUEADO.
+[INFO] 11:43:59:097 Kernel/(2647:2650):     
+	Cola nuevos:      
+	Cola listos: [2]     
+	Cola ejecutando: [1]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:43:59:100 Kernel/(2647:2651): Agregado a READY el proceso : 0 .
+[INFO] 11:43:59:107 Kernel/(2647:2649): Analizando si hay algun proceso para SUSPENDER
+[INFO] 11:43:59:109 Kernel/(2647:2651):     
+	Cola nuevos:      
+	Cola listos: [2][0]     
+	Cola ejecutando: [1]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:43:59:110 Kernel/(2647:2650): Conectando con Servidor CPU via Dispatch en IP: 127.0.0.1 y Puerto: 8001
+[INFO] 11:43:59:113 Kernel/(2647:2650): Conexión con Dispatch establecida.
+[INFO] 11:44:02:185 Kernel/(2647:2650): Recibi el PCB con PID : 1 de CPU!
+[INFO] 11:44:02:188 Kernel/(2647:2650): El proceso 1 se encuentra BLOQUEADO por IO por 5000 ms
+[INFO] 11:44:02:189 Kernel/(2647:2650): Proceso con PID: 1 , agregado a BLOQUEADO en posicion : 1 
+[INFO] 11:44:02:192 Kernel/(2647:2651): ESTOY EJECUTANDO E/S
+[INFO] 11:44:02:192 Kernel/(2647:2649): Analizando si hay algun proceso para SUSPENDER
+[INFO] 11:44:02:195 Kernel/(2647:2651): Duermo PID: 1 ,5 segundos
+[INFO] 11:44:02:196 Kernel/(2647:2649): Tiempo BLOQUEO proceso 1 : 0
+[INFO] 11:44:02:200 Kernel/(2647:2650):     
+	Cola nuevos:      
+	Cola listos: [2][0]     
+	Cola ejecutando:      
+	Cola bloqueados: [1]    
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:44:02:200 Kernel/(2647:2650): Agregado a EJECUTANDO el proceso : 2 .
+[INFO] 11:44:02:201 Kernel/(2647:2650):     
+	Cola nuevos:      
+	Cola listos: [0]     
+	Cola ejecutando: [2]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:44:02:200 Kernel/(2647:2651): Proceso PID:1 salío de BLOQUEADO.
+[INFO] 11:44:02:204 Kernel/(2647:2649): Analizando si hay algun proceso para SUSPENDER
+[INFO] 11:44:02:205 Kernel/(2647:2651): Agregado a READY el proceso : 1 .
+[INFO] 11:44:02:207 Kernel/(2647:2651):     
+	Cola nuevos:      
+	Cola listos: [0][1]     
+	Cola ejecutando: [2]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: 
+[INFO] 11:44:02:208 Kernel/(2647:2650): Conectando con Servidor CPU via Dispatch en IP: 127.0.0.1 y Puerto: 8001
+[INFO] 11:44:02:208 Kernel/(2647:2650): Conexión con Dispatch establecida.
+[INFO] 11:44:12:376 Kernel/(2647:2650): Recibi el PCB con PID : 2 de CPU!
+[INFO] 11:44:12:379 Kernel/(2647:2650): El proceso 2 se encuentra TERMINADO 
+[INFO] 11:44:12:382 Kernel/(2647:2650): Proceso con PID: 2 , agregado a FIN en posicion : 1 .
+[INFO] 11:44:12:384 Kernel/(2647:2650):     
+	Cola nuevos:      
+	Cola listos: [0][1]     
+	Cola ejecutando:      
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: [2]
+[INFO] 11:44:12:389 Kernel/(2647:2650): Cantidad procesos en MEMORIA 2
+[INFO] 11:44:12:394 Kernel/(2647:2650): Agregado a EJECUTANDO el proceso : 0 .
+[INFO] 11:44:12:399 Kernel/(2647:2650):     
+	Cola nuevos:      
+	Cola listos: [1]     
+	Cola ejecutando: [0]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: [2]
+[INFO] 11:44:12:409 Kernel/(2647:2649): Analizando si hay algun proceso para SUSPENDER
+[INFO] 11:44:12:413 Kernel/(2647:2650): Conectando con Servidor CPU via Dispatch en IP: 127.0.0.1 y Puerto: 8001
+[INFO] 11:44:12:415 Kernel/(2647:2650): Conexión con Dispatch establecida.
+[INFO] 11:44:15:562 Kernel/(2647:2650): Recibi el PCB con PID : 0 de CPU!
+[INFO] 11:44:15:564 Kernel/(2647:2650): El proceso 0 se encuentra TERMINADO 
+[INFO] 11:44:15:566 Kernel/(2647:2650): Proceso con PID: 0 , agregado a FIN en posicion : 2 .
+[INFO] 11:44:15:568 Kernel/(2647:2650):     
+	Cola nuevos:      
+	Cola listos: [1]     
+	Cola ejecutando:      
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: [2][0]
+[INFO] 11:44:15:572 Kernel/(2647:2650): Cantidad procesos en MEMORIA 1
+[INFO] 11:44:15:577 Kernel/(2647:2650): Agregado a EJECUTANDO el proceso : 1 .
+[INFO] 11:44:15:580 Kernel/(2647:2650):     
+	Cola nuevos:      
+	Cola listos:      
+	Cola ejecutando: [1]     
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: [2][0]
+[INFO] 11:44:15:584 Kernel/(2647:2649): Analizando si hay algun proceso para SUSPENDER
+[INFO] 11:44:15:585 Kernel/(2647:2650): Conectando con Servidor CPU via Dispatch en IP: 127.0.0.1 y Puerto: 8001
+[INFO] 11:44:15:590 Kernel/(2647:2650): Conexión con Dispatch establecida.
+[INFO] 11:44:18:655 Kernel/(2647:2650): Recibi el PCB con PID : 1 de CPU!
+[INFO] 11:44:18:659 Kernel/(2647:2650): El proceso 1 se encuentra TERMINADO 
+[INFO] 11:44:18:662 Kernel/(2647:2650): Proceso con PID: 1 , agregado a FIN en posicion : 3 .
+[INFO] 11:44:18:666 Kernel/(2647:2650):     
+	Cola nuevos:      
+	Cola listos:      
+	Cola ejecutando:      
+	Cola bloqueados:     
+	Cola suspended - ready:     
+	Cola terminados: [2][0][1]
+[INFO] 11:44:18:669 Kernel/(2647:2650): Cantidad procesos en MEMORIA 0
