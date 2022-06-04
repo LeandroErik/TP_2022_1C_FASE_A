@@ -1,0 +1,125 @@
+[INFO] 11:45:37:412 CPU/(2019:2021): Interrupción recibida de Kernel.
+[INFO] 11:45:37:413 CPU/(2019:2021): Interrupción: Interrupción externa
+[WARNING] 11:45:37:431 CPU/(2019:2021): Conexión con Kernel en puerto Interrupt terminada.
+[INFO] 11:45:37:438 CPU/(2019:2021): Esperando a Kernel que se conecte al puerto Interrupt...
+[INFO] 11:45:41:293 CPU/(2019:2020): PCB recibido de Kernel.
+[INFO] 11:45:41:294 CPU/(2019:2020): PCB Nº 0
+[INFO] 11:45:41:295 CPU/(2019:2020): Tamaño del Proceso: 2
+[INFO] 11:45:41:296 CPU/(2019:2020): Estimación de Ráfaga: 10000.000000
+[INFO] 11:45:41:297 CPU/(2019:2020): Estado: 0
+[INFO] 11:45:41:300 CPU/(2019:2020): Tiempo de Bloqueo de I/O: 0
+[INFO] 11:45:41:300 CPU/(2019:2020): Instrucción Nº 0: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:41:301 CPU/(2019:2020): Instrucción Nº 1: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:41:305 CPU/(2019:2020): Instrucción Nº 2: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:41:308 CPU/(2019:2020): Instrucción Nº 3: I/O	- Parámetro 1: 5000	- Parámetro 2: -1
+[INFO] 11:45:41:309 CPU/(2019:2020): Instrucción Nº 4: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:41:310 CPU/(2019:2020): Instrucción Nº 5: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:41:311 CPU/(2019:2020): Instrucción Nº 6: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:41:317 CPU/(2019:2020): Instrucción Nº 7: EXIT	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:41:320 CPU/(2019:2020): Ejecutando instrucciones del PCB Nº 0
+[INFO] 11:45:41:321 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:42:323 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:43:326 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:44:329 CPU/(2019:2020): Ejecutando IO
+[WARNING] 11:45:44:365 CPU/(2019:2020): Conexión con Kernel en puerto Dispatch terminada.
+[INFO] 11:45:44:367 CPU/(2019:2020): Esperando a Kernel que se conecte al puerto Dispatch...
+[INFO] 11:45:44:395 CPU/(2019:2020): Conexión con Kernel en puerto Dispatch establecida.
+[INFO] 11:45:44:399 CPU/(2019:2020): PCB recibido de Kernel.
+[INFO] 11:45:44:401 CPU/(2019:2020): PCB Nº 0
+[INFO] 11:45:44:401 CPU/(2019:2020): Tamaño del Proceso: 2
+[INFO] 11:45:44:403 CPU/(2019:2020): Estimación de Ráfaga: 10000.000000
+[INFO] 11:45:44:403 CPU/(2019:2020): Estado: 0
+[INFO] 11:45:44:405 CPU/(2019:2020): Tiempo de Bloqueo de I/O: 5000
+[INFO] 11:45:44:408 CPU/(2019:2020): Instrucción Nº 0: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:44:411 CPU/(2019:2020): Instrucción Nº 1: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:44:413 CPU/(2019:2020): Instrucción Nº 2: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:44:413 CPU/(2019:2020): Instrucción Nº 3: I/O	- Parámetro 1: 5000	- Parámetro 2: -1
+[INFO] 11:45:44:416 CPU/(2019:2020): Instrucción Nº 4: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:44:420 CPU/(2019:2020): Instrucción Nº 5: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:44:422 CPU/(2019:2020): Instrucción Nº 6: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:44:424 CPU/(2019:2020): Instrucción Nº 7: EXIT	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:44:430 CPU/(2019:2020): Ejecutando instrucciones del PCB Nº 0
+[INFO] 11:45:44:431 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:45:433 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:46:439 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:47:443 CPU/(2019:2020): Ejecutando EXIT
+[WARNING] 11:45:47:462 CPU/(2019:2020): Conexión con Kernel en puerto Dispatch terminada.
+[INFO] 11:45:47:463 CPU/(2019:2020): Esperando a Kernel que se conecte al puerto Dispatch...
+[INFO] 11:45:47:555 CPU/(2019:2020): Conexión con Kernel en puerto Dispatch establecida.
+[INFO] 11:45:47:563 CPU/(2019:2020): PCB recibido de Kernel.
+[INFO] 11:45:47:566 CPU/(2019:2020): PCB Nº 1
+[INFO] 11:45:47:584 CPU/(2019:2020): Tamaño del Proceso: 2
+[INFO] 11:45:47:585 CPU/(2019:2020): Estimación de Ráfaga: 10000.000000
+[INFO] 11:45:47:586 CPU/(2019:2020): Estado: 0
+[INFO] 11:45:47:616 CPU/(2019:2020): Tiempo de Bloqueo de I/O: 0
+[INFO] 11:45:47:616 CPU/(2019:2020): Instrucción Nº 0: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:47:620 CPU/(2019:2020): Instrucción Nº 1: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:47:625 CPU/(2019:2020): Instrucción Nº 2: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:47:638 CPU/(2019:2020): Instrucción Nº 3: I/O	- Parámetro 1: 5000	- Parámetro 2: -1
+[INFO] 11:45:47:644 CPU/(2019:2020): Instrucción Nº 4: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:47:656 CPU/(2019:2020): Instrucción Nº 5: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:47:660 CPU/(2019:2020): Instrucción Nº 6: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:47:668 CPU/(2019:2020): Instrucción Nº 7: EXIT	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:47:683 CPU/(2019:2020): Ejecutando instrucciones del PCB Nº 1
+[INFO] 11:45:47:685 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:48:693 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:49:695 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:50:699 CPU/(2019:2020): Ejecutando IO
+[WARNING] 11:45:50:724 CPU/(2019:2020): Conexión con Kernel en puerto Dispatch terminada.
+[INFO] 11:45:50:727 CPU/(2019:2020): Esperando a Kernel que se conecte al puerto Dispatch...
+[INFO] 11:45:50:760 CPU/(2019:2020): Conexión con Kernel en puerto Dispatch establecida.
+[INFO] 11:45:50:773 CPU/(2019:2020): PCB recibido de Kernel.
+[INFO] 11:45:50:796 CPU/(2019:2020): PCB Nº 1
+[INFO] 11:45:50:802 CPU/(2019:2020): Tamaño del Proceso: 2
+[INFO] 11:45:50:830 CPU/(2019:2020): Estimación de Ráfaga: 10000.000000
+[INFO] 11:45:50:844 CPU/(2019:2020): Estado: 0
+[INFO] 11:45:50:851 CPU/(2019:2020): Tiempo de Bloqueo de I/O: 5000
+[INFO] 11:45:50:879 CPU/(2019:2020): Instrucción Nº 0: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:50:929 CPU/(2019:2020): Instrucción Nº 1: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:50:934 CPU/(2019:2020): Instrucción Nº 2: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:50:941 CPU/(2019:2020): Instrucción Nº 3: I/O	- Parámetro 1: 5000	- Parámetro 2: -1
+[INFO] 11:45:50:944 CPU/(2019:2020): Instrucción Nº 4: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:50:948 CPU/(2019:2020): Instrucción Nº 5: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:50:951 CPU/(2019:2020): Instrucción Nº 6: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:50:951 CPU/(2019:2020): Instrucción Nº 7: EXIT	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:50:955 CPU/(2019:2020): Ejecutando instrucciones del PCB Nº 1
+[INFO] 11:45:50:957 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:51:959 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:52:963 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:53:965 CPU/(2019:2020): Ejecutando EXIT
+[WARNING] 11:45:53:989 CPU/(2019:2020): Conexión con Kernel en puerto Dispatch terminada.
+[INFO] 11:45:53:992 CPU/(2019:2020): Esperando a Kernel que se conecte al puerto Dispatch...
+[INFO] 11:45:54:012 CPU/(2019:2020): Conexión con Kernel en puerto Dispatch establecida.
+[INFO] 11:45:54:027 CPU/(2019:2020): PCB recibido de Kernel.
+[INFO] 11:45:54:029 CPU/(2019:2020): PCB Nº 2
+[INFO] 11:45:54:031 CPU/(2019:2020): Tamaño del Proceso: 2
+[INFO] 11:45:54:037 CPU/(2019:2020): Estimación de Ráfaga: 10000.000000
+[INFO] 11:45:54:040 CPU/(2019:2020): Estado: 0
+[INFO] 11:45:54:042 CPU/(2019:2020): Tiempo de Bloqueo de I/O: 0
+[INFO] 11:45:54:043 CPU/(2019:2020): Instrucción Nº 0: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:048 CPU/(2019:2020): Instrucción Nº 1: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:052 CPU/(2019:2020): Instrucción Nº 2: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:060 CPU/(2019:2020): Instrucción Nº 3: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:062 CPU/(2019:2020): Instrucción Nº 4: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:065 CPU/(2019:2020): Instrucción Nº 5: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:066 CPU/(2019:2020): Instrucción Nº 6: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:077 CPU/(2019:2020): Instrucción Nº 7: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:080 CPU/(2019:2020): Instrucción Nº 8: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:083 CPU/(2019:2020): Instrucción Nº 9: NO_OP	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:086 CPU/(2019:2020): Instrucción Nº 10: EXIT	- Parámetro 1: -1	- Parámetro 2: -1
+[INFO] 11:45:54:097 CPU/(2019:2020): Ejecutando instrucciones del PCB Nº 2
+[INFO] 11:45:54:101 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:55:103 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:56:105 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:57:108 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:58:111 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:45:59:118 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:46:00:120 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:46:01:126 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:46:02:128 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:46:03:132 CPU/(2019:2020): Ejecutando NOOP
+[INFO] 11:46:04:135 CPU/(2019:2020): Ejecutando EXIT
+[WARNING] 11:46:04:153 CPU/(2019:2020): Conexión con Kernel en puerto Dispatch terminada.
+[INFO] 11:46:04:154 CPU/(2019:2020): Esperando a Kernel que se conecte al puerto Dispatch...
+[INFO] 11:48:22:480 CPU/(2019:2021): Conexión con Kernel en puerto Interrupt establecida.
+[INFO] 11:48:25:424 CPU/(2019:2020): Conexión con Kernel en puerto Dispatch establecida.
