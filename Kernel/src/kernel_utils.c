@@ -56,9 +56,9 @@ int conectar_con_cpu_dispatch()
 {
   Logger *logger = iniciar_logger_kernel();
 
-  log_info(logger, "Conectando con Servidor CPU via Dispatch en IP: %s y Puerto: %s", KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
+  log_info(logger, "Conectando con Servidor CPU via Dispatch en IP: %s y Puerto: %s", KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
 
-  int socketDispatch = crear_conexion_con_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
+  int socketDispatch = crear_conexion_con_servidor(KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
 
   if (socketDispatch < 0)
   {
@@ -74,10 +74,10 @@ int conectar_con_cpu_dispatch()
 
 int conectar_con_cpu_interrupt()
 {
-  return crear_conexion_con_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
+  return crear_conexion_con_servidor(KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
 }
 
 int conectar_con_memoria()
 {
-  return crear_conexion_con_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_MEMORIA);
+  return crear_conexion_con_servidor(KERNEL_CONFIG.IP_MEMORIA, KERNEL_CONFIG.PUERTO_MEMORIA);
 }

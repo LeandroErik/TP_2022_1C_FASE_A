@@ -17,7 +17,7 @@ int iniciar_servidor_cpu_interrupt()
 
 int conectar_con_memoria()
 {
-  return crear_conexion_con_servidor(CPU_CONFIG.IP, CPU_CONFIG.PUERTO_MEMORIA);
+  return crear_conexion_con_servidor(CPU_CONFIG.IP_MEMORIA, CPU_CONFIG.PUERTO_MEMORIA);
 }
 
 void mostrar_lineas_instrucciones(Logger *logger, Lista *listaInstrucciones)
