@@ -215,6 +215,7 @@ void serializar_pcb(Paquete *paquete, Pcb *pcb)
   agregar_a_paquete(paquete, &(pcb->estimacionRafaga), sizeof(float));
   agregar_a_paquete(paquete, &(pcb->escenario->estado), sizeof(Estado));
   agregar_a_paquete(paquete, &(pcb->escenario->tiempoBloqueadoIO), sizeof(int));
+  agregar_a_paquete(paquete, &(pcb->tiempoInicioEjecucion), sizeof(int));
   agregar_a_paquete(paquete, &cantidadInstrucciones, sizeof(int));
 
   serializar_lista_de_instrucciones(paquete, pcb->instrucciones, pcb->tamanio);
@@ -234,8 +235,9 @@ Pcb *deserializar_pcb(int socketCliente)
   pcb->escenario = malloc(sizeof(Escenario));
   pcb->escenario->estado = *(Estado *)list_get(propiedadesPlanas, 5);
   pcb->escenario->tiempoBloqueadoIO = *(int *)list_get(propiedadesPlanas, 6);
+  pcb->tiempoInicioEjecucion = *(int *)list_get(propiedadesPlanas, 7);
 
-  deserializar_lista_de_instrucciones(listaResultado, propiedadesPlanas, 7, 9);
+  deserializar_lista_de_instrucciones(listaResultado, propiedadesPlanas, 8, 10);
 
   pcb->instrucciones = list_duplicate(listaResultado);
 

@@ -26,7 +26,7 @@ void inicializar_semaforos()
 void inicializar_colas_procesos()
 {
     colaNuevos = queue_create();
-    colaListos = queue_create();
+    colaListos = list_create();
     colaEjecutando = queue_create();
     colaBloqueados = queue_create();
     colaSuspendidoListo = queue_create();
@@ -38,8 +38,15 @@ void iniciar_planificadores()
     pthread_create(&hilo_planificador_largo_plazo, NULL, planificador_largo_plazo, NULL);
 
     pthread_create(&hilo_planificador_mediano_plazo, NULL, planificador_mediano_plazo, NULL);
-
-    pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo, NULL);
+    log_info(logger, "CONFIG: %s", KERNEL_CONFIG.ALGORITMO_PLANIFICACION);
+    if (strcmp(KERNEL_CONFIG.ALGORITMO_PLANIFICACION, "FIFO") != 0)
+    {
+        pthread_create(&hilo_planificador_corto_plazo_sjf, NULL, planificador_corto_plazo_sjf, NULL);
+    }
+    else
+    {
+        pthread_create(&hilo_planificador_corto_plazo_fifo, NULL, planificador_corto_plazo_fifo, NULL);
+    }
 
     pthread_create(&hilo_dispositivo_io, NULL, dispositivo_io, NULL);
 }
@@ -49,6 +56,8 @@ void iniciar_planificadores()
 void ejecutar(Pcb *proceso)
 {
     proceso->escenario->estado = EJECUTANDO;
+
+    proceso->tiempoInicioEjecucion = obtener_tiempo_actual();
 
     int socketDispatch = conectar_con_cpu_dispatch();
 
@@ -88,6 +97,7 @@ void ejecutar(Pcb *proceso)
 void manejar_proceso_recibido(Pcb *pcb)
 {
     sacar_proceso_ejecutando();
+    pcb->tiempoRafagaRealAnterior = obtener_tiempo_actual() - pcb->tiempoInicioEjecucion;
 
     switch (pcb->escenario->estado)
     {
@@ -238,11 +248,27 @@ void imprimir_colas()
     \n\tCola suspended - ready: % s\
     \n\tCola terminados: %s",
              leer_cola(colaNuevos),
-             leer_cola(colaListos), leer_cola(colaEjecutando), leer_cola(colaBloqueados), leer_cola(colaSuspendidoListo), leer_cola(colaFinalizado));
+             leer_lista(colaListos), leer_cola(colaEjecutando), leer_cola(colaBloqueados), leer_cola(colaSuspendidoListo), leer_cola(colaFinalizado));
 }
-
-void *planificador_corto_plazo()
+char *leer_lista(t_list *cola)
 {
+    char *out = string_new();
+
+    for (int i = 0; i < list_size(cola); i++)
+    {
+
+        Pcb *proceso_actual = list_get(cola, i);
+
+        string_append(&out, "[");
+
+        string_append(&out, string_itoa(proceso_actual->pid));
+        string_append(&out, "]");
+    }
+    return out;
+}
+void *planificador_corto_plazo_fifo()
+{
+    log_info(logger, "INICIO PLANIFICACION FIFO");
     while (1)
     {
         sem_wait(&semaforoProcesoListo);
@@ -256,6 +282,55 @@ void *planificador_corto_plazo()
         sem_wait(&suspensionFinalizada);
         ejecutar(procesoEjecutar);
     }
+}
+void *planificador_corto_plazo_sjf()
+{
+    log_info(logger, "INICIO PLANIFICACION SJF");
+
+    while (1)
+    {
+        sem_wait(&semaforoProcesoListo);
+        sem_wait(&semaforoCantidadProcesosEjecutando);
+
+        Pcb *procesoEjecutar = sacar_proceso_mas_corto();
+
+        agregar_proceso_ejecutando(procesoEjecutar);
+
+        sem_post(&analizarSuspension);
+        sem_wait(&suspensionFinalizada);
+        ejecutar(procesoEjecutar);
+    }
+}
+Pcb *sacar_proceso_mas_corto()
+{
+
+    Pcb *pcbSaliente = malloc(sizeof(Pcb));
+    /*Replanifico la cola de listos*/
+
+    pthread_mutex_lock(&mutexColaListos);
+
+    log_info(logger, "Replanifico la cola de Listos");
+    list_sort(colaListos, &ordenar_segun_tiempo_de_trabajo);
+    pcbSaliente = list_remove(colaListos, 0);
+    log_info(logger, "\nPID :%d ESTIMACION: %f,RAFAGA ANTERIOR: %d -> RESULTADO: %f \n", pcbSaliente->pid, pcbSaliente->estimacionRafaga, pcbSaliente->tiempoRafagaRealAnterior, obtener_tiempo_de_trabajo(pcbSaliente));
+    pthread_mutex_unlock(&mutexColaListos);
+
+    return pcbSaliente;
+}
+
+bool ordenar_segun_tiempo_de_trabajo(void *procesoA, void *procesoB)
+{
+    return obtener_tiempo_de_trabajo((Pcb *)procesoA) < obtener_tiempo_de_trabajo((Pcb *)procesoB);
+}
+
+float obtener_tiempo_de_trabajo(Pcb *proceso)
+{
+    float alfa = KERNEL_CONFIG.ALFA;
+    float estimacionAnterior = proceso->estimacionRafaga;
+    int rafagaAnterior = proceso->tiempoRafagaRealAnterior * 1000;
+    float resultado = alfa * rafagaAnterior + (1 - alfa) * estimacionAnterior;
+
+    return resultado;
 }
 
 /*Colas de planificacion*/
@@ -293,6 +368,7 @@ void agregar_proceso_suspendido_listo(Pcb *procesoSuspendidoListo)
 }
 void sacar_proceso_ejecutando()
 {
+
     pthread_mutex_lock(&mutexColaEjecutando);
     queue_pop(colaEjecutando);
     pthread_mutex_unlock(&mutexColaEjecutando);
@@ -317,7 +393,7 @@ Pcb *sacar_proceso_listo()
     Pcb *pcbSaliente = malloc(sizeof(Pcb));
 
     pthread_mutex_lock(&mutexColaListos);
-    pcbSaliente = queue_pop(colaListos);
+    pcbSaliente = list_remove(colaListos, 0);
     pthread_mutex_unlock(&mutexColaListos);
 
     return pcbSaliente;
@@ -349,7 +425,7 @@ void agregar_proceso_listo(Pcb *procesoListo)
 {
     pthread_mutex_lock(&mutexColaListos);
 
-    queue_push(colaListos, procesoListo);
+    list_add(colaListos, procesoListo);
     log_info(logger, "Agregado a READY el proceso : %d .", procesoListo->pid);
 
     pthread_mutex_unlock(&mutexColaListos);

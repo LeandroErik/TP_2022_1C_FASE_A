@@ -6,19 +6,16 @@ int main(int argc, char *argv[])
   Config *config = config_create("Consola.config");
   Logger *logger = log_create("Consola.log", "Consola", true, LOG_LEVEL_INFO);
 
-  // if(argc < 3)
-  // {
-  //   log_error(logger, "Los argumentos son dos.");
-  //   return EXIT_FAILURE;
-  // }
+  if (argc < 3)
+  {
+    log_error(logger, "Los argumentos son dos.");
+    return EXIT_FAILURE;
+  }
 
   rellenar_configuracion_consola(config);
 
-  // char* direccionArchivo = argv[1];
-  //  int tamanioProceso = atoi(argv[2]);
-
-  char *direccionArchivo = "./pseudocodigo.txt";
-  int tamanioProceso = 100;
+  char *direccionArchivo = argv[1];
+  int tamanioProceso = atoi(argv[2]);
 
   log_info(logger, "Conectando con Servidor Kernel...");
   int socketKernel = conectar_con_kernel();

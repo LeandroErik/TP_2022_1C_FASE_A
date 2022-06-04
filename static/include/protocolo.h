@@ -54,6 +54,8 @@ typedef struct Pcb
   unsigned int tablaPaginas;
   float estimacionRafaga;
   int tiempoInicioBloqueo;
+  int tiempoInicioEjecucion;
+  int tiempoRafagaRealAnterior;
   Escenario *escenario;
   Lista *instrucciones;
 } Pcb;
