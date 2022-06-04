@@ -167,7 +167,7 @@ void *dispositivo_io()
         sem_wait(&contadorBloqueados);
         log_info(logger, "ESTOY EJECUTANDO E/S");
         Pcb *proceso = queue_peek(colaBloqueados); // Aun la dejo en la cola de bloqueados,pero leo el proceso
-        int tiempoBloqueo = proceso->escenario->tiempoBloqueadoIO / 1000;
+        int tiempoBloqueo = proceso->escenario->tiempoBloqueadoIO;
         log_info(logger, "Duermo PID: %d ,%d segundos", proceso->pid, tiempoBloqueo);
         usleep(tiempoBloqueo);
         proceso = sacar_proceso_bloqueado(); // Aca lo saco de la cola de bloqueados.(CON EL VALOR ACTUALIZADO)
