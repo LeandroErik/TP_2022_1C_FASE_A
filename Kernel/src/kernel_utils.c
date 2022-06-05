@@ -37,7 +37,7 @@ Pcb *crear_pcb(Lista *listaInstrucciones, int tamanioProceso)
   pcb->escenario->tiempoBloqueadoIO = 0;
   pcb->instrucciones = list_duplicate(listaInstrucciones);
   pcb->tiempoRafagaRealAnterior = KERNEL_CONFIG.ESTIMACION_INICIAL / 1000;
-  pcb->tiempoInicioEjecucion = NULL;
+  pcb->tiempoInicioEjecucion = (int)NULL;
 
   list_destroy(listaInstrucciones);
 
