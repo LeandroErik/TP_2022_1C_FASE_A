@@ -118,7 +118,6 @@ void manejar_proceso_recibido(Pcb *pcb)
         Hilo hiloMonitorizacionSuspension;
 
         pthread_create(&hiloMonitorizacionSuspension, NULL, monitorizarSuspension, pcb);
-        pthread_detach(hiloMonitorizacionSuspension);
 
         break;
     case TERMINADO:
@@ -139,16 +138,16 @@ void *monitorizarSuspension(Pcb *proceso)
 {
     int tiempoMaximoBloqueo = KERNEL_CONFIG.TIEMPO_MAXIMO_BLOQUEADO;
     /*Si pasados los segundos establecidos en el config seguis bloqueado ,entonces supendete*/
-    usleep(tiempoMaximoBloqueo * 1000);
+    int tiempoMaximoBloqueoEnMicrosegundos = tiempoMaximoBloqueo * 1000;
+    usleep(tiempoMaximoBloqueoEnMicrosegundos);
 
     if (proceso->escenario->estado == BLOQUEADO_IO)
     {
         proceso->escenario->estado = SUSPENDIDO;
         log_info(logger, "El proceso: [%d](%d seg) ,se movio a SUSPENDIDO-BLOQUEADO", proceso->pid, tiempo_total_bloqueado(proceso));
         decrementar_cantidad_procesos_memoria();
-        /*Falta avisar a memoria*/
+        /*TODO: Avisar a memoria*/
     }
-    return "p";
 }
 
 /*Varios*/
@@ -200,7 +199,7 @@ void *dispositivo_io()
 
         int tiempoBloqueo = proceso->escenario->tiempoBloqueadoIO;
 
-        log_info(logger, "Bloqueo proceso: [%d] ,%d segundos", proceso->pid, tiempoBloqueo / 1000);
+        log_info(logger, "[DISP I/O] Proceso: [%d] ,se bloqueo %d segundos", proceso->pid, tiempoBloqueo / 1000);
         /*bloqueo el proceso*/
         int tiempoBloqueoEnMicrosegundos = tiempoBloqueo * 1000;
 
@@ -208,16 +207,15 @@ void *dispositivo_io()
 
         /* Aca lo saco de la cola de bloqueados.*/
         proceso = sacar_proceso_bloqueado();
-        /*Por si no lo atrapo el planificador de mediano plazo*/
 
         if (proceso->escenario->estado == SUSPENDIDO)
         {
-            /*AGREGAR A SUSPENDED READY*/
+            // Agregar a suspendido listo
             agregar_proceso_suspendido_listo(proceso);
         }
         else
         {
-            /*sino pasarlo a ready normal*/
+            // Sino pasarlo listo.
             agregar_proceso_listo(proceso);
         }
     }
@@ -242,20 +240,14 @@ void *planificador_largo_plazo()
             procesoSaliente = queue_is_empty(colaSuspendidoListo) ? extraer_proceso_nuevo() : extraer_proceso_suspendido_listo();
 
             procesoSaliente->escenario->estado = LISTO;
-            // TODO:controlar que solo mande interrupcion en SRT
-            //  mandar interrupcion.
 
             agregar_proceso_listo(procesoSaliente);
+            // TODO:controlar que solo mande interrupcion en SRT
+            //  mandar interrupcion.
 
             incrementar_cantidad_procesos_memoria();
         }
     }
-}
-
-int calulo_tiempo_bloqueo_total(Pcb *procesoBloqueado)
-{
-    /*Lo obtiene en segundos*/
-    return (obtener_tiempo_actual() - procesoBloqueado->tiempoInicioBloqueo);
 }
 
 void imprimir_colas()
@@ -348,7 +340,7 @@ float obtener_tiempo_de_trabajo(Pcb *proceso)
     return resultado;
 }
 
-/*Colas de planificacion-AGREGAR*/
+/*Funciones para aniadir proceso a cola*/
 
 void agregar_proceso_nuevo(Pcb *procesoNuevo)
 {
@@ -438,7 +430,7 @@ void agregar_proceso_suspendido_listo(Pcb *procesoSuspendidoListo)
     imprimir_colas();
 }
 
-/*Colas de planificacion-SACAR*/
+/*Funciones para sacar procesos a cola.*/
 
 void sacar_proceso_ejecutando()
 {

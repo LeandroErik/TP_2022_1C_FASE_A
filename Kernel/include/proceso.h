@@ -92,9 +92,6 @@ float obtener_tiempo_de_trabajo(Pcb *);
 bool ordenar_segun_tiempo_de_trabajo(void *, void *);
 
 /*Varios*/
-
-int calulo_tiempo_bloqueo_total(Pcb *);
-
 void enviar_pcb(Pcb *, int);
 void *queue_peek_at(t_queue *elf, int);
 char *leer_cola(t_queue *);
