@@ -103,6 +103,13 @@ void manejar_proceso_recibido(Pcb *pcb)
 
     switch (pcb->escenario->estado)
     {
+    case INTERRUPCION:
+        // TODO:
+        //  le llega el pcb interrumpido
+        //  calculo la nueva estimacion
+        //  comparo la estimacion de los listos
+        //  decido si volverlo a ejecutar o ejecutar al de menor estimacion.
+        break;
     case BLOQUEADO_IO:
         log_info(logger, "Proceso: [%d] (%d seg.)se movio a BLOQUEADO", pcb->pid, pcb->escenario->tiempoBloqueadoIO / 1000);
         agregar_proceso_bloqueado(pcb);
@@ -235,6 +242,8 @@ void *planificador_largo_plazo()
             procesoSaliente = queue_is_empty(colaSuspendidoListo) ? extraer_proceso_nuevo() : extraer_proceso_suspendido_listo();
 
             procesoSaliente->escenario->estado = LISTO;
+            // TODO:controlar que solo mande interrupcion en SRT
+            //  mandar interrupcion.
 
             agregar_proceso_listo(procesoSaliente);
 
@@ -317,11 +326,13 @@ Pcb *sacar_proceso_mas_corto()
     pthread_mutex_lock(&mutexColaListos);
 
     log_info(logger, "REPLANIFICACION DE PROCESOS.");
+
     list_sort(colaListos, &ordenar_segun_tiempo_de_trabajo);
 
     pcbSaliente = list_remove(colaListos, 0);
 
     log_info(logger, "\nPID :%d ESTIMACION: %f,RAFAGA ANTERIOR: %d -> RESULTADO: %f \n", pcbSaliente->pid, pcbSaliente->estimacionRafaga, pcbSaliente->tiempoRafagaRealAnterior, obtener_tiempo_de_trabajo(pcbSaliente));
+
     pthread_mutex_unlock(&mutexColaListos);
 
     return pcbSaliente;
