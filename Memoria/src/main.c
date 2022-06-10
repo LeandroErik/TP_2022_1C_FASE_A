@@ -1,9 +1,12 @@
 #include <memoria_utils.h>
+#include <main.h>
 
 int main(void)
 {
   Config *config = config_create("Memoria.config");
   Logger *logger = iniciar_logger_memoria();
+
+  (void *)memoriaPrincipal = (void *)malloc(sizeof(config->TAM_MEMORIA)); // Representa la memoria fisica
 
   rellenar_config_memoria(config);
 
@@ -17,6 +20,8 @@ int main(void)
   }
 
   log_info(logger, "Servidor Memoria iniciado correctamente.");
+
+  t_list *tablaPrimerNivel = crearTablaPrimerNivel();
 
   Hilo hiloCliente;
 
