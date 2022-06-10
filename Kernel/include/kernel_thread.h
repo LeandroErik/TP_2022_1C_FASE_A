@@ -31,7 +31,7 @@ int manejar_envio_pcb(Logger *logger, int socketConsola);
  * @brief Maneja una conexión con CPU usando el puerto de Interrupción.
  *
  */
-void manejar_conexion_cpu_interrupcion();
+void enviar_interrupcion();
 
 /**
  * @brief Maneja una conexión con Memoria.

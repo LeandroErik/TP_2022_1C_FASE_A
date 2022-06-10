@@ -41,7 +41,7 @@ void iniciar_planificadores()
 
     if (strcmp(KERNEL_CONFIG.ALGORITMO_PLANIFICACION, "FIFO") != 0)
     {
-        pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo_sjf, NULL);
+        pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo_srt, NULL);
     }
     else
     {
@@ -59,6 +59,8 @@ void ejecutar(Pcb *proceso)
 
     proceso->tiempoInicioEjecucion = obtener_tiempo_actual();
 
+    // TODO: solucionar bug "El Servidor CPU/Puerto Dispatch no está disponible. -1"
+    //  cuando se devuelve el pcb interrumpido desde CPU.
     int socketDispatch = conectar_con_cpu_dispatch();
 
     if (socketDispatch == -1)
@@ -103,13 +105,11 @@ void manejar_proceso_recibido(Pcb *pcb)
 
     switch (pcb->escenario->estado)
     {
-    case INTERRUPCION:
-        // TODO:
-        //  le llega el pcb interrumpido
-        //  calculo la nueva estimacion
-        //  comparo la estimacion de los listos
-        //  decido si volverlo a ejecutar o ejecutar al de menor estimacion.
+    case INTERRUMPIDO:
+        log_info(logger, "El proceso con PID : %d fue interrumpido", pcb->pid);
+        manejar_proceso_interrumpido(pcb);
         break;
+
     case BLOQUEADO_IO:
         log_info(logger, "Proceso: [%d] (%d seg.)se movio a BLOQUEADO", pcb->pid, pcb->escenario->tiempoBloqueadoIO / 1000);
         agregar_proceso_bloqueado(pcb);
@@ -117,11 +117,10 @@ void manejar_proceso_recibido(Pcb *pcb)
         /*crear hilo que cuente hasta 10 y suspenda al proceso si sigue bloqueado*/
         Hilo hiloMonitorizacionSuspension;
 
-        pthread_create(&hiloMonitorizacionSuspension, NULL, monitorizarSuspension, pcb);
-
+        pthread_create(&hiloMonitorizacionSuspension, NULL, (void *)monitorizarSuspension, pcb);
         break;
-    case TERMINADO:
 
+    case TERMINADO:
         agregar_proceso_finalizado(pcb);
 
         decrementar_cantidad_procesos_memoria();
@@ -132,6 +131,33 @@ void manejar_proceso_recibido(Pcb *pcb)
         log_info(logger, "El proceso %d es medio raro", pcb->pid);
         break;
     }
+}
+
+void manejar_proceso_interrumpido(Pcb *pcb)
+{
+    // comparar lo que le falta con las estimaciones de los listos
+
+    float tiempoQueYaEjecuto = obtener_tiempo_actual() - pcb->tiempoInicioEjecucion;
+
+    float estimacionEnSegundos = pcb->estimacionRafaga / 1000;
+
+    float tiempoRestanteEnSegundos = estimacionEnSegundos - tiempoQueYaEjecuto;
+
+    list_sort(colaListos, &ordenar_segun_tiempo_de_trabajo);
+
+    if (colaListos && !list_is_empty(colaListos))
+    {
+        Pcb *pcbMasCortoDeListos = list_get(colaListos, 0);
+
+        if (tiempoRestanteEnSegundos / 1000 > pcbMasCortoDeListos->estimacionRafaga)
+        {
+            log_info(logger, "El proceso interrumpido [%d] se bloquea por tener tiempo restante largo", pcb->pid);
+            agregar_proceso_bloqueado(pcb);
+        }
+    }
+    log_info(logger, "El proceso interrumpido [%d] se vuelve a ejecutar", pcb->pid);
+
+    agregar_proceso_ejecutando(pcb);
 }
 
 void *monitorizarSuspension(Pcb *proceso)
@@ -242,8 +268,13 @@ void *planificador_largo_plazo()
             procesoSaliente->escenario->estado = LISTO;
 
             agregar_proceso_listo(procesoSaliente);
-            // TODO:controlar que solo mande interrupcion en SRT
-            //  mandar interrupcion.
+
+            bool esSrt = strcmp(KERNEL_CONFIG.ALGORITMO_PLANIFICACION, "SRT") == 0;
+
+            if (esSrt)
+            {
+                enviar_interrupcion();
+            }
 
             incrementar_cantidad_procesos_memoria();
         }
@@ -293,9 +324,9 @@ void *planificador_corto_plazo_fifo()
         ejecutar(procesoEjecutar);
     }
 }
-void *planificador_corto_plazo_sjf()
+void *planificador_corto_plazo_srt()
 {
-    log_info(logger, "INICIO PLANIFICACION SJF");
+    log_info(logger, "INICIO PLANIFICACION SRT");
 
     while (1)
     {

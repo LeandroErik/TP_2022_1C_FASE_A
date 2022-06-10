@@ -50,7 +50,7 @@ void manejar_paquete_consola(int socketConsola)
   }
 }
 
-void manejar_conexion_cpu_interrupcion()
+void enviar_interrupcion()
 {
   Logger *logger = iniciar_logger_kernel();
 
@@ -71,7 +71,6 @@ void manejar_conexion_cpu_interrupcion()
 
   log_info(logger, "Saliendo del Puerto Interrupt...");
   liberar_conexion_con_servidor(socketInterrupcion);
-  log_destroy(logger);
 }
 
 void manejar_conexion_memoria()

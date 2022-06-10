@@ -69,7 +69,7 @@ void *planificador_largo_plazo();
 void *planificador_mediano_plazo();
 void *planificador_corto_plazo_fifo();
 
-void *planificador_corto_plazo_sjf();
+void *planificador_corto_plazo_srt();
 
 void *dispositivo_io();
 
@@ -86,7 +86,7 @@ void agregar_proceso_finalizado(Pcb *);
 Pcb *extraer_proceso_nuevo();
 Pcb *extraer_proceso_suspendido_listo();
 
-/*Planificacion SJF*/
+/*Planificacion SRT*/
 Pcb *sacar_proceso_mas_corto();
 float obtener_tiempo_de_trabajo(Pcb *);
 bool ordenar_segun_tiempo_de_trabajo(void *, void *);
@@ -122,7 +122,7 @@ Pcb *sacar_proceso_bloqueado();
  * @brief Dependiendo del estado del pcb se lo agrega a una de las colas.
  *
  */
-void manejar_proceso_recibido(Pcb *pcb);
+void manejar_proceso_recibido(Pcb *);
 
 Pcb *sacar_proceso_listo();
 
@@ -132,6 +132,9 @@ Pcb *sacar_proceso_listo();
  *@returns segundos desde 01 / 01 / 1970
  */
 int obtener_tiempo_actual();
+
 int tiempo_total_bloqueado();
+
+void manejar_proceso_interrumpido(Pcb *);
 
 #endif

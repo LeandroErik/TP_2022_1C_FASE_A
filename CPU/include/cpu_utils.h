@@ -89,4 +89,8 @@ void ejecutar_exit(Pcb *pcb, int socketKernel);
  */
 void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel);
 
+bool seNecesitaAtenderInterrupcion;
+
+void atender_interrupcion(Pcb *pcb, int socketKernel);
+
 #endif

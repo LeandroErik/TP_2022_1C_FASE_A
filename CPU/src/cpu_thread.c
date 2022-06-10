@@ -89,6 +89,8 @@ void manejar_paquete_kernel_interrupt(int socketKernel)
     case MENSAJE:
       log_info(logger, "Interrupción recibida de Kernel.");
       log_info(logger, "Interrupción: %s", obtener_mensaje_del_cliente(socketKernel));
+      seNecesitaAtenderInterrupcion = true;
+
       break;
 
     default:

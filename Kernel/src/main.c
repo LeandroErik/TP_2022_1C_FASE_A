@@ -26,15 +26,12 @@ int main(void)
     iniciar_planificadores();
 
     Hilo hiloConsolas;
-    Hilo hiloConexionInterrupt;
     Hilo hiloConexionMemoria;
 
     pthread_create(&hiloConsolas, NULL, (void *)esperar_consola, (void *)socketKernel);
-    pthread_create(&hiloConexionInterrupt, NULL, (void *)manejar_conexion_cpu_interrupcion, NULL);
     pthread_create(&hiloConexionMemoria, NULL, (void *)manejar_conexion_memoria, NULL);
 
     pthread_join(hiloConsolas, NULL);
-    pthread_join(hiloConexionInterrupt, NULL);
     pthread_join(hiloConexionMemoria, NULL);
 
     apagar_servidor(socketKernel);

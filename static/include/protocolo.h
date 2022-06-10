@@ -17,7 +17,6 @@ typedef enum CodigoOperacion
   MENSAJE,
   LINEAS_CODIGO,
   PCB,
-  INTERRUPCION
 } CodigoOperacion;
 
 typedef enum Estado
@@ -27,7 +26,8 @@ typedef enum Estado
   INTERRUPCION_EXTERNA,
   TERMINADO,
   SUSPENDIDO,
-  LISTO
+  LISTO,
+  INTERRUMPIDO
 } Estado;
 
 typedef enum Instruccion

@@ -90,6 +90,18 @@ void ejecutar_exit(Pcb *pcb, int socketKernel)
   eliminar_paquete(paquete);
 }
 
+void atender_interrupcion(Pcb *pcb, int socketKernel)
+{
+  pcb->escenario->estado = INTERRUMPIDO;
+
+  Paquete *paquete = malloc(sizeof(Paquete));
+  paquete = crear_paquete(PCB);
+  serializar_pcb(paquete, pcb);
+
+  enviar_paquete_a_cliente(paquete, socketKernel);
+  eliminar_paquete(paquete);
+}
+
 void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
 {
   Logger *logger = iniciar_logger_cpu();
@@ -102,6 +114,14 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
 
     LineaInstruccion *lineaInstruccion = list_get(pcb->instrucciones, pcb->contadorPrograma);
     Instruccion instruccion = obtener_tipo_instruccion(lineaInstruccion->identificador);
+
+    if (seNecesitaAtenderInterrupcion)
+    {
+      log_info(logger, "Se necesita atender una interrupción");
+
+      atender_interrupcion(pcb, socketKernel);
+      return;
+    }
     pcb->contadorPrograma++;
     switch (instruccion)
     {
