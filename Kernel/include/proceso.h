@@ -122,7 +122,7 @@ Pcb *sacar_proceso_bloqueado();
  * @brief Dependiendo del estado del pcb se lo agrega a una de las colas.
  *
  */
-void manejar_proceso_recibido(Pcb *);
+void manejar_proceso_recibido(Pcb *, int);
 
 Pcb *sacar_proceso_listo();
 

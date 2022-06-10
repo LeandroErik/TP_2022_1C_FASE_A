@@ -70,6 +70,7 @@ void ejecutar(Pcb *proceso)
     }
 
     enviar_pcb(proceso, socketDispatch);
+
     log_info(logger, "Envio el proceso con PID : %d de CPU!", proceso->pid);
 
     CodigoOperacion codOperacion = obtener_codigo_operacion(socketDispatch);
@@ -81,7 +82,7 @@ void ejecutar(Pcb *proceso)
     case PCB:
         procesoRecibido = deserializar_pcb(socketDispatch);
         log_info(logger, "Recibi el proceso con PID : %d de CPU!", proceso->pid);
-        manejar_proceso_recibido(procesoRecibido);
+        manejar_proceso_recibido(procesoRecibido, socketDispatch);
 
         break;
 
@@ -97,7 +98,7 @@ void ejecutar(Pcb *proceso)
     liberar_conexion_con_servidor(socketDispatch);
 }
 
-void manejar_proceso_recibido(Pcb *pcb)
+void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 {
     sacar_proceso_ejecutando();
     /*Calculamos el tiempo que ejecuto en CPU*/
@@ -107,7 +108,11 @@ void manejar_proceso_recibido(Pcb *pcb)
     {
     case INTERRUMPIDO:
         log_info(logger, "El proceso con PID : %d fue interrumpido", pcb->pid);
+        // Libero la conexion asi no se bloquea el cpu en la espera de un codigo de operacion(Asi puede espera a otro procesos)
+        liberar_conexion_con_servidor(socketDispatch);
+
         manejar_proceso_interrumpido(pcb);
+
         break;
 
     case BLOQUEADO_IO:
@@ -137,6 +142,7 @@ void manejar_proceso_interrumpido(Pcb *pcb)
 {
     // comparar lo que le falta con las estimaciones de los listos
 
+    Pcb *pcbEjecutar = pcb;
     float tiempoQueYaEjecuto = obtener_tiempo_actual() - pcb->tiempoInicioEjecucion;
 
     float estimacionEnSegundos = pcb->estimacionRafaga / 1000;
@@ -151,13 +157,14 @@ void manejar_proceso_interrumpido(Pcb *pcb)
 
         if (tiempoRestanteEnSegundos / 1000 > pcbMasCortoDeListos->estimacionRafaga)
         {
-            log_info(logger, "El proceso interrumpido [%d] se bloquea por tener tiempo restante largo", pcb->pid);
+            log_info(logger, "Proceso:[%d] se bloquea por tener tiempo restante largo.", pcb->pid);
             agregar_proceso_bloqueado(pcb);
         }
     }
-    log_info(logger, "El proceso interrumpido [%d] se vuelve a ejecutar", pcb->pid);
+    log_info(logger, "El proceso interrumpido [%d] se vuelve a ejecutar", pcbEjecutar->pid);
 
-    agregar_proceso_ejecutando(pcb);
+    agregar_proceso_ejecutando(pcbEjecutar);
+    ejecutar(pcbEjecutar);
 }
 
 void *monitorizarSuspension(Pcb *proceso)
@@ -428,6 +435,9 @@ void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
 
     /*Aviso al dispositivo de E/S*/
     sem_post(&contadorBloqueados);
+    // Despierto al plani de largo plazo
+    // (asi al proceso bloqueado lo encola para luego ser ejecutado)
+    sem_post(&despertarPlanificadorLargoPlazo);
 
     imprimir_colas();
 }

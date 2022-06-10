@@ -61,8 +61,9 @@ Instruccion obtener_tipo_instruccion(char *instruccion)
 
 void ejecutar_noop()
 {
-  int tiempoEnSegundos = CPU_CONFIG.RETARDO_NOOP / 1000;
-  sleep(tiempoEnSegundos);
+  int tiempoEnMiliSegundos = CPU_CONFIG.RETARDO_NOOP;
+  int tiempoEnMicroSegundos = tiempoEnMiliSegundos * 1000;
+  usleep(tiempoEnMicroSegundos);
 }
 
 void ejecutar_io(Pcb *pcb, int tiempoBloqueadoIO, int socketKernel)
@@ -99,7 +100,10 @@ void atender_interrupcion(Pcb *pcb, int socketKernel)
   serializar_pcb(paquete, pcb);
 
   enviar_paquete_a_cliente(paquete, socketKernel);
+
   eliminar_paquete(paquete);
+
+  seNecesitaAtenderInterrupcion = false;
 }
 
 void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
@@ -120,6 +124,9 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       log_info(logger, "Se necesita atender una interrupción");
 
       atender_interrupcion(pcb, socketKernel);
+
+      log_info(logger, "Se termino de atender una interrupción (valor : %d)", seNecesitaAtenderInterrupcion);
+
       return;
     }
     pcb->contadorPrograma++;
