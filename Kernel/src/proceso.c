@@ -57,10 +57,9 @@ void ejecutar(Pcb *proceso)
 {
     proceso->escenario->estado = EJECUTANDO;
 
+    // TODO:Solucionar posible error el tiempo de ejecucion ,ya que se actualiza por cada desalojo(osea cuando replanifica).
     proceso->tiempoInicioEjecucion = obtener_tiempo_actual();
 
-    // TODO: solucionar bug "El Servidor CPU/Puerto Dispatch no está disponible. -1"
-    //  cuando se devuelve el pcb interrumpido desde CPU.
     int socketDispatch = conectar_con_cpu_dispatch();
 
     if (socketDispatch == -1)
@@ -138,14 +137,13 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
     }
 }
 
-void manejar_proceso_interrumpido(Pcb *pcb)
+void manejar_proceso_interrumpido(Pcb *pcbEjecutar)
 {
     // comparar lo que le falta con las estimaciones de los listos
 
-    Pcb *pcbEjecutar = pcb;
-    float tiempoQueYaEjecuto = obtener_tiempo_actual() - pcb->tiempoInicioEjecucion;
+    float tiempoQueYaEjecuto = obtener_tiempo_actual() - pcbEjecutar->tiempoInicioEjecucion;
 
-    float estimacionEnSegundos = pcb->estimacionRafaga / 1000;
+    float estimacionEnSegundos = pcbEjecutar->estimacionRafaga / 1000;
 
     float tiempoRestanteEnSegundos = estimacionEnSegundos - tiempoQueYaEjecuto;
 
@@ -157,11 +155,11 @@ void manejar_proceso_interrumpido(Pcb *pcb)
 
         if (tiempoRestanteEnSegundos / 1000 > pcbMasCortoDeListos->estimacionRafaga)
         {
-            log_info(logger, "Proceso:[%d] se bloquea por tener tiempo restante largo.", pcb->pid);
-            agregar_proceso_bloqueado(pcb);
+            log_info(logger, "Proceso:[%d] se bloquea por tener tiempo restante largo.", pcbEjecutar->pid);
+            agregar_proceso_bloqueado(pcbEjecutar);
         }
     }
-    log_info(logger, "El proceso interrumpido [%d] se vuelve a ejecutar", pcbEjecutar->pid);
+    log_info(logger, "El proceso interrumpido [%d] se vuelve a ejecutar (IP en %d)", pcbEjecutar->pid, pcbEjecutar->contadorPrograma);
 
     agregar_proceso_ejecutando(pcbEjecutar);
     ejecutar(pcbEjecutar);
