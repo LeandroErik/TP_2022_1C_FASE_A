@@ -66,10 +66,12 @@ void enviar_interrupcion()
 
   log_info(logger, "Conexión con Interrupción establecida.");
 
-  log_info(logger, "Enviando Interrupción al Servidor CPU...");
+  log_info(logger, "[INTERRUPCION] Enviando Interrupción al Servidor CPU...");
+
   enviar_mensaje_a_servidor("Interrupción externa", socketInterrupcion);
 
-  log_info(logger, "Saliendo del Puerto Interrupt...");
+  log_info(logger, "[INTERRUPCION] Saliendo del Puerto Interrupt...");
+
   liberar_conexion_con_servidor(socketInterrupcion);
 }
 

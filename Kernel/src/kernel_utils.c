@@ -33,7 +33,7 @@ Pcb *crear_pcb(Lista *listaInstrucciones, int tamanioProceso)
   pcb->tablaPaginas = 0;
   pcb->estimacionRafaga = KERNEL_CONFIG.ESTIMACION_INICIAL;
   pcb->escenario = malloc(sizeof(Escenario));
-  pcb->escenario->estado = EJECUTANDO;
+  pcb->escenario->estado = LISTO;
   pcb->escenario->tiempoBloqueadoIO = 0;
   pcb->instrucciones = list_duplicate(listaInstrucciones);
   pcb->tiempoRafagaRealAnterior = KERNEL_CONFIG.ESTIMACION_INICIAL / 1000;
