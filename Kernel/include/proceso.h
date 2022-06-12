@@ -88,7 +88,7 @@ Pcb *extraer_proceso_suspendido_listo();
 
 /*Planificacion SRT*/
 Pcb *sacar_proceso_mas_corto();
-float obtener_tiempo_de_trabajo(Pcb *);
+float obtener_tiempo_de_trabajo_actual(Pcb *);
 bool ordenar_segun_tiempo_de_trabajo(void *, void *);
 
 /*Varios*/

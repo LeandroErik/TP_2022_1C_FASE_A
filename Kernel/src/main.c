@@ -7,19 +7,11 @@ int main(void)
 
     Config *config = config_create("Kernel.config");
     logger = iniciar_logger_kernel();
+    loggerPlanificacion = log_create("Kernel-Planificacion.log", "Kernel", 1, LOG_LEVEL_INFO);
 
     rellenar_configuracion_kernel(config);
 
-    log_info(logger, "Iniciando Servidor Kernel...");
     int socketKernel = iniciar_servidor_kernel();
-
-    if (socketKernel < 0)
-    {
-        log_error(logger, "Error intentando iniciar Servidor Kernel.");
-        return EXIT_FAILURE;
-    }
-
-    log_info(logger, "Servidor Kernel iniciado correctamente.");
 
     inicializar_semaforos();
     inicializar_colas_procesos();
