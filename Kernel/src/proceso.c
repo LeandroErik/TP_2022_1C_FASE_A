@@ -142,7 +142,6 @@ void manejar_proceso_interrumpido(Pcb *pcb)
 
     log_info(loggerPlanificacion, "[INTERRUPCION] Proceso: [%d] ,(cpu: %f), estimación restante: %f.", pcb->pid, tiempoQueYaEjecuto, tiempoRestanteEnSegundos);
 
-    pthread_mutex_lock(&mutexColaListos);
     if (!list_is_empty(colaListos))
     {
         // Ordeno segun esos valores
@@ -151,7 +150,7 @@ void manejar_proceso_interrumpido(Pcb *pcb)
         log_info(loggerPlanificacion, "[INTERRUPCION] Se reordenó la cola Listos.");
 
         log_info(loggerPlanificacion, "[INTERRUPCION]Analizando si suspender o ejecutar al actual.");
-        // Falta aplicar mutua exclucion
+        // Falta aplicar mutua exclusion
         Pcb *pcbMasCortoDeListos = list_get(colaListos, 0);
 
         float tiempoPcbMasCortoEnSegundos = obtener_tiempo_de_trabajo_actual(pcbMasCortoDeListos) / 1000;
@@ -168,7 +167,6 @@ void manejar_proceso_interrumpido(Pcb *pcb)
         }
     }
     pthread_mutex_unlock(&mutexColaListos);
-
     log_info(loggerPlanificacion, "[INTERRUPCION] Proceso:[%d] se ejecuta con puntero en %d", pcbEjecutar->pid, pcbEjecutar->contadorPrograma);
 
     agregar_proceso_ejecutando(pcbEjecutar);
@@ -284,6 +282,7 @@ void *planificador_largo_plazo()
             procesoSaliente->escenario->estado = LISTO;
 
             agregar_proceso_listo(procesoSaliente);
+
             // Envio interrupcion por cada vez que que entra uno a ready
             bool esSrt = strcmp(KERNEL_CONFIG.ALGORITMO_PLANIFICACION, "SRT") == 0;
 
