@@ -17,7 +17,9 @@ typedef enum CodigoOperacion
   MENSAJE,
   LINEAS_CODIGO,
   PCB,
-  INTERRUPCION
+  INTERRUPCION,
+  PROCESO_NUEVO,
+  SUSPENDER_PROCESO
 } CodigoOperacion;
 
 typedef enum Estado

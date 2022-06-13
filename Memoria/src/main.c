@@ -1,12 +1,10 @@
 #include <memoria_utils.h>
-#include <main.h>
+#include <main.h> 
 
 int main(void)
 {
   Config *config = config_create("Memoria.config");
   Logger *logger = iniciar_logger_memoria();
-
-  (void *)memoriaPrincipal = (void *)malloc(sizeof(config->TAM_MEMORIA)); // Representa la memoria fisica
 
   rellenar_config_memoria(config);
 
@@ -21,17 +19,48 @@ int main(void)
 
   log_info(logger, "Servidor Memoria iniciado correctamente.");
 
-  t_list *tablaPrimerNivel = crearTablaPrimerNivel();
+  //Estructuras de memoria
+  void* memoriaPrincipal = (void*) malloc(MEMORIA_CONFIG.TAM_MEMORIA);
+  int cantidadMarcos = MEMORIA_CONFIG.TAM_MEMORIA / MEMORIA_CONFIG.TAM_PAGINA;
 
-  Hilo hiloCliente;
+  Marco marcos[cantidadMarcos]; 
+  procesos = list_create();
 
-  while (true)
-  {
-    int socketCliente = esperar_cliente(socketMemoria);
+  //PRUEBA:
+  int id=1;
+  int tamanio=10;
+  Proceso* procesoNuevo = crear_proceso(id,tamanio);
+  int nroDeEntradaTablaPrimerNivel = agregar_proceso(procesoNuevo);
+  log_info(logger, "Tabla de primer nivel del proceso %d, tabla numero: %d", id, nroDeEntradaTablaPrimerNivel);
 
-    pthread_create(&hiloCliente, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
-    pthread_join(hiloCliente, NULL);
-  }
+   id=2;
+   tamanio=15;
+  Proceso* procesoNuevo2 = crear_proceso(id,tamanio);
+  nroDeEntradaTablaPrimerNivel = agregar_proceso(procesoNuevo);
+  log_info(logger, "Tabla de primer nivel del proceso %d, tabla numero: %d", id, nroDeEntradaTablaPrimerNivel);
+
+   id=3;
+   tamanio=30;
+  Proceso* procesoNuevo3 = crear_proceso(id,tamanio);
+  nroDeEntradaTablaPrimerNivel = agregar_proceso(procesoNuevo);
+  log_info(logger, "Tabla de primer nivel del proceso %d, tabla numero: %d", id, nroDeEntradaTablaPrimerNivel);
+  //
+  //
+
+
+
+  //
+
+  //Hilos
+  // Hilo hiloCliente;
+
+  // for (int i=0; i<2; i++)
+  // {
+  //   int socketCliente = esperar_cliente(socketMemoria);
+
+  //   pthread_create(&hiloCliente, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
+  //   pthread_join(hiloCliente, NULL);
+  // }
 
   return EXIT_SUCCESS;
 }

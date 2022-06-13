@@ -1,4 +1,5 @@
 #include <memoria_thread.h>
+#include <memoria_utils.h>
 
 void manejar_paquetes_clientes(int socketCliente)
 {
@@ -13,10 +14,14 @@ void manejar_paquetes_clientes(int socketCliente)
 
   case MENSAJE:
     esKernel = es_kernel(socketCliente);
-    if (esKernel)
+    if (esKernel){
       log_info(logger, "Se recibió un mensaje de Kernel.");
-    else
+      escuchar_kernel(socketCliente);
+    }
+    else{
       log_info(logger, "Se recibió un mensaje de CPU.");
+      escuchar_cpu(socketCliente);
+    }
     break;
 
   default:
@@ -33,4 +38,41 @@ bool es_kernel(int socketCliente)
   free(mensaje);
 
   return esKernel;
+}
+
+void escuchar_kernel(int socketCliente){
+
+  while(1)
+  {
+    CodigoOperacion codOp = obtener_codigo_operacion(socketCliente);
+    Logger *logger = iniciar_logger_memoria();
+
+    switch (codOp){
+      case PROCESO_NUEVO:
+        
+        // int id=1;
+        // int tamanio=10;
+        // Proceso* procesoNuevo = crear_proceso(id,tamanio);
+        // int nroDeEntradaTablaPrimerNivel = agregar_proceso(procesoNuevo);
+        // log_info(logger, "tabla 1 nivel del proceso %d, tabla numero: %d", id, tamanio);
+
+      break;
+      case SUSPENDER_PROCESO:
+      //
+      break;
+      default:
+      ///
+      break;
+    }
+  }
+
+}
+
+void escuchar_cpu(int socketCliente){
+
+  while(1)
+  {
+
+  }
+  
 }

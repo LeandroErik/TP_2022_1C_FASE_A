@@ -1,46 +1,37 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <main.c>
+//estructuras
 
 typedef struct
 {
-    // uint32_t entradas; //(uint32)
-    int presencia;
-    int uso;
-    int modificado;
-    // Entrada_tp entrada_del_marco;
-} Marco; // frames
+    int idProceso;
+    //Pagina* paginaActual; //NULL = vacio
+} Marco; 
 
-typedef struct
+typedef struct{
+    //bool presencia; //No haria falta si marcoAsignado = NULL
+    bool uso;
+    bool modificado;
+    Marco* marcoAsignado;
+} Pagina;
+
+typedef struct 
 {
-    int *nroMarco;
+    t_list* entradas; //puntero a paginas
 
 } TablaSegundoNivel;
 
-typedef struct
+typedef struct 
 {
-    TablaSegundoNivel *TablaSegundoNivel;
-    int idProcesoDuenio;
-} EntradaTablaPrimerNivel;
+    t_list* entradas; // cada entrada es puntero a tabla 2 nivel
+} TablaPrimerNivel;
 
 typedef struct
 {
-    uint32_t id;
-    uint32_t pagina;
-    uint32_t marco;
-    bool presencia; // demuestra que esta actualizada la entrada
-    bool esta_vacia;
-} Entrada_tp;
-
-t_list *crearTablaPrimerNivel()
-{
-    return list_create();
-}
-
-void agregarEntradaTabLaPrimerNivel(t_list *tablaPrimerNivel, EntradaTablaPrimerNivel entrada)
-{
-    list_add(tablaPrimerNivel, entrada);
-}
+    int idProceso;
+    int tamanio;
+    TablaPrimerNivel* tabla;
+} Proceso;
 
 #endif
