@@ -65,10 +65,15 @@ Proceso *buscar_proceso_por_id(int idProceso)
 
 void escribir_memoria(int idProceso, uint32_t valorAEscribir, int desplazamiento)
 {
-  Proceso *proceso = buscar_proceso_por_id(idProceso);
-
   Logger *log = iniciar_logger_memoria();
+
+  Proceso *proceso = buscar_proceso_por_id(idProceso);
   log_info(log, "id proceso: %d", proceso->idProceso);
+
+  int nroMarco = obtener_numero_de_marco(desplazamiento);
+  log_info(log, "numero de marco: %d", nroMarco);
+
+  asignar_marco(proceso, nroMarco);
 
   void *n = memoriaPrincipal + desplazamiento;
   memcpy(n, &valorAEscribir, 4);
@@ -82,4 +87,32 @@ uint32_t leer_de_memoria(int idProceso, int desplazamiento)
   void *n = memoriaPrincipal + desplazamiento;
   memcpy(&leido, n, 4);
   return leido;
+}
+
+int obtener_numero_de_marco(int desplazamiento)
+{
+  return desplazamiento / MEMORIA_CONFIG.TAM_PAGINA;
+}
+
+void asignar_marco(Proceso *proceso, int nroMarco)
+{
+  /*Logger *log = iniciar_logger_memoria();
+
+  if (list_is_empty(proceso->tabla->entradas))
+  {
+    TablaSegundoNivel *tablaSegundoNivel = crear_tabla_segundo_nivel();
+    list_add(proceso->tabla->entradas, tablaSegundoNivel);
+    Pagina *pagina = list_get(tablaSegundoNivel->entradas, 0);
+
+    Marco *marco = &marcos[nroMarco];
+    pagina->marcoAsignado = marco;
+    marco->idProceso = proceso->idProceso;
+    marco->paginaActual = pagina;
+
+    log_info(log, "Tabla de segundo nivel creada correctamente");
+  }
+  else
+  {
+    log_info(log, "Nada");
+  } */
 }

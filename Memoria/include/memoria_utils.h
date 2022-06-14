@@ -9,6 +9,7 @@
 
 t_list *procesos;
 void *memoriaPrincipal;
+Marco *marcos;
 
 /**
  * @brief Inicia un logger en el Módulo Memoria.
@@ -77,5 +78,22 @@ uint32_t leer_de_memoria(int idProceso, int desplazamiento);
  * @return Index del proceso buscado.
  */
 Proceso *buscar_proceso_por_id(int idProceso);
+
+/**
+ * @brief Obtener el numero de Marco buscado.
+ * @param desplazamiento
+ *
+ * @return Marco buscado.
+ */
+int obtener_numero_de_marco(int desplazamiento);
+
+/**
+ * @brief A
+ * @param proceso
+ * @param nroMarco
+ *
+ * @return
+ */
+void asignar_marco(Proceso *proceso, int nroMarco);
 
 #endif
