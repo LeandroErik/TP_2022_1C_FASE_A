@@ -1,5 +1,5 @@
 #include <memoria_utils.h>
-#include <main.h> 
+#include <main.h>
 
 int main(void)
 {
@@ -19,40 +19,43 @@ int main(void)
 
   log_info(logger, "Servidor Memoria iniciado correctamente.");
 
-  //Estructuras de memoria
-  void* memoriaPrincipal = (void*) malloc(MEMORIA_CONFIG.TAM_MEMORIA);
+  // Estructuras de memoria
+  memoriaPrincipal = (void *)malloc(MEMORIA_CONFIG.TAM_MEMORIA);
   int cantidadMarcos = MEMORIA_CONFIG.TAM_MEMORIA / MEMORIA_CONFIG.TAM_PAGINA;
 
-  Marco marcos[cantidadMarcos]; 
+  Marco marcos[cantidadMarcos];
   procesos = list_create();
 
-  //PRUEBA:
-  int id=1;
-  int tamanio=10;
-  Proceso* procesoNuevo = crear_proceso(id,tamanio);
+  // prueba
+
+  int id = 1;
+  int tamanio = 10;
+  Proceso *procesoNuevo = crear_proceso(id, tamanio);
   int nroDeEntradaTablaPrimerNivel = agregar_proceso(procesoNuevo);
   log_info(logger, "Tabla de primer nivel del proceso %d, tabla numero: %d", id, nroDeEntradaTablaPrimerNivel);
 
-   id=2;
-   tamanio=15;
-  Proceso* procesoNuevo2 = crear_proceso(id,tamanio);
-  nroDeEntradaTablaPrimerNivel = agregar_proceso(procesoNuevo);
-  log_info(logger, "Tabla de primer nivel del proceso %d, tabla numero: %d", id, nroDeEntradaTablaPrimerNivel);
+  escribir_memoria(id, 5, 100);
+  uint32_t leido = leer_de_memoria(id, 100);
+  log_info(logger, "Valor leido %d", leido);
 
-   id=3;
-   tamanio=30;
-  Proceso* procesoNuevo3 = crear_proceso(id,tamanio);
-  nroDeEntradaTablaPrimerNivel = agregar_proceso(procesoNuevo);
-  log_info(logger, "Tabla de primer nivel del proceso %d, tabla numero: %d", id, nroDeEntradaTablaPrimerNivel);
+  //  id=2;
+  //  tamanio=15;
+  // Proceso* procesoNuevo2 = crear_proceso(id,tamanio);
+  // nroDeEntradaTablaPrimerNivel = agregar_proceso(procesoNuevo);
+  // log_info(logger, "Tabla de primer nivel del proceso %d, tabla numero: %d", id, nroDeEntradaTablaPrimerNivel);
+
+  //  id=3;
+  //  tamanio=30;
+  // Proceso* procesoNuevo3 = crear_proceso(id,tamanio);
+  // nroDeEntradaTablaPrimerNivel = agregar_proceso(procesoNuevo);
+  // log_info(logger, "Tabla de primer nivel del proceso %d, tabla numero: %d", id, nroDeEntradaTablaPrimerNivel);
   //
   //
 
-
-
   //
 
-  //Hilos
-  // Hilo hiloCliente;
+  // Hilos
+  //  Hilo hiloCliente;
 
   // for (int i=0; i<2; i++)
   // {

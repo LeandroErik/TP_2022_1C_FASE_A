@@ -1,37 +1,40 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-//estructuras
+// estructuras
+
+typedef struct Pagina Pagina;
 
 typedef struct
 {
     int idProceso;
-    //Pagina* paginaActual; //NULL = vacio
-} Marco; 
+    Pagina *paginaActual; // NULL = vacio
+} Marco;
 
-typedef struct{
-    //bool presencia; //No haria falta si marcoAsignado = NULL
+struct Pagina
+{
+    // bool presencia; //No haria falta si marcoAsignado = NULL
     bool uso;
     bool modificado;
-    Marco* marcoAsignado;
-} Pagina;
+    Marco *marcoAsignado;
+};
 
-typedef struct 
+typedef struct
 {
-    t_list* entradas; //puntero a paginas
+    t_list *entradas; // puntero a paginas
 
 } TablaSegundoNivel;
 
-typedef struct 
+typedef struct
 {
-    t_list* entradas; // cada entrada es puntero a tabla 2 nivel
+    t_list *entradas; // cada entrada es puntero a tabla 2 nivel
 } TablaPrimerNivel;
 
 typedef struct
 {
     int idProceso;
     int tamanio;
-    TablaPrimerNivel* tabla;
+    TablaPrimerNivel *tabla;
 } Proceso;
 
 #endif
