@@ -23,7 +23,7 @@ int main(void)
   memoriaPrincipal = (void *)malloc(MEMORIA_CONFIG.TAM_MEMORIA);
   int cantidadMarcos = MEMORIA_CONFIG.TAM_MEMORIA / MEMORIA_CONFIG.TAM_PAGINA;
 
-  marcos[cantidadMarcos];
+  iniciar_marcos(cantidadMarcos);
   procesos = list_create();
 
   // prueba

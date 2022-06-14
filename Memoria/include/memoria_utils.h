@@ -8,8 +8,8 @@
 #include <stdbool.h>
 
 t_list *procesos;
+t_list *marcos;
 void *memoriaPrincipal;
-Marco *marcos;
 
 /**
  * @brief Inicia un logger en el Módulo Memoria.
@@ -24,6 +24,12 @@ Logger *iniciar_logger_memoria();
  * @return Socket del cliente.
  */
 int iniciar_servidor_memoria();
+
+/**
+ * @brief Inicia los marcos de la memoria
+ * @param cantidadMarcos Numero de marcos que tendra la memoria
+ */
+void iniciar_marcos(int cantidadMarcos);
 
 /**
  * @brief Crear tabla de primer nivel

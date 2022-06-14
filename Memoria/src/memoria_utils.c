@@ -11,7 +11,18 @@ int iniciar_servidor_memoria()
   return iniciar_servidor(MEMORIA_CONFIG.IP_MEMORIA, MEMORIA_CONFIG.PUERTO_MEMORIA);
 }
 
-// tablas
+// Estructuras
+void iniciar_marcos(int cantidadMarcos)
+{
+  marcos = list_create();
+  for (int i=0; i<cantidadMarcos; i++){
+    Marco* marco = malloc(sizeof(Marco));
+    marco->idProceso = -1;
+    marco->paginaActual = NULL;
+    list_add(marcos, marco);
+  }
+}
+
 Proceso *crear_proceso(int id, int tamanio)
 {
   Proceso *proceso = malloc(sizeof(proceso));
@@ -96,7 +107,7 @@ int obtener_numero_de_marco(int desplazamiento)
 
 void asignar_marco(Proceso *proceso, int nroMarco)
 {
-  /*Logger *log = iniciar_logger_memoria();
+  Logger *log = iniciar_logger_memoria();
 
   if (list_is_empty(proceso->tabla->entradas))
   {
@@ -104,8 +115,9 @@ void asignar_marco(Proceso *proceso, int nroMarco)
     list_add(proceso->tabla->entradas, tablaSegundoNivel);
     Pagina *pagina = list_get(tablaSegundoNivel->entradas, 0);
 
-    Marco *marco = &marcos[nroMarco];
+    Marco* marco = list_get(marcos, nroMarco);
     pagina->marcoAsignado = marco;
+
     marco->idProceso = proceso->idProceso;
     marco->paginaActual = pagina;
 
@@ -114,5 +126,5 @@ void asignar_marco(Proceso *proceso, int nroMarco)
   else
   {
     log_info(log, "Nada");
-  } */
+  } 
 }
