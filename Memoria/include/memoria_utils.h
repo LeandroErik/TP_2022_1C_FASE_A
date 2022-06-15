@@ -6,10 +6,13 @@
 #include <memoria_thread.h>
 #include <main.h>
 #include <stdbool.h>
+#include <math.h>
 
 t_list *procesos;
 t_list *marcos;
 void *memoriaPrincipal;
+
+int tablasDePrimerNivel;
 
 /**
  * @brief Inicia un logger en el Módulo Memoria.
@@ -101,5 +104,15 @@ int obtener_numero_de_marco(int desplazamiento);
  * @return
  */
 void asignar_marco(Proceso *proceso, int nroMarco);
+
+/**
+ * @brief Le asigna una pagina a un marco.
+ * @param proceso
+ * @param nroPagina
+ * @param nroMarco
+ *
+ * @return
+ */
+Marco* asignar_pagina_a_marco(Proceso* proceso, int nroPagina, int nroMarco);
 
 #endif

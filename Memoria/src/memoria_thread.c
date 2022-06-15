@@ -45,7 +45,7 @@ void escuchar_kernel(int socketCliente){
   while(1)
   {
     CodigoOperacion codOp = obtener_codigo_operacion(socketCliente);
-    Logger *logger = iniciar_logger_memoria();
+    //Logger *logger = iniciar_logger_memoria();
 
     switch (codOp){
       case PROCESO_NUEVO:

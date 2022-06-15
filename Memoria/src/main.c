@@ -20,6 +20,7 @@ int main(void)
   log_info(logger, "Servidor Memoria iniciado correctamente.");
 
   // Estructuras de memoria
+  tablasDePrimerNivel = 0;
   memoriaPrincipal = (void *)malloc(MEMORIA_CONFIG.TAM_MEMORIA);
   int cantidadMarcos = MEMORIA_CONFIG.TAM_MEMORIA / MEMORIA_CONFIG.TAM_PAGINA;
 
@@ -28,15 +29,17 @@ int main(void)
 
   // prueba
 
-  int id = 1;
-  int tamanio = 10;
+  int id = 0;
+  int tamanio = 64 * 4; //bytes
   Proceso *procesoNuevo = crear_proceso(id, tamanio);
-  int nroDeEntradaTablaPrimerNivel = agregar_proceso(procesoNuevo);
-  log_info(logger, "Tabla de primer nivel del proceso %d, tabla numero: %d", id, nroDeEntradaTablaPrimerNivel);
+  agregar_proceso(procesoNuevo);
+  log_info(logger, "Tabla de primer nivel del proceso %d, tamanio %d, tabla numero: %d", id, procesoNuevo->tamanio, procesoNuevo->tablaPrimerNivel->nroTablaPrimerNivel);
 
-  escribir_memoria(id, 5, 100);
-  uint32_t leido = leer_de_memoria(id, 100);
-  log_info(logger, "Valor leido %d", leido);
+  asignar_pagina_a_marco(procesoNuevo, 3, 6);
+
+  // escribir_memoria(id, 5, 100);
+  // uint32_t leido = leer_de_memoria(id, 100);
+  // log_info(logger, "Valor leido %d", leido);
 
   //  id=2;
   //  tamanio=15;
