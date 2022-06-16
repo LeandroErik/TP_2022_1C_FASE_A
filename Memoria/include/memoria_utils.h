@@ -8,10 +8,10 @@
 #include <stdbool.h>
 #include <math.h>
 
+//Variables globales
 t_list *procesos;
 t_list *marcos;
 void *memoriaPrincipal;
-
 int tablasDePrimerNivel;
 
 /**
@@ -27,6 +27,8 @@ Logger *iniciar_logger_memoria();
  * @return Socket del cliente.
  */
 int iniciar_servidor_memoria();
+
+void iniciar_estructuras_memoria();
 
 /**
  * @brief Inicia los marcos de la memoria
@@ -63,14 +65,14 @@ Proceso *crear_proceso(int id, int tamanio);
  *
  * @return Index donde se agrega el proceso.
  */
-int agregar_proceso(Proceso *proceso);
+void agregar_proceso(Proceso *proceso);
 
 /**
  * @brief Escribir en Memoria Principal.
  * @param valorAEscribir El valor que se va a escribir en Memoria Principal.
  * @param desplazamiento Bytes que se va a desplazar en Memoria Principal.
  */
-void escribir_memoria(int idProceso, uint32_t valorAEscribir, int desplazamiento);
+char* escribir_memoria(int idProceso, uint32_t valorAEscribir, int desplazamiento);
 
 /**
  * @brief Leer lo que hay en Memoria Principal.
@@ -106,13 +108,18 @@ int obtener_numero_de_marco(int desplazamiento);
 void asignar_marco(Proceso *proceso, int nroMarco);
 
 /**
- * @brief Le asigna una pagina a un marco.
+ * @brief Le asigna una pagina al primer marco libre marco o realiza sustitucion.
  * @param proceso
  * @param nroPagina
- * @param nroMarco
  *
  * @return
  */
-Marco* asignar_pagina_a_marco(Proceso* proceso, int nroPagina, int nroMarco);
+Marco* asignar_pagina_a_marco(Proceso* proceso, int nroPagina);
+
+Marco* primer_marco_libre();
+
+bool tiene_marcos_por_asignar(Proceso* proceso);
+
+int numero_de_marco(Marco* marco);
 
 #endif

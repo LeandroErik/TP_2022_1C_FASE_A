@@ -1,8 +1,6 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-// estructuras
-
 typedef struct Pagina Pagina;
 
 typedef struct
