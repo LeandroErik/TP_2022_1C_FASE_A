@@ -42,7 +42,7 @@ Proceso *crear_proceso(int id, int tamanio)
   Proceso *proceso = malloc(sizeof(Proceso));
   proceso->idProceso = id;
   proceso->tamanio = tamanio;
-  proceso->tablaPrimerNivel = crear_tabla_primer_nivel(); 
+  proceso->tablaPrimerNivel = crear_tabla_primer_nivel();
 
   return proceso;
 }
@@ -59,7 +59,7 @@ TablaPrimerNivel *crear_tabla_primer_nivel()
   tabla->nroTablaPrimerNivel = tablasDePrimerNivel;
   tablasDePrimerNivel++;
 
-  for (int i = 0; i < MEMORIA_CONFIG.ENTRADAS_POR_TABLA; i++) //TODO checkeo de tamaño del proceso, quiza no hace falta completar toda la tabla
+  for (int i = 0; i < MEMORIA_CONFIG.ENTRADAS_POR_TABLA; i++) // TODO checkeo de tamaño del proceso, quiza no hace falta completar toda la tabla
   {
     TablaSegundoNivel *tablaSegundoNivel = crear_tabla_segundo_nivel();
     list_add(tabla->entradas, tablaSegundoNivel);
@@ -102,11 +102,11 @@ int obtener_numero_de_marco(int desplazamiento)
   return desplazamiento / MEMORIA_CONFIG.TAM_PAGINA;
 }
 
-char* escribir_memoria(int idProceso, uint32_t valorAEscribir, int direccionFisica)
+char *escribir_memoria(int idProceso, uint32_t valorAEscribir, int direccionFisica)
 {
   Logger *log = iniciar_logger_memoria();
 
-  //if(le pertenece el marco), escribir
+  // if(le pertenece el marco), escribir
 
   Proceso *proceso = buscar_proceso_por_id(idProceso);
   log_info(log, "id proceso: %d", proceso->idProceso);
@@ -117,14 +117,14 @@ char* escribir_memoria(int idProceso, uint32_t valorAEscribir, int direccionFisi
   void *n = memoriaPrincipal + direccionFisica;
   memcpy(n, &valorAEscribir, 4);
 
-  return "";//confirmacion
+  return ""; // confirmacion
 }
 
 uint32_t leer_de_memoria(int idProceso, int direccionFisica)
 {
   Logger *log = iniciar_logger_memoria();
 
-  //if(le pertenece el marco), escribir
+  // if(le pertenece el marco), escribir
 
   Proceso *proceso = buscar_proceso_por_id(idProceso);
   log_info(log, "id proceso: %d", proceso->idProceso);
@@ -157,11 +157,12 @@ bool tiene_marcos_por_asignar(Proceso *proceso)
   return list_count_satisfying(marcos, &tiene_pagina_asignada_del_proceso) < MEMORIA_CONFIG.MARCOS_POR_PROCESO;
 }
 
-int numero_de_marco(Marco* marco)
+int numero_de_marco(Marco *marco)
 {
-  for(int i = 0; i<list_size(marcos); i++) //TODO ver si hay funcion de t_list que pueda usar
+  for (int i = 0; i < list_size(marcos); i++) // TODO ver si hay funcion de t_list que pueda usar
   {
-    if(list_get(marcos, i) == marco){
+    if (list_get(marcos, i) == marco)
+    {
       return i;
     }
   }
@@ -169,7 +170,7 @@ int numero_de_marco(Marco* marco)
   return -1;
 }
 
-Marco *asignar_pagina_a_marco(Proceso *proceso, int nroPagina) //la llamaria luego de que la cpu me pida la entrada a TP segundo nivel?
+Marco *asignar_pagina_a_marco(Proceso *proceso, int nroPagina) // la llamaria luego de que la cpu me pida la entrada a TP segundo nivel?
 {
   Logger *log = iniciar_logger_memoria();
 
@@ -191,14 +192,14 @@ Marco *asignar_pagina_a_marco(Proceso *proceso, int nroPagina) //la llamaria lue
       marco->paginaActual = pagina;
       marco->idProceso = proceso->idProceso;
 
-      log_info(log, "Pagina %d del proceso %d, asignada al Marco %d", nroPagina, proceso->idProceso, numero_de_marco(marco)); 
+      log_info(log, "Pagina %d del proceso %d, asignada al Marco %d", nroPagina, proceso->idProceso, numero_de_marco(marco));
     }
-    else //memoria llena
+    else // memoria llena
     {
       // correr algortimo sustitucion global
     }
   }
-  else //tiene asignada la cantidad maxima de marcos por proceso
+  else // tiene asignada la cantidad maxima de marcos por proceso
   {
     // correr algortimo sustitucion local
   }

@@ -56,6 +56,9 @@ void iniciar_planificadores()
 
 void ejecutar(Pcb *proceso)
 {
+
+    // TODO: conectar a dispatch una sola vez y no cada vez que se necesita
+
     int socketDispatch = conectar_con_cpu_dispatch();
 
     enviar_pcb(proceso, socketDispatch);
@@ -394,9 +397,13 @@ void agregar_proceso_nuevo(Pcb *procesoNuevo)
 }
 void agregar_proceso_listo(Pcb *procesoListo)
 {
+
+    int tablaPaginasPrimerNivel = tabla_pagina_primer_nivel(procesoListo->pid, procesoListo->tamanio);
+
     pthread_mutex_lock(&mutexColaListos);
 
     procesoListo->escenario->estado = LISTO;
+    procesoListo->tablaPaginas = tablaPaginasPrimerNivel;
     list_add(colaListos, procesoListo);
     log_info(loggerPlanificacion, "Proceso:[%d] se movio LISTO.", procesoListo->pid);
 
@@ -405,6 +412,49 @@ void agregar_proceso_listo(Pcb *procesoListo)
     sem_post(&semaforoProcesoListo);
 
     imprimir_colas();
+}
+
+int tabla_pagina_primer_nivel(int pid, int tamanio)
+{
+    Logger *log = iniciar_logger_kernel();
+    Paquete *paquete = crear_paquete(PROCESO_NUEVO);
+
+    agregar_a_paquete(paquete, pid);
+    agregar_a_paquete(paquete, tamanio);
+
+    // TODO: conectar a memoria una sola vez y no cada vez que se necesita
+    int socketMemoria = conectar_con_memoria();
+
+    enviar_paquete_a_servidor(paquete, socketMemoria);
+
+    log_info(log, "Se envio el proceso %d a la memoria", pid);
+
+    CodigoOperacion codOperacion = obtener_codigo_operacion(socketDispatch);
+
+    Pcb *procesoRecibido;
+
+    char *mensajeDeMemoria;
+
+    int tablaPrimerNivel;
+
+    switch (codOperacion)
+    {
+    case MENSAJE:
+
+        mensajeDeMemoria = obtener_mensaje_del_cliente(socketMemoria);
+        tablaPrimerNivel = atoi(mensajeDeMemoria);
+        log_info(log, "Se recibio de memoria el numero de tabla de primer nivel del proceso");
+        break;
+
+    default:
+        log_warning(logger, "Operación desconocida.");
+        return;
+    }
+
+    eliminar_paquete(paquete);
+    liberar_conexion_con_servidor(socketMemoria);
+
+    return tablaPrimerNivel
 }
 
 void agregar_proceso_ejecutando(Pcb *procesoEjecutando)

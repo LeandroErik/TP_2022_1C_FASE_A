@@ -1,9 +1,10 @@
 #include <memoria_utils.h>
 #include <main.h>
 
-void correr_prueba(Logger* logger){
+void correr_prueba(Logger *logger)
+{
 
-  Proceso *procesoNuevo = crear_proceso(0, 256);// id, tamanio
+  Proceso *procesoNuevo = crear_proceso(0, 256); // id, tamanio
   agregar_proceso(procesoNuevo);
   log_info(logger, "Proceso %d tamanio %d, tabla de primer nivel numero: %d", procesoNuevo->idProceso, procesoNuevo->tamanio, procesoNuevo->tablaPrimerNivel->nroTablaPrimerNivel);
 
@@ -27,7 +28,7 @@ int main(void)
 
   iniciar_estructuras_memoria();
 
-  //Prueba
+  // Prueba
   correr_prueba(logger);
 
   // log_info(logger, "Iniciando Servidor Memoria...");
