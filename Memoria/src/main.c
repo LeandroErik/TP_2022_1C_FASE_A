@@ -43,15 +43,16 @@ int main(void)
   log_info(logger, "Servidor Memoria iniciado correctamente.");
 
   // Hilos
-  Hilo hiloCliente;
 
-  while (true)
+  while(true)
   {
     int socketCliente = esperar_cliente(socketMemoria);
+    Hilo hiloCliente;
 
     pthread_create(&hiloCliente, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
-    pthread_join(hiloCliente, NULL);
+    //pthread_join(hiloCliente, NULL);
   }
+
 
   return EXIT_SUCCESS;
 }

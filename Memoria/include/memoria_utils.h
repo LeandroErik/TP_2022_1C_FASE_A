@@ -7,6 +7,7 @@
 #include <main.h>
 #include <stdbool.h>
 #include <math.h>
+#include <commons/string.h>
 
 //Variables globales
 t_list *procesos;

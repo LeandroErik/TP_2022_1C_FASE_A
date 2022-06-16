@@ -73,7 +73,7 @@ void *planificador_corto_plazo_srt();
 
 void *dispositivo_io();
 
-void *monitorizarSuspension(Pcb *);
+void monitorizarSuspension(Pcb *);
 
 /*Transiciones*/
 void agregar_proceso_nuevo(Pcb *);
@@ -136,5 +136,7 @@ int obtener_tiempo_actual();
 int tiempo_total_bloqueado();
 
 void manejar_proceso_interrumpido(Pcb *);
+
+int tabla_pagina_primer_nivel(int pid, int tamanio);
 
 #endif

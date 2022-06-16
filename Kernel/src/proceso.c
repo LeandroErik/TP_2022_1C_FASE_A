@@ -112,7 +112,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 
         // Comienza el analisis de suspension (10 segundos)
         Hilo hiloMonitorizacionSuspension;
-        pthread_create(&hiloMonitorizacionSuspension, NULL, (void *)monitorizarSuspension, pcb);
+        pthread_create(&hiloMonitorizacionSuspension, NULL, &monitorizarSuspension, pcb);
 
         break;
 
@@ -177,7 +177,7 @@ void manejar_proceso_interrumpido(Pcb *pcb)
     ejecutar(pcbEjecutar);
 }
 
-void *monitorizarSuspension(Pcb *proceso)
+void monitorizarSuspension(Pcb *proceso)
 {
     int tiempoMaximoBloqueo = KERNEL_CONFIG.TIEMPO_MAXIMO_BLOQUEADO;
     // Pasados 10 segundos de bloqueado ,se suspende.
@@ -419,22 +419,21 @@ int tabla_pagina_primer_nivel(int pid, int tamanio)
     Logger *log = iniciar_logger_kernel();
     Paquete *paquete = crear_paquete(PROCESO_NUEVO);
 
-    agregar_a_paquete(paquete, pid);
-    agregar_a_paquete(paquete, tamanio);
+    agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
+    agregar_a_paquete(paquete, &tamanio, sizeof(unsigned int));
 
     // TODO: conectar a memoria una sola vez y no cada vez que se necesita
+    // TODO: Controlar que el mensaje a memoria sea solo la primera vez que se pone en ready el proceso
     int socketMemoria = conectar_con_memoria();
+    enviar_mensaje_a_servidor("Kernel", socketMemoria);
 
     enviar_paquete_a_servidor(paquete, socketMemoria);
 
     log_info(log, "Se envio el proceso %d a la memoria", pid);
 
-    CodigoOperacion codOperacion = obtener_codigo_operacion(socketDispatch);
-
-    Pcb *procesoRecibido;
+    CodigoOperacion codOperacion = obtener_codigo_operacion(socketMemoria);
 
     char *mensajeDeMemoria;
-
     int tablaPrimerNivel;
 
     switch (codOperacion)
@@ -448,13 +447,13 @@ int tabla_pagina_primer_nivel(int pid, int tamanio)
 
     default:
         log_warning(logger, "Operación desconocida.");
-        return;
+        return EXIT_FAILURE;
     }
 
     eliminar_paquete(paquete);
     liberar_conexion_con_servidor(socketMemoria);
 
-    return tablaPrimerNivel
+    return tablaPrimerNivel;
 }
 
 void agregar_proceso_ejecutando(Pcb *procesoEjecutando)
