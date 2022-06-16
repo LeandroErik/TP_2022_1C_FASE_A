@@ -61,8 +61,9 @@ Instruccion obtener_tipo_instruccion(char *instruccion)
 
 void ejecutar_noop()
 {
-  int tiempoEnSegundos = CPU_CONFIG.RETARDO_NOOP / 1000;
-  sleep(tiempoEnSegundos);
+  int tiempoEnMiliSegundos = CPU_CONFIG.RETARDO_NOOP;
+  int tiempoEnMicroSegundos = tiempoEnMiliSegundos * 1000;
+  usleep(tiempoEnMicroSegundos);
 }
 
 void ejecutar_io(Pcb *pcb, int tiempoBloqueadoIO, int socketKernel)
@@ -90,6 +91,21 @@ void ejecutar_exit(Pcb *pcb, int socketKernel)
   eliminar_paquete(paquete);
 }
 
+void atender_interrupcion(Pcb *pcb, int socketKernel)
+{
+  pcb->escenario->estado = INTERRUPCION_EXTERNA;
+
+  Paquete *paquete = malloc(sizeof(Paquete));
+  paquete = crear_paquete(PCB);
+  serializar_pcb(paquete, pcb);
+
+  enviar_paquete_a_cliente(paquete, socketKernel);
+
+  eliminar_paquete(paquete);
+
+  seNecesitaAtenderInterrupcion = false;
+}
+
 void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
 {
   Logger *logger = iniciar_logger_cpu();
@@ -102,6 +118,17 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
 
     LineaInstruccion *lineaInstruccion = list_get(pcb->instrucciones, pcb->contadorPrograma);
     Instruccion instruccion = obtener_tipo_instruccion(lineaInstruccion->identificador);
+
+    if (seNecesitaAtenderInterrupcion)
+    {
+      log_info(logger, "Se necesita atender una interrupción");
+
+      atender_interrupcion(pcb, socketKernel);
+
+      log_info(logger, "Se termino de atender una interrupción (valor : %d)", seNecesitaAtenderInterrupcion);
+
+      return;
+    }
     pcb->contadorPrograma++;
     switch (instruccion)
     {

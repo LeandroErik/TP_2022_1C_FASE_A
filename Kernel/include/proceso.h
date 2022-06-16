@@ -42,16 +42,16 @@ Semaforo semaforoProcesoListo;
 Semaforo semaforoProcesoEjecutando;
 
 Semaforo contadorBloqueados;
+
 Semaforo analizarSuspension;
 Semaforo suspensionFinalizada;
+Semaforo despertarPlanificadorLargoPlazo;
 
 Semaforo semaforoCantidadProcesosEjecutando;
 
 /*Hilos*/
 Hilo hilo_planificador_largo_plazo;
-Hilo hilo_planificador_mediano_plazo;
-Hilo hilo_planificador_corto_plazo_sjf;
-Hilo hilo_planificador_corto_plazo_fifo;
+Hilo hilo_planificador_corto_plazo;
 Hilo hilo_dispositivo_io;
 /*Contador de procesos en memoria*/
 int cantidadProcesosEnMemoria;
@@ -69,9 +69,11 @@ void *planificador_largo_plazo();
 void *planificador_mediano_plazo();
 void *planificador_corto_plazo_fifo();
 
-void *planificador_corto_plazo_sjf();
+void *planificador_corto_plazo_srt();
 
 void *dispositivo_io();
+
+void *monitorizarSuspension(Pcb *);
 
 /*Transiciones*/
 void agregar_proceso_nuevo(Pcb *);
@@ -84,13 +86,12 @@ void agregar_proceso_finalizado(Pcb *);
 Pcb *extraer_proceso_nuevo();
 Pcb *extraer_proceso_suspendido_listo();
 
-/*Planificacion SJF*/
+/*Planificacion SRT*/
 Pcb *sacar_proceso_mas_corto();
-float obtener_tiempo_de_trabajo(Pcb *);
+float obtener_tiempo_de_trabajo_actual(Pcb *);
 bool ordenar_segun_tiempo_de_trabajo(void *, void *);
 
 /*Varios*/
-
 void enviar_pcb(Pcb *, int);
 void *queue_peek_at(t_queue *elf, int);
 char *leer_cola(t_queue *);
@@ -121,16 +122,19 @@ Pcb *sacar_proceso_bloqueado();
  * @brief Dependiendo del estado del pcb se lo agrega a una de las colas.
  *
  */
-void manejar_proceso_recibido(Pcb *pcb);
+void manejar_proceso_recibido(Pcb *, int);
 
 Pcb *sacar_proceso_listo();
 
 /**
- * @brief Instante actual
+ * @brief Instante actual en segundos
  *
  *@returns segundos desde 01 / 01 / 1970
  */
 int obtener_tiempo_actual();
-int tiempo_total_bloqueo_proceso();
+
+int tiempo_total_bloqueado();
+
+void manejar_proceso_interrumpido(Pcb *);
 
 #endif

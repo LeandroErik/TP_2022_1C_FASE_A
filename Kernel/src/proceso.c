@@ -5,11 +5,11 @@
 void inicializar_semaforos()
 {
     pthread_mutex_init(&mutexNumeroProceso, NULL);
+
     pthread_mutex_init(&mutexColaNuevos, NULL);
     pthread_mutex_init(&mutexColaListos, NULL);
     pthread_mutex_init(&mutexColaEjecutando, NULL);
     pthread_mutex_init(&mutexColaBloqueados, NULL);
-
     pthread_mutex_init(&mutexColaSuspendidoListo, NULL);
     pthread_mutex_init(&mutexColaFinalizado, NULL);
 
@@ -22,7 +22,10 @@ void inicializar_semaforos()
     sem_init(&suspensionFinalizada, 0, 0);
 
     sem_init(&semaforoCantidadProcesosEjecutando, 0, 1);
+
+    sem_init(&despertarPlanificadorLargoPlazo, 0, 0);
 }
+
 void inicializar_colas_procesos()
 {
     colaNuevos = queue_create();
@@ -37,15 +40,13 @@ void iniciar_planificadores()
 {
     pthread_create(&hilo_planificador_largo_plazo, NULL, planificador_largo_plazo, NULL);
 
-    pthread_create(&hilo_planificador_mediano_plazo, NULL, planificador_mediano_plazo, NULL);
-    log_info(logger, "CONFIG: %s", KERNEL_CONFIG.ALGORITMO_PLANIFICACION);
     if (strcmp(KERNEL_CONFIG.ALGORITMO_PLANIFICACION, "FIFO") != 0)
     {
-        pthread_create(&hilo_planificador_corto_plazo_sjf, NULL, planificador_corto_plazo_sjf, NULL);
+        pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo_srt, NULL);
     }
     else
     {
-        pthread_create(&hilo_planificador_corto_plazo_fifo, NULL, planificador_corto_plazo_fifo, NULL);
+        pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo_fifo, NULL);
     }
 
     pthread_create(&hilo_dispositivo_io, NULL, dispositivo_io, NULL);
@@ -55,19 +56,11 @@ void iniciar_planificadores()
 
 void ejecutar(Pcb *proceso)
 {
-    proceso->escenario->estado = EJECUTANDO;
-
-    proceso->tiempoInicioEjecucion = obtener_tiempo_actual();
-
     int socketDispatch = conectar_con_cpu_dispatch();
 
-    if (socketDispatch == -1)
-    {
-        log_error(logger, "No se pudo conectar con el CPU Dispatch");
-        return;
-    }
-
     enviar_pcb(proceso, socketDispatch);
+
+    log_info(logger, "Envio el proceso con PID : %d de CPU!", proceso->pid);
 
     CodigoOperacion codOperacion = obtener_codigo_operacion(socketDispatch);
 
@@ -77,8 +70,8 @@ void ejecutar(Pcb *proceso)
     {
     case PCB:
         procesoRecibido = deserializar_pcb(socketDispatch);
-        log_info(logger, "Recibi el PCB con PID : %d de CPU!", procesoRecibido->pid);
-        manejar_proceso_recibido(procesoRecibido);
+        log_info(logger, "Recibi el proceso con PID : %d de CPU!", proceso->pid);
+        manejar_proceso_recibido(procesoRecibido, socketDispatch);
 
         break;
 
@@ -94,30 +87,109 @@ void ejecutar(Pcb *proceso)
     liberar_conexion_con_servidor(socketDispatch);
 }
 
-void manejar_proceso_recibido(Pcb *pcb)
+void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 {
     sacar_proceso_ejecutando();
-    pcb->tiempoRafagaRealAnterior = obtener_tiempo_actual() - pcb->tiempoInicioEjecucion;
 
     switch (pcb->escenario->estado)
     {
+    case INTERRUPCION_EXTERNA:
+        log_info(loggerPlanificacion, "[INTERRUPCION]Proceso : [%d] fue INTERRUPIDO.", pcb->pid);
+        // Libero la conexion asi no se bloquea el cpu en la espera de un codigo de operacion(Asi puede espera a otro procesos)
+        liberar_conexion_con_servidor(socketDispatch);
+
+        log_info(loggerPlanificacion, "Tiempo ejecucion [%d]: %d.", pcb->pid, obtener_tiempo_actual() - pcb->tiempoInicioEjecucion);
+        manejar_proceso_interrumpido(pcb);
+
+        break;
+
     case BLOQUEADO_IO:
-        log_info(logger, "El proceso %d se encuentra BLOQUEADO por IO por %d ms", pcb->pid, pcb->escenario->tiempoBloqueadoIO);
 
         agregar_proceso_bloqueado(pcb);
 
+        // Comienza el analisis de suspension (10 segundos)
+        Hilo hiloMonitorizacionSuspension;
+        pthread_create(&hiloMonitorizacionSuspension, NULL, (void *)monitorizarSuspension, pcb);
+
         break;
+
     case TERMINADO:
-        log_info(logger, "El proceso %d se encuentra TERMINADO ", pcb->pid);
         agregar_proceso_finalizado(pcb);
 
         decrementar_cantidad_procesos_memoria();
-        log_info(logger, "Cantidad procesos en MEMORIA %d", cantidadProcesosEnMemoria);
+        log_info(loggerPlanificacion, "Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
+
+        // TODO:Avisar a consola asi se finaliza.
+
         break;
 
     default:
-        log_info(logger, "El proceso %d es medio raro", pcb->pid);
+        log_warning(loggerPlanificacion, "El proceso %d con operacion desconocida.", pcb->pid);
         break;
+    }
+}
+
+void manejar_proceso_interrumpido(Pcb *pcb)
+{
+    Pcb *pcbEjecutar = pcb;
+    // comparar lo que le falta con las estimaciones de los listos
+
+    float tiempoQueYaEjecuto = obtener_tiempo_actual() - pcb->tiempoInicioEjecucion;
+
+    float estimacionEnSegundos = obtener_tiempo_de_trabajo_actual(pcb) / 1000;
+
+    float tiempoRestanteEnSegundos = estimacionEnSegundos - tiempoQueYaEjecuto;
+
+    log_info(loggerPlanificacion, "[INTERRUPCION] Proceso: [%d] ,(cpu: %f), estimación restante: %f.", pcb->pid, tiempoQueYaEjecuto, tiempoRestanteEnSegundos);
+
+    if (!list_is_empty(colaListos))
+    {
+        // Ordeno segun esos valores
+        list_sort(colaListos, &ordenar_segun_tiempo_de_trabajo);
+
+        log_info(loggerPlanificacion, "[INTERRUPCION] Se reordenó la cola Listos.");
+
+        log_info(loggerPlanificacion, "[INTERRUPCION]Analizando si suspender o ejecutar al actual.");
+        // Falta aplicar mutua exclusion
+        Pcb *pcbMasCortoDeListos = list_get(colaListos, 0);
+
+        float tiempoPcbMasCortoEnSegundos = obtener_tiempo_de_trabajo_actual(pcbMasCortoDeListos) / 1000;
+        log_info(loggerPlanificacion, "[INTERRUPCION] Proceso menor [%d], con estimacion: %f.", pcbMasCortoDeListos->pid, tiempoPcbMasCortoEnSegundos);
+
+        if (tiempoRestanteEnSegundos > tiempoPcbMasCortoEnSegundos)
+        {
+            log_info(loggerPlanificacion, "Proceso:[%d] se DESALOJA.", pcbEjecutar->pid);
+            agregar_proceso_listo(pcb);
+            // aca pongo a ejecutar al mas corto,caso contrario sigue ejecutando el otro
+            sem_wait(&semaforoProcesoListo); // Asi decremento el semaforo y no saca a ejecutar a otro que no existe
+
+            pcbEjecutar = sacar_proceso_mas_corto(colaListos);
+        }
+    }
+    pthread_mutex_unlock(&mutexColaListos);
+    log_info(loggerPlanificacion, "[INTERRUPCION] Proceso:[%d] se ejecuta con puntero en %d", pcbEjecutar->pid, pcbEjecutar->contadorPrograma);
+
+    agregar_proceso_ejecutando(pcbEjecutar);
+
+    ejecutar(pcbEjecutar);
+}
+
+void *monitorizarSuspension(Pcb *proceso)
+{
+    int tiempoMaximoBloqueo = KERNEL_CONFIG.TIEMPO_MAXIMO_BLOQUEADO;
+    // Pasados 10 segundos de bloqueado ,se suspende.
+    int tiempoMaximoBloqueoEnMicrosegundos = tiempoMaximoBloqueo * 1000;
+
+    usleep(tiempoMaximoBloqueoEnMicrosegundos);
+
+    if (proceso->escenario->estado == BLOQUEADO_IO)
+    {
+        proceso->escenario->estado = SUSPENDIDO;
+        log_info(loggerPlanificacion, "El proceso: [%d],se movio a SUSPENDIDO-BLOQUEADO", proceso->pid);
+
+        decrementar_cantidad_procesos_memoria();
+
+        // TODO:Avisar a memoria de la suspension
     }
 }
 
@@ -165,31 +237,41 @@ void *dispositivo_io()
     {
 
         sem_wait(&contadorBloqueados);
-        log_info(logger, "ESTOY EJECUTANDO E/S");
-        Pcb *proceso = queue_peek(colaBloqueados); // Aun la dejo en la cola de bloqueados,pero leo el proceso
-        int tiempoBloqueo = proceso->escenario->tiempoBloqueadoIO;
-        log_info(logger, "Duermo PID: %d ,%d segundos", proceso->pid, tiempoBloqueo);
 
+        Pcb *proceso = queue_peek(colaBloqueados);
+
+        int tiempoBloqueo = proceso->escenario->tiempoBloqueadoIO;
+
+        log_info(loggerPlanificacion, "[DISP I/O] Proceso: [%d] ,se bloqueara %d segundos", proceso->pid, tiempoBloqueo / 1000);
+        // Bloqueo el proceso.
         int tiempoBloqueoEnMicrosegundos = tiempoBloqueo * 1000;
 
         usleep(tiempoBloqueoEnMicrosegundos);
-        proceso = sacar_proceso_bloqueado(); // Aca lo saco de la cola de bloqueados.(CON EL VALOR ACTUALIZADO)
+
+        log_info(loggerPlanificacion, "[DISP I/O] Proceso: [%d] ,termino I/O %d segundos.", proceso->pid, tiempoBloqueo / 1000);
+
+        proceso = sacar_proceso_bloqueado();
+        // Analizo si fue suspendido.
         if (proceso->escenario->estado == SUSPENDIDO)
         {
-            /*AGREGAR A SUSPENDED READY*/
+
             agregar_proceso_suspendido_listo(proceso);
         }
         else
         {
-            /*sino pasarlo a ready normal*/
+
             agregar_proceso_listo(proceso);
         }
     }
 }
+
 void *planificador_largo_plazo()
 {
+    log_info(loggerPlanificacion, "Inicio planificacion LARGO PLAZO [%s]", KERNEL_CONFIG.ALGORITMO_PLANIFICACION);
     while (1)
     {
+        sem_wait(&despertarPlanificadorLargoPlazo);
+        log_info(loggerPlanificacion, "[LARGO-PLAZO] Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
 
         if (cantidadProcesosEnMemoria < KERNEL_CONFIG.GRADO_MULTIPROGRAMACION && (queue_size(colaNuevos) > 0 || queue_size(colaSuspendidoListo) > 0))
         {
@@ -201,49 +283,22 @@ void *planificador_largo_plazo()
 
             agregar_proceso_listo(procesoSaliente);
 
+            // Envio interrupcion por cada vez que que entra uno a ready
+            bool esSrt = strcmp(KERNEL_CONFIG.ALGORITMO_PLANIFICACION, "SRT") == 0;
+
+            if (esSrt)
+            {
+                enviar_interrupcion();
+            }
+
             incrementar_cantidad_procesos_memoria();
         }
     }
 }
 
-void *planificador_mediano_plazo()
-{
-    while (1)
-    {
-        sem_wait(&analizarSuspension);
-        log_info(logger, "Analizando si hay algun proceso para SUSPENDER");
-        pthread_mutex_lock(&mutexColaBloqueados);
-
-        if (queue_size(colaBloqueados) > 0)
-        {
-            /*Realizar el chequeo si suspende o no*/
-            for (int i = 0; i < queue_size(colaBloqueados); i++)
-            {
-                Pcb *procesoActual = malloc(sizeof(Pcb));
-                procesoActual = queue_peek_at(colaBloqueados, i);
-
-                int tiempoBloqueo = (obtener_tiempo_actual() - procesoActual->tiempoInicioBloqueo);
-                log_info(logger, "Tiempo BLOQUEO proceso %d : %d", procesoActual->pid, tiempoBloqueo);
-
-                if (tiempoBloqueo * 1000 >= KERNEL_CONFIG.TIEMPO_MAXIMO_BLOQUEADO && procesoActual->escenario->estado != SUSPENDIDO)
-                {
-                    log_info(logger, "EL PROCESO SE TENDRIA QUE SUSPENDER ,CON PID : %d (pasaron %d segundos)", procesoActual->pid, tiempoBloqueo);
-                    /*Seteo estado suspendido al proceso que esta bloqueado*/
-                    procesoActual->escenario->estado = SUSPENDIDO;
-                    /*libero espacio en procesos en memoria*/
-                    decrementar_cantidad_procesos_memoria();
-                }
-            }
-        }
-
-        pthread_mutex_unlock(&mutexColaBloqueados);
-        sem_post(&suspensionFinalizada);
-    }
-}
-
 void imprimir_colas()
 {
-    log_info(logger, "\
+    log_info(loggerPlanificacion, "\
     \n\tCola nuevos: %s \
     \n\tCola listos: %s \
     \n\tCola ejecutando: %s \
@@ -271,7 +326,7 @@ char *leer_lista(t_list *cola)
 }
 void *planificador_corto_plazo_fifo()
 {
-    log_info(logger, "INICIO PLANIFICACION FIFO");
+    log_info(loggerPlanificacion, "INICIO PLANIFICACION FIFO");
     while (1)
     {
         sem_wait(&semaforoProcesoListo);
@@ -281,17 +336,17 @@ void *planificador_corto_plazo_fifo()
 
         agregar_proceso_ejecutando(procesoEjecutar);
 
-        sem_post(&analizarSuspension);
-        sem_wait(&suspensionFinalizada);
         ejecutar(procesoEjecutar);
     }
 }
-void *planificador_corto_plazo_sjf()
+
+void *planificador_corto_plazo_srt()
 {
-    log_info(logger, "INICIO PLANIFICACION SJF");
+    log_info(logger, "INICIO PLANIFICACION SRT");
 
     while (1)
     {
+
         sem_wait(&semaforoProcesoListo);
         sem_wait(&semaforoCantidadProcesosEjecutando);
 
@@ -299,150 +354,73 @@ void *planificador_corto_plazo_sjf()
 
         agregar_proceso_ejecutando(procesoEjecutar);
 
-        sem_post(&analizarSuspension);
-        sem_wait(&suspensionFinalizada);
         ejecutar(procesoEjecutar);
     }
 }
 Pcb *sacar_proceso_mas_corto()
 {
 
-    Pcb *pcbSaliente = malloc(sizeof(Pcb));
+    Pcb *pcbSaliente;
     /*Replanifico la cola de listos*/
 
     pthread_mutex_lock(&mutexColaListos);
 
-    log_info(logger, "Replanifico la cola de Listos");
     list_sort(colaListos, &ordenar_segun_tiempo_de_trabajo);
+
     pcbSaliente = list_remove(colaListos, 0);
-    log_info(logger, "\nPID :%d ESTIMACION: %f,RAFAGA ANTERIOR: %d -> RESULTADO: %f \n", pcbSaliente->pid, pcbSaliente->estimacionRafaga, pcbSaliente->tiempoRafagaRealAnterior, obtener_tiempo_de_trabajo(pcbSaliente));
+
+    log_info(loggerPlanificacion, "\n[REPLANIFICACION] Proceso:[%d] rafaga anterior: %d ,estimacion anterior: %f-> estimacion actual: %f \n", pcbSaliente->pid, pcbSaliente->tiempoRafagaRealAnterior, pcbSaliente->estimacionRafaga, obtener_tiempo_de_trabajo_actual(pcbSaliente));
+
     pthread_mutex_unlock(&mutexColaListos);
 
     return pcbSaliente;
 }
 
-bool ordenar_segun_tiempo_de_trabajo(void *procesoA, void *procesoB)
-{
-    return obtener_tiempo_de_trabajo((Pcb *)procesoA) < obtener_tiempo_de_trabajo((Pcb *)procesoB);
-}
-
-float obtener_tiempo_de_trabajo(Pcb *proceso)
-{
-    float alfa = KERNEL_CONFIG.ALFA;
-    float estimacionAnterior = proceso->estimacionRafaga;
-    int rafagaAnterior = proceso->tiempoRafagaRealAnterior * 1000;
-    float resultado = alfa * rafagaAnterior + (1 - alfa) * estimacionAnterior;
-
-    return resultado;
-}
-
-/*Colas de planificacion*/
+/*Funciones para aniadir proceso a cola*/
 
 void agregar_proceso_nuevo(Pcb *procesoNuevo)
 {
     pthread_mutex_lock(&mutexColaNuevos);
+
     queue_push(colaNuevos, procesoNuevo);
-    log_info(logger, "Proceso con PID: %d , agregado a NEW en posicion : %d .", procesoNuevo->pid, queue_size(colaNuevos));
-    pthread_mutex_unlock(&mutexColaNuevos);
-
-    /*Despierto plani de mediano plazo*/
-    sem_post(&analizarSuspension);
-    sem_wait(&suspensionFinalizada);
-
-    imprimir_colas();
-}
-void agregar_proceso_finalizado(Pcb *procesoFinalizado)
-{
-    pthread_mutex_lock(&mutexColaFinalizado);
-    queue_push(colaFinalizado, procesoFinalizado);
-    log_info(logger, "Proceso con PID: %d , agregado a FIN en posicion : %d .", procesoFinalizado->pid, queue_size(colaFinalizado));
-    pthread_mutex_unlock(&mutexColaFinalizado);
-
-    imprimir_colas();
-}
-
-void agregar_proceso_suspendido_listo(Pcb *procesoSuspendidoListo)
-{
-    pthread_mutex_lock(&mutexColaSuspendidoListo);
-    queue_push(colaSuspendidoListo, procesoSuspendidoListo);
-    log_info(logger, "Proceso con PID: %d , agregado a SUSPENDIDO-LISTO en posicion : %d .", procesoSuspendidoListo->pid, queue_size(colaSuspendidoListo));
-    pthread_mutex_unlock(&mutexColaSuspendidoListo);
-    imprimir_colas();
-}
-void sacar_proceso_ejecutando()
-{
-
-    pthread_mutex_lock(&mutexColaEjecutando);
-    queue_pop(colaEjecutando);
-    pthread_mutex_unlock(&mutexColaEjecutando);
-
-    sem_post(&semaforoCantidadProcesosEjecutando);
-}
-
-Pcb *sacar_proceso_bloqueado()
-{
-    Pcb *pcbSaliente = malloc(sizeof(Pcb));
-
-    pthread_mutex_lock(&mutexColaBloqueados);
-    pcbSaliente = queue_pop(colaBloqueados);
-    log_info(logger, "Proceso PID:%d salío de BLOQUEADO.", pcbSaliente->pid);
-    pthread_mutex_unlock(&mutexColaBloqueados);
-
-    return pcbSaliente;
-}
-
-Pcb *sacar_proceso_listo()
-{
-    Pcb *pcbSaliente = malloc(sizeof(Pcb));
-
-    pthread_mutex_lock(&mutexColaListos);
-    pcbSaliente = list_remove(colaListos, 0);
-    pthread_mutex_unlock(&mutexColaListos);
-
-    return pcbSaliente;
-}
-
-Pcb *extraer_proceso_nuevo()
-{
-    pthread_mutex_lock(&mutexColaNuevos);
-
-    Pcb *proceso_saliente = queue_pop(colaNuevos);
+    log_info(loggerPlanificacion, "Proceso:[%d] se movio NUEVO.", procesoNuevo->pid);
 
     pthread_mutex_unlock(&mutexColaNuevos);
 
-    return proceso_saliente;
+    /*Despierto al Planificador de Largo Plazo*/
+    sem_post(&despertarPlanificadorLargoPlazo);
+
+    imprimir_colas();
 }
-
-Pcb *extraer_proceso_suspendido_listo()
-{
-    pthread_mutex_lock(&mutexColaSuspendidoListo);
-
-    Pcb *proceso_saliente = queue_pop(colaSuspendidoListo);
-
-    pthread_mutex_unlock(&mutexColaSuspendidoListo);
-
-    return proceso_saliente;
-}
-
 void agregar_proceso_listo(Pcb *procesoListo)
 {
     pthread_mutex_lock(&mutexColaListos);
 
+    procesoListo->escenario->estado = LISTO;
     list_add(colaListos, procesoListo);
-    log_info(logger, "Agregado a READY el proceso : %d .", procesoListo->pid);
+    log_info(loggerPlanificacion, "Proceso:[%d] se movio LISTO.", procesoListo->pid);
 
     pthread_mutex_unlock(&mutexColaListos);
 
     sem_post(&semaforoProcesoListo);
+
     imprimir_colas();
 }
 
 void agregar_proceso_ejecutando(Pcb *procesoEjecutando)
 {
     pthread_mutex_lock(&mutexColaEjecutando);
+    if (procesoEjecutando->escenario->estado != INTERRUPCION_EXTERNA)
+    {
+        // Aca si pongo tiempo inicio ejecucion asi no cambia por cada interrupcion(acepta que venga de LISTO)
+        procesoEjecutando->tiempoInicioEjecucion = obtener_tiempo_actual();
+        log_info(loggerPlanificacion, "Se puso tiempo inicio ejecucion proceso %d", procesoEjecutando->pid);
+    }
+    procesoEjecutando->escenario->estado = EJECUTANDO;
 
     queue_push(colaEjecutando, procesoEjecutando);
-    log_info(logger, "Agregado a EJECUTANDO el proceso : %d .", procesoEjecutando->pid);
+    log_info(loggerPlanificacion, "Proceso:[%d] se movio EJECUTANDO.", procesoEjecutando->pid);
+
     pthread_mutex_unlock(&mutexColaEjecutando);
 
     imprimir_colas();
@@ -452,19 +430,134 @@ void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
 {
 
     pthread_mutex_lock(&mutexColaBloqueados);
-    /*agrego tiempo inicial de bloqueo para la calcular la suspension*/
-    procesoBloqueado->tiempoInicioBloqueo = obtener_tiempo_actual();
+    // Se guarda la estimacion anterior
+    procesoBloqueado->estimacionRafaga = obtener_tiempo_de_trabajo_actual(procesoBloqueado);
+
+    // Se guarda tiempo de ejecucion anterior
+    procesoBloqueado->tiempoRafagaRealAnterior = obtener_tiempo_actual() - procesoBloqueado->tiempoInicioEjecucion;
+
+    log_info(loggerPlanificacion, "Proceso [%d] rafaga real anterior: %d", procesoBloqueado->pid, procesoBloqueado->tiempoRafagaRealAnterior);
+    log_info(loggerPlanificacion, "Proceso [%d] estimacion rafaga anterior: %f", procesoBloqueado->pid, procesoBloqueado->estimacionRafaga);
+
+    procesoBloqueado->escenario->estado = BLOQUEADO_IO;
 
     queue_push(colaBloqueados, procesoBloqueado);
-    log_info(logger, "Proceso con PID: %d , agregado a BLOQUEADO en posicion : %d ", procesoBloqueado->pid, queue_size(colaBloqueados));
+
+    log_info(loggerPlanificacion, "Proceso: [%d] se movio a BLOQUEADO (%d segundos).", procesoBloqueado->pid, procesoBloqueado->escenario->tiempoBloqueadoIO / 1000);
+
     pthread_mutex_unlock(&mutexColaBloqueados);
 
-    /*Aviso al dispositivo de E/S*/
+    // Despierto dispositivo I/O
     sem_post(&contadorBloqueados);
-    /*Despierto planificador mediano plazo*/
-    sem_post(&analizarSuspension);
-    sem_wait(&suspensionFinalizada);
+
+    // Despierto al planificador de largo plazo
+
+    sem_post(&despertarPlanificadorLargoPlazo);
+
     imprimir_colas();
+}
+void agregar_proceso_finalizado(Pcb *procesoFinalizado)
+{
+    pthread_mutex_lock(&mutexColaFinalizado);
+
+    queue_push(colaFinalizado, procesoFinalizado);
+    log_info(loggerPlanificacion, "Proceso:[%d] se encuentra FINALIZADO.", procesoFinalizado->pid);
+
+    pthread_mutex_unlock(&mutexColaFinalizado);
+
+    // Despierto al planificador de mediano plazo.
+    sem_post(&despertarPlanificadorLargoPlazo);
+
+    imprimir_colas();
+}
+
+void agregar_proceso_suspendido_listo(Pcb *procesoSuspendidoListo)
+{
+    pthread_mutex_lock(&mutexColaSuspendidoListo);
+
+    procesoSuspendidoListo->escenario->estado = LISTO;
+    queue_push(colaSuspendidoListo, procesoSuspendidoListo);
+    log_info(loggerPlanificacion, "Proceso:[%d] se encuentra SUSPENDIDO-LISTO.", procesoSuspendidoListo->pid);
+
+    pthread_mutex_unlock(&mutexColaSuspendidoListo);
+
+    // Despierto al Planificador de Largo Plazo
+    sem_post(&despertarPlanificadorLargoPlazo);
+
+    imprimir_colas();
+}
+
+/*Funciones para sacar procesos a cola.*/
+
+void sacar_proceso_ejecutando()
+{
+
+    pthread_mutex_lock(&mutexColaEjecutando);
+
+    Pcb *pcbSaliente = queue_pop(colaEjecutando);
+    log_info(loggerPlanificacion, "Proceso : [%d] salío de EJECUTANDO.", pcbSaliente->pid);
+    pthread_mutex_unlock(&mutexColaEjecutando);
+    // le aviso al planificador de corto plazo
+    sem_post(&semaforoCantidadProcesosEjecutando);
+
+    /*Despierto al Planificador de Largo Plazo*/
+    sem_post(&despertarPlanificadorLargoPlazo);
+
+    imprimir_colas();
+}
+
+Pcb *sacar_proceso_bloqueado()
+{
+    Pcb *pcbSaliente;
+
+    pthread_mutex_lock(&mutexColaBloqueados);
+    pcbSaliente = queue_pop(colaBloqueados);
+    log_info(loggerPlanificacion, "Proceso : [%d] salío de BLOQUEADO. (real ant : %d)", pcbSaliente->pid, pcbSaliente->tiempoRafagaRealAnterior);
+    pthread_mutex_unlock(&mutexColaBloqueados);
+    // Envio interrupcion por cada vez quesale de bloqueadoalgun proceso.
+    bool esSrt = strcmp(KERNEL_CONFIG.ALGORITMO_PLANIFICACION, "SRT") == 0;
+
+    if (esSrt)
+    {
+        enviar_interrupcion();
+    }
+
+    return pcbSaliente;
+}
+
+Pcb *sacar_proceso_listo()
+{
+
+    pthread_mutex_lock(&mutexColaListos);
+    Pcb *pcbSaliente = list_remove(colaListos, 0);
+    log_info(loggerPlanificacion, "Proceso : [%d] salío de LISTO.", pcbSaliente->pid);
+    pthread_mutex_unlock(&mutexColaListos);
+
+    return pcbSaliente;
+}
+
+Pcb *extraer_proceso_nuevo()
+{
+    pthread_mutex_lock(&mutexColaNuevos);
+
+    Pcb *pcbSaliente = queue_pop(colaNuevos);
+    log_info(loggerPlanificacion, "Proceso : [%d] salío de NUEVO.", pcbSaliente->pid);
+
+    pthread_mutex_unlock(&mutexColaNuevos);
+
+    return pcbSaliente;
+}
+
+Pcb *extraer_proceso_suspendido_listo()
+{
+    pthread_mutex_lock(&mutexColaSuspendidoListo);
+
+    Pcb *pcbSaliente = queue_pop(colaSuspendidoListo);
+    log_info(logger, "Proceso : [%d] salío de SUSPENDIDO-LISTO.", pcbSaliente->pid);
+
+    pthread_mutex_unlock(&mutexColaSuspendidoListo);
+
+    return pcbSaliente;
 }
 
 /*Monitores*/
@@ -484,4 +577,20 @@ void decrementar_cantidad_procesos_memoria()
 int obtener_tiempo_actual()
 {
     return time(NULL);
+}
+
+float obtener_tiempo_de_trabajo_actual(Pcb *proceso)
+{
+    float alfa = KERNEL_CONFIG.ALFA;
+    float estimacionAnterior = proceso->estimacionRafaga;
+    int rafagaAnterior = proceso->tiempoRafagaRealAnterior * 1000;
+
+    float resultado = alfa * rafagaAnterior + (1 - alfa) * estimacionAnterior;
+
+    return resultado;
+}
+
+bool ordenar_segun_tiempo_de_trabajo(void *procesoA, void *procesoB)
+{
+    return obtener_tiempo_de_trabajo_actual((Pcb *)procesoA) < obtener_tiempo_de_trabajo_actual((Pcb *)procesoB);
 }

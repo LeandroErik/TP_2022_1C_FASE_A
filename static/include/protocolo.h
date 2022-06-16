@@ -17,7 +17,6 @@ typedef enum CodigoOperacion
   MENSAJE,
   LINEAS_CODIGO,
   PCB,
-  INTERRUPCION
 } CodigoOperacion;
 
 typedef enum Estado
@@ -53,7 +52,6 @@ typedef struct Pcb
   unsigned int contadorPrograma;
   unsigned int tablaPaginas;
   float estimacionRafaga;
-  int tiempoInicioBloqueo;
   int tiempoInicioEjecucion;
   int tiempoRafagaRealAnterior;
   Escenario *escenario;

@@ -7,34 +7,23 @@ int main(void)
 
     Config *config = config_create("Kernel.config");
     logger = iniciar_logger_kernel();
+    loggerPlanificacion = log_create("Kernel-Planificacion.log", "Kernel", 1, LOG_LEVEL_INFO);
 
     rellenar_configuracion_kernel(config);
 
-    log_info(logger, "Iniciando Servidor Kernel...");
     int socketKernel = iniciar_servidor_kernel();
-
-    if (socketKernel < 0)
-    {
-        log_error(logger, "Error intentando iniciar Servidor Kernel.");
-        return EXIT_FAILURE;
-    }
-
-    log_info(logger, "Servidor Kernel iniciado correctamente.");
 
     inicializar_semaforos();
     inicializar_colas_procesos();
     iniciar_planificadores();
 
     Hilo hiloConsolas;
-    Hilo hiloConexionInterrupt;
     Hilo hiloConexionMemoria;
 
     pthread_create(&hiloConsolas, NULL, (void *)esperar_consola, (void *)socketKernel);
-    pthread_create(&hiloConexionInterrupt, NULL, (void *)manejar_conexion_cpu_interrupcion, NULL);
     pthread_create(&hiloConexionMemoria, NULL, (void *)manejar_conexion_memoria, NULL);
 
     pthread_join(hiloConsolas, NULL);
-    pthread_join(hiloConexionInterrupt, NULL);
     pthread_join(hiloConexionMemoria, NULL);
 
     apagar_servidor(socketKernel);

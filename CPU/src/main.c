@@ -1,5 +1,7 @@
 #include <cpu_utils.h>
 
+bool seNecesitaAtenderInterrupcion = false;
+
 int main(void)
 {
   Config *config = config_create("CPU.config");

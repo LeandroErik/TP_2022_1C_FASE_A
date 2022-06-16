@@ -11,6 +11,7 @@
 #include <proceso.h>
 
 Logger *logger;
+Logger *loggerPlanificacion;
 
 int idProcesoGlobal;
 
