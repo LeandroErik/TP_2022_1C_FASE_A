@@ -7,7 +7,19 @@ Logger *iniciar_logger_kernel()
 
 int iniciar_servidor_kernel()
 {
-  return iniciar_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_KERNEL);
+  log_info(logger, "Iniciando Servidor Kernel...");
+
+  int socketKernel = iniciar_servidor(KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_KERNEL);
+
+  if (socketKernel < 0)
+  {
+    log_error(logger, "Error intentando iniciar Servidor Kernel.");
+    return EXIT_FAILURE;
+  }
+
+  log_info(logger, "Servidor Kernel iniciado correctamente.");
+
+  return socketKernel;
 }
 
 int rellenar_lista_instrucciones(Lista *listaInstrucciones, int socketCliente)
@@ -33,11 +45,11 @@ Pcb *crear_pcb(Lista *listaInstrucciones, int tamanioProceso)
   pcb->tablaPaginas = 0;
   pcb->estimacionRafaga = KERNEL_CONFIG.ESTIMACION_INICIAL;
   pcb->escenario = malloc(sizeof(Escenario));
-  pcb->escenario->estado = EJECUTANDO;
+  pcb->escenario->estado = LISTO;
   pcb->escenario->tiempoBloqueadoIO = 0;
   pcb->instrucciones = list_duplicate(listaInstrucciones);
   pcb->tiempoRafagaRealAnterior = KERNEL_CONFIG.ESTIMACION_INICIAL / 1000;
-  pcb->tiempoInicioEjecucion = NULL;
+  pcb->tiempoInicioEjecucion = (int)NULL;
 
   list_destroy(listaInstrucciones);
 
