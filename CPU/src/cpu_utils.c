@@ -93,7 +93,7 @@ void ejecutar_exit(Pcb *pcb, int socketKernel)
 
 void atender_interrupcion(Pcb *pcb, int socketKernel)
 {
-  pcb->escenario->estado = INTERRUMPIDO;
+  pcb->escenario->estado = INTERRUPCION_EXTERNA;
 
   Paquete *paquete = malloc(sizeof(Paquete));
   paquete = crear_paquete(PCB);

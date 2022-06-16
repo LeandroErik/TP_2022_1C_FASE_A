@@ -26,8 +26,7 @@ typedef enum Estado
   INTERRUPCION_EXTERNA,
   TERMINADO,
   SUSPENDIDO,
-  LISTO,
-  INTERRUMPIDO
+  LISTO
 } Estado;
 
 typedef enum Instruccion

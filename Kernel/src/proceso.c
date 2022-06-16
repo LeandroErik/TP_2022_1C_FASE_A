@@ -93,7 +93,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 
     switch (pcb->escenario->estado)
     {
-    case INTERRUMPIDO:
+    case INTERRUPCION_EXTERNA:
         log_info(loggerPlanificacion, "[INTERRUPCION]Proceso : [%d] fue INTERRUPIDO.", pcb->pid);
         // Libero la conexion asi no se bloquea el cpu en la espera de un codigo de operacion(Asi puede espera a otro procesos)
         liberar_conexion_con_servidor(socketDispatch);
@@ -410,7 +410,7 @@ void agregar_proceso_listo(Pcb *procesoListo)
 void agregar_proceso_ejecutando(Pcb *procesoEjecutando)
 {
     pthread_mutex_lock(&mutexColaEjecutando);
-    if (procesoEjecutando->escenario->estado != INTERRUMPIDO)
+    if (procesoEjecutando->escenario->estado != INTERRUPCION_EXTERNA)
     {
         // Aca si pongo tiempo inicio ejecucion asi no cambia por cada interrupcion(acepta que venga de LISTO)
         procesoEjecutando->tiempoInicioEjecucion = obtener_tiempo_actual();

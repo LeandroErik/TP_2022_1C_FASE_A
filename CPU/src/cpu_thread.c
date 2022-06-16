@@ -85,7 +85,7 @@ void manejar_paquete_kernel_interrupt(int socketKernel)
       log_warning(logger, "Conexión con Kernel en puerto Interrupt terminada.");
       log_destroy(logger);
       return;
-
+    /// TODO: revisar nombre del enum.
     case MENSAJE:
       log_info(logger, "Interrupción recibida de Kernel.");
       log_info(logger, "Interrupción: %s", obtener_mensaje_del_cliente(socketKernel));
