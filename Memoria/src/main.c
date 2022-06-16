@@ -29,29 +29,29 @@ int main(void)
   iniciar_estructuras_memoria();
 
   // Prueba
-  correr_prueba(logger);
+  // correr_prueba(logger);
 
-  // log_info(logger, "Iniciando Servidor Memoria...");
-  // int socketMemoria = iniciar_servidor_memoria();
+  log_info(logger, "Iniciando Servidor Memoria...");
+  int socketMemoria = iniciar_servidor_memoria();
 
-  // if (socketMemoria < 0)
-  // {
-  //   log_error(logger, "Error intentando iniciar Servidor Memoria.");
-  //   return EXIT_FAILURE;
-  // }
+  if (socketMemoria < 0)
+  {
+    log_error(logger, "Error intentando iniciar Servidor Memoria.");
+    return EXIT_FAILURE;
+  }
 
-  // log_info(logger, "Servidor Memoria iniciado correctamente.");
+  log_info(logger, "Servidor Memoria iniciado correctamente.");
 
   // Hilos
-  //  Hilo hiloCliente;
+  Hilo hiloCliente;
 
-  // for (int i=0; i<2; i++)
-  // {
-  //   int socketCliente = esperar_cliente(socketMemoria);
+  while (true)
+  {
+    int socketCliente = esperar_cliente(socketMemoria);
 
-  //   pthread_create(&hiloCliente, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
-  //   pthread_join(hiloCliente, NULL);
-  // }
+    pthread_create(&hiloCliente, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
+    pthread_join(hiloCliente, NULL);
+  }
 
   return EXIT_SUCCESS;
 }

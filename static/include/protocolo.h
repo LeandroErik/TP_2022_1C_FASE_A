@@ -20,6 +20,7 @@ typedef enum CodigoOperacion
   INTERRUPCION,
   PROCESO_NUEVO,
   SUSPENDER_PROCESO
+  
 } CodigoOperacion;
 
 typedef enum Estado
