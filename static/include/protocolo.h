@@ -19,8 +19,8 @@ typedef enum CodigoOperacion
   PCB,
   INTERRUPCION,
   PROCESO_NUEVO,
-  SUSPENDER_PROCESO
-  
+  SUSPENDER_PROCESO,
+  FINALIZAR_PROCESO
 } CodigoOperacion;
 
 typedef enum Estado

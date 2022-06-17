@@ -206,3 +206,17 @@ Marco *asignar_pagina_a_marco(Proceso *proceso, int nroPagina) // la llamaria lu
 
   return marco;
 }
+
+void suspender_proceso(int idProcesoASuspender)
+{
+  Proceso *proceso = buscar_proceso_por_id(idProcesoASuspender);
+
+  // TODO implementar suspension
+}
+
+void finalizar_proceso(int idProcesoAFinalizar)
+{
+  Proceso *proceso = buscar_proceso_por_id(idProcesoAFinalizar);
+
+  // TODO implementar finalizacion de proceso
+}

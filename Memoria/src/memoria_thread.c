@@ -26,7 +26,7 @@ void manejar_paquetes_clientes(int socketCliente)
     }
     break;
   default:
-      log_info(logger, "Cliente desconocido.");
+    log_info(logger, "Cliente desconocido.");
     break;
   }
 
@@ -53,7 +53,7 @@ void escuchar_kernel(int socketCliente)
     t_list *lista;
     Proceso *nuevoProceso;
     int id, tamanio;
-    char* nroTablaPrimerNivel;
+    char *nroTablaPrimerNivel;
 
     switch (codOp)
     {
@@ -66,16 +66,21 @@ void escuchar_kernel(int socketCliente)
       nroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
       enviar_mensaje_a_servidor(nroTablaPrimerNivel, socketCliente);
       log_info(log, "Se creo el Proceso %d tamanio %d, tabla de primer nivel numero: %d", nuevoProceso->idProceso, nuevoProceso->tamanio, nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
+      break;
+
+    case SUSPENDER_PROCESO:
+      suspender_proceso(string_atoi(obtener_mensaje_del_cliente(socketCliente)));
 
       break;
-    case SUSPENDER_PROCESO:
-      //
+    case FINALIZAR_PROCESO:
+      finalizar_proceso(string_atoi(obtener_mensaje_del_cliente(socketCliente)));
       break;
+
     case DESCONEXION:
       log_warning(log, "Se desconecto kernel.");
       return;
     default:
-      ///
+      log_warning(log, "Operacion desconocida...");
       break;
     }
   }
