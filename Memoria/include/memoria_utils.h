@@ -6,10 +6,11 @@
 #include <memoria_thread.h>
 #include <main.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <math.h>
 #include <commons/string.h>
 
-//Variables globales
+// Variables globales
 t_list *procesos;
 t_list *marcos;
 void *memoriaPrincipal;
@@ -73,7 +74,7 @@ void agregar_proceso(Proceso *proceso);
  * @param valorAEscribir El valor que se va a escribir en Memoria Principal.
  * @param desplazamiento Bytes que se va a desplazar en Memoria Principal.
  */
-char* escribir_memoria(int idProceso, uint32_t valorAEscribir, int desplazamiento);
+char *escribir_memoria(int idProceso, uint32_t valorAEscribir, int desplazamiento);
 
 /**
  * @brief Leer lo que hay en Memoria Principal.
@@ -115,12 +116,12 @@ void asignar_marco(Proceso *proceso, int nroMarco);
  *
  * @return
  */
-Marco* asignar_pagina_a_marco(Proceso* proceso, int nroPagina);
+Marco *asignar_pagina_a_marco(Proceso *proceso, int nroPagina);
 
-Marco* primer_marco_libre();
+Marco *primer_marco_libre();
 
-bool tiene_marcos_por_asignar(Proceso* proceso);
+bool tiene_marcos_por_asignar(Proceso *proceso);
 
-int numero_de_marco(Marco* marco);
+int numero_de_marco(Marco *marco);
 
 #endif

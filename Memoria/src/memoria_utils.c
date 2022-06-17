@@ -218,5 +218,28 @@ void finalizar_proceso(int idProcesoAFinalizar)
 {
   Proceso *proceso = buscar_proceso_por_id(idProcesoAFinalizar);
 
-  // TODO implementar finalizacion de proceso
+  // void limpiar_proceso(){
+
+  // }
+
+  // list_destroy_and_destroy_elements(proceso->tablaPrimerNivel, &limpiar_proceso);
+
+  int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA; // Itera por entradas del config
+  for (int i = 0; i < entradas; i++)
+  {
+    TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel, i);
+
+    for (int j = 0; j < entradas; j++)
+    {
+      Pagina *pagina = list_get(tablaSegundoNivel->entradas, j);
+
+      free(pagina);
+    }
+
+    free(tablaSegundoNivel);
+  }
+
+  free(proceso->tablaPrimerNivel);
+  free(proceso);
 }
+// make clean && make all && ./bin/consola.out ./pseudocodigo.txt 84

@@ -69,11 +69,11 @@ void escuchar_kernel(int socketCliente)
       break;
 
     case SUSPENDER_PROCESO:
-      suspender_proceso(string_atoi(obtener_mensaje_del_cliente(socketCliente)));
+      suspender_proceso(atoi(obtener_mensaje_del_cliente(socketCliente)));
 
       break;
     case FINALIZAR_PROCESO:
-      finalizar_proceso(string_atoi(obtener_mensaje_del_cliente(socketCliente)));
+      finalizar_proceso(atoi(obtener_mensaje_del_cliente(socketCliente)));
       break;
 
     case DESCONEXION:
