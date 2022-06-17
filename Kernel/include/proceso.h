@@ -49,6 +49,8 @@ Semaforo despertarPlanificadorLargoPlazo;
 
 Semaforo semaforoCantidadProcesosEjecutando;
 
+int socketMemoria;
+
 /*Hilos*/
 Hilo hilo_planificador_largo_plazo;
 Hilo hilo_planificador_corto_plazo;
