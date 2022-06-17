@@ -12,6 +12,8 @@ int main(void)
     rellenar_configuracion_kernel(config);
 
     int socketKernel = iniciar_servidor_kernel();
+    log_info(logger, "Conectando con Servidor Memoria.");
+    socketMemoria = conectar_con_memoria();
 
     inicializar_semaforos();
     inicializar_colas_procesos();
@@ -28,6 +30,9 @@ int main(void)
 
     apagar_servidor(socketKernel);
     log_info(logger, "Servidor Kernel finalizado.");
+
+    log_info(logger, "Saliendo del Servidor Memoria...");
+    liberar_conexion_con_servidor(socketMemoria);
 
     log_destroy(logger);
     config_destroy(config);
