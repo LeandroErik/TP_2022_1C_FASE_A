@@ -57,7 +57,7 @@ void escuchar_kernel(int socketCliente)
 
     switch (codOp)
     {
-    case PROCESO_NUEVO:
+    case PROCESO_NUEVO: //TODO: Abstraer en otra funcion la logica e implementar la espera por acceso a memoria
       lista = obtener_paquete_como_lista(socketCliente);
       id = *(int *)list_get(lista, 0);
       tamanio = *(int *)list_get(lista, 1);
@@ -65,7 +65,7 @@ void escuchar_kernel(int socketCliente)
       nuevoProceso = crear_proceso(id, tamanio);
       nroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
       enviar_mensaje_a_servidor(nroTablaPrimerNivel, socketCliente);
-      log_info(logger, "Se creo el Proceso %d tamanio %d, tabla de primer nivel numero: %d", nuevoProceso->idProceso, nuevoProceso->tamanio, nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
+      log_info(logger, "Se envia a kernel el numero de tabla de primer nivel %d", nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
       break;
 
     case SUSPENDER_PROCESO:

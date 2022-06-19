@@ -38,19 +38,29 @@ void iniciar_marcos(int cantidadMarcos)
   }
 }
 
+char* generar_path_archivo_swap(int idProceso)
+{
+  return string_from_format("%s%s%s%s", MEMORIA_CONFIG.PATH_SWAP, "/", string_itoa(idProceso), ".swap");
+}
+
 Proceso *crear_proceso(int id, int tamanio)
 {
+  Logger *logger = iniciar_logger_memoria();
+
   Proceso *proceso = malloc(sizeof(Proceso));
   proceso->idProceso = id;
   proceso->tamanio = tamanio;
   proceso->tablaPrimerNivel = crear_tabla_primer_nivel();
 
-  return proceso;
-}
+  char* pathArchivoSwap = generar_path_archivo_swap(id);
+  proceso->archivoSwap = fopen(pathArchivoSwap, "w+");
 
-void agregar_proceso(Proceso *proceso)
-{
   list_add(procesos, proceso);
+
+  log_info(logger, "Se creo el Proceso: %d, tamanio: %d, path de swap: %s", proceso->idProceso, proceso->tamanio, pathArchivoSwap);
+  log_destroy(logger);
+
+  return proceso;
 }
 
 TablaPrimerNivel *crear_tabla_primer_nivel()
@@ -105,7 +115,7 @@ void escribir_memoria(uint32_t valorAEscribir, int direccionFisica)
   void *n = memoriaPrincipal + direccionFisica;
   memcpy(n, &valorAEscribir, 4);
 
-  log_info(logger, "Valor escrito %d, en la posicion de memoria fisica %d", valorAEscribir, direccionFisica);
+  log_info(logger, "Valor escrito %d, en la posicion de memoria fisica %d.", valorAEscribir, direccionFisica);
   log_destroy(logger);
 }
 
@@ -117,7 +127,7 @@ uint32_t leer_de_memoria(int direccionFisica)
   void *n = memoriaPrincipal + direccionFisica;
   memcpy(&leido, n, 4);
 
-  log_info(logger, "Valor leido %d, en la posicion de memoria fisica %d", leido, direccionFisica);  
+  log_info(logger, "Valor leido %d, en la posicion de memoria fisica %d.", leido, direccionFisica);  
   log_destroy(logger);
 
   return leido;
@@ -125,8 +135,15 @@ uint32_t leer_de_memoria(int direccionFisica)
 
 void copiar_en_memoria(int direccionFisicaDestino, int direccionFisicaOrigen)
 {
+  Logger *logger = iniciar_logger_memoria();
+
+  log_info(logger, "Iniciando Copia:");  
+
   uint32_t leido = leer_de_memoria(direccionFisicaOrigen);
   escribir_memoria(leido, direccionFisicaDestino);
+
+  log_info(logger, "Copia finalizada.");  
+  log_destroy(logger);
 }
 
 int obtener_numero_de_marco(int desplazamiento)
@@ -169,7 +186,7 @@ int numero_de_marco(Marco *marco)
   return -1;
 }
 
-Marco *asignar_pagina_a_marco(Proceso *proceso, int nroPagina) // la llamaria luego de que la cpu me pida la entrada a TP segundo nivel?
+Marco *asignar_pagina_a_marco(Proceso *proceso, int nroPagina) //TODO: delegar en otras funciones y ver cuando se llamaria
 {
   Logger *logger = iniciar_logger_memoria();
 
@@ -214,42 +231,65 @@ void suspender_proceso(int idProcesoASuspender)
   // TODO implementar suspension
 }
 
-void finalizar_proceso(int idProcesoAFinalizar) //TODO: Debuggear la funcion, tira segmentation fault
+void borrar_tablas_del_proceso(Proceso* proceso) 
 {
-  // Logger *logger = iniciar_logger_memoria();
-  // Proceso *proceso = buscar_proceso_por_id(idProcesoAFinalizar);
+  int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA; 
+  for (int i = 0; i < entradas; i++) 
+  {
+    TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel->entradas, i);
 
-  // int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA; 
-  // for (int i = 0; i < entradas; i++) 
-  // {
-  //   TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel, i);
+    for (int j = 0; j < entradas; j++)
+    {
+      Pagina *pagina = list_get(tablaSegundoNivel->entradas, j);
 
-  //   for (int j = 0; j < entradas; j++)
-  //   {
-  //     Pagina *pagina = list_get(tablaSegundoNivel->entradas, j);
+      free(pagina);
+    }
 
-  //     free(pagina);
-  //   }
+    free(tablaSegundoNivel);
+  }
 
-  //   free(tablaSegundoNivel);
-  // }
+  free(proceso->tablaPrimerNivel);
+}
 
-  //log_info(logger, "Proceso %d finalizado"); 
+void borrar_archivo_swap_del_proceso(Proceso* proceso) //TODO: implementar toda logica de swap en un archivo swap.c
+{
+  fclose(proceso->archivoSwap);
+  remove(generar_path_archivo_swap(proceso->idProceso));
+}
 
-  // free(proceso->tablaPrimerNivel);
-  // free(proceso);
-  // log_destroy(logger);
+void eliminar_proceso_de_lista_de_procesos(Proceso* proceso)
+{
+  bool cmpProceso(void *_procesoLista)
+  {
+    Proceso *procesoLista = (Proceso *)_procesoLista;
+    return procesoLista == proceso;
+  }
+  
+  list_remove_and_destroy_by_condition(procesos, &cmpProceso, &free);
+}
+
+void finalizar_proceso(int idProcesoAFinalizar) 
+{
+  Logger *logger = iniciar_logger_memoria();
+  Proceso *proceso = buscar_proceso_por_id(idProcesoAFinalizar);
+
+  borrar_tablas_del_proceso(proceso);
+  borrar_archivo_swap_del_proceso(proceso);
+  eliminar_proceso_de_lista_de_procesos(proceso);
+
+  log_info(logger, "Proceso %d finalizado", idProcesoAFinalizar); 
+  log_destroy(logger);
 }
 
 void liberar_memoria()
 {
   Logger *logger = iniciar_logger_memoria();
 
+  list_destroy_and_destroy_elements(marcos, &free);
+
   free(memoriaPrincipal);
-  log_info(logger, "Estructura de memoria liberada");
+  free(procesos);
 
+  log_info(logger, "Estructuras de memoria liberadas");
   log_destroy(logger);
-
-  //TODO: borrar tambien el resto de estructuras administrativas
 }
-

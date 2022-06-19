@@ -7,6 +7,7 @@
 #include <main.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <commons/string.h>
 
@@ -53,21 +54,13 @@ TablaPrimerNivel *crear_tabla_primer_nivel();
 TablaSegundoNivel *crear_tabla_segundo_nivel();
 
 /**
- * @brief Crear un proceso y asignarle una tabla de primer nivel.
+ * @brief Crear un proceso, asignarle una tabla de primer nivel y agregarlo a la lista de procesos.
  * @param id Id del prcoeso
  * @param tamanio Tamanio del proceso.
  *
  * @return Proceso nuevo.
  */
 Proceso *crear_proceso(int id, int tamanio);
-
-/**
- * @brief Agrega un proceso a la lista de procesos.
- * @param proceso Proceso a agregar a la lista de procesos
- *
- * @return Index donde se agrega el proceso.
- */
-void agregar_proceso(Proceso *proceso);
 
 /**
  * @brief Escribir en Memoria Principal.
@@ -136,5 +129,11 @@ void finalizar_proceso(int idProcesoAFinalizar);
  * 
  */
 void liberar_memoria();
+
+char* generar_path_archivo_swap(int idProceso);
+
+void borrar_tablas_del_proceso(Proceso* proceso);
+void borrar_archivo_swap_del_proceso(Proceso* proceso);
+void eliminar_proceso_de_lista_de_procesos(Proceso* proceso);
 
 #endif

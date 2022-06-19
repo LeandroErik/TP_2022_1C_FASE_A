@@ -33,6 +33,7 @@ typedef struct
     int idProceso;
     int tamanio;
     TablaPrimerNivel *tablaPrimerNivel;
+    FILE* archivoSwap;
 } Proceso;
 
 #endif
