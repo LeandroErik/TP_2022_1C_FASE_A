@@ -44,7 +44,7 @@ bool es_kernel(int socketCliente)
 
 void escuchar_kernel(int socketCliente)
 {
-  Logger *log = iniciar_logger_memoria();
+  Logger *logger = iniciar_logger_memoria();
 
   while (1)
   {
@@ -65,7 +65,7 @@ void escuchar_kernel(int socketCliente)
       nuevoProceso = crear_proceso(id, tamanio);
       nroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
       enviar_mensaje_a_servidor(nroTablaPrimerNivel, socketCliente);
-      log_info(log, "Se creo el Proceso %d tamanio %d, tabla de primer nivel numero: %d", nuevoProceso->idProceso, nuevoProceso->tamanio, nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
+      log_info(logger, "Se creo el Proceso %d tamanio %d, tabla de primer nivel numero: %d", nuevoProceso->idProceso, nuevoProceso->tamanio, nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
       break;
 
     case SUSPENDER_PROCESO:
@@ -77,21 +77,38 @@ void escuchar_kernel(int socketCliente)
       break;
 
     case DESCONEXION:
-      log_warning(log, "Se desconecto kernel.");
+      log_warning(logger, "Se desconecto kernel.");
       return;
+
     default:
-      log_warning(log, "Operacion desconocida...");
+      log_warning(logger, "Operacion desconocida...");
       break;
     }
   }
 
-  log_destroy(log);
+  log_destroy(logger);
 }
 
 void escuchar_cpu(int socketCliente)
 {
+  Logger *logger = iniciar_logger_memoria();
 
   while (1)
   {
+    CodigoOperacion codOp = obtener_codigo_operacion(socketCliente);
+
+    switch (codOp)
+    {
+    case DESCONEXION:
+      log_warning(logger, "Se desconecto CPU.");
+      return;
+    default:
+      log_warning(logger, "Operacion desconocida...");
+      break;
+    }
+    //TODO: agregar los otros case
   }
+
+  log_destroy(logger);
 }
+

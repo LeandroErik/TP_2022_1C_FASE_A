@@ -74,7 +74,7 @@ void agregar_proceso(Proceso *proceso);
  * @param valorAEscribir El valor que se va a escribir en Memoria Principal.
  * @param desplazamiento Bytes que se va a desplazar en Memoria Principal.
  */
-char *escribir_memoria(int idProceso, uint32_t valorAEscribir, int desplazamiento);
+void escribir_memoria(uint32_t valorAEscribir, int desplazamiento);
 
 /**
  * @brief Leer lo que hay en Memoria Principal.
@@ -82,7 +82,9 @@ char *escribir_memoria(int idProceso, uint32_t valorAEscribir, int desplazamient
  *
  * @return Valor numerico de lo que hay en la direccion en memoria.
  */
-uint32_t leer_de_memoria(int idProceso, int desplazamiento);
+uint32_t leer_de_memoria(int desplazamiento);
+
+void copiar_en_memoria(int direccionFisicaDestino, int direccionFisicaOrigen);
 
 /**
  * @brief Busca el proceso en la lista de procesos.
@@ -123,5 +125,16 @@ Marco *primer_marco_libre();
 bool tiene_marcos_por_asignar(Proceso *proceso);
 
 int numero_de_marco(Marco *marco);
+
+void suspender_proceso(int idProcesoASuspender);
+
+void finalizar_proceso(int idProcesoAFinalizar);
+
+/**
+ * @brief Limpiar el espacio usado por la memoria principal al cerrar el servidor
+ * 
+ * 
+ */
+void liberar_memoria();
 
 #endif

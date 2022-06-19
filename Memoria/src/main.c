@@ -3,20 +3,29 @@
 
 void correr_prueba(Logger *logger)
 {
+  Proceso *procesoNuevo1 = crear_proceso(0, 256); // id, tamanio
+  agregar_proceso(procesoNuevo1);
+  log_info(logger, "Proceso %d tamanio %d, tabla de primer nivel numero: %d", procesoNuevo1->idProceso, procesoNuevo1->tamanio, procesoNuevo1->tablaPrimerNivel->nroTablaPrimerNivel);
 
-  Proceso *procesoNuevo = crear_proceso(0, 256); // id, tamanio
-  agregar_proceso(procesoNuevo);
-  log_info(logger, "Proceso %d tamanio %d, tabla de primer nivel numero: %d", procesoNuevo->idProceso, procesoNuevo->tamanio, procesoNuevo->tablaPrimerNivel->nroTablaPrimerNivel);
+  asignar_pagina_a_marco(procesoNuevo1, 3);
+  asignar_pagina_a_marco(procesoNuevo1, 1);
+  asignar_pagina_a_marco(procesoNuevo1, 0);
 
-  asignar_pagina_a_marco(procesoNuevo, 3);
-  asignar_pagina_a_marco(procesoNuevo, 1);
-  asignar_pagina_a_marco(procesoNuevo, 0);
+  Proceso* procesoNuevo2 = crear_proceso(1, 192);
+  agregar_proceso(procesoNuevo2);
+  log_info(logger, "Proceso %d tamanio %d, tabla de primer nivel numero: %d", procesoNuevo2->idProceso, procesoNuevo2->tamanio, procesoNuevo2->tablaPrimerNivel->nroTablaPrimerNivel);
 
-  procesoNuevo = crear_proceso(1, 192);
-  agregar_proceso(procesoNuevo);
-  log_info(logger, "Proceso %d tamanio %d, tabla de primer nivel numero: %d", procesoNuevo->idProceso, procesoNuevo->tamanio, procesoNuevo->tablaPrimerNivel->nroTablaPrimerNivel);
+  asignar_pagina_a_marco(procesoNuevo2, 2);
 
-  asignar_pagina_a_marco(procesoNuevo, 2);
+  finalizar_proceso(procesoNuevo1->idProceso);
+  finalizar_proceso(procesoNuevo2->idProceso);
+
+  //Escritura, lectura y copia en memoria
+  escribir_memoria(12, 100);
+  leer_de_memoria(100);
+  copiar_en_memoria(120,100);
+  leer_de_memoria(120);
+
 }
 
 int main(void)
@@ -25,11 +34,6 @@ int main(void)
   Logger *logger = iniciar_logger_memoria();
 
   rellenar_config_memoria(config);
-
-  iniciar_estructuras_memoria();
-
-  // Prueba
-  // correr_prueba(logger);
 
   log_info(logger, "Iniciando Servidor Memoria...");
   int socketMemoria = iniciar_servidor_memoria();
@@ -42,8 +46,12 @@ int main(void)
 
   log_info(logger, "Servidor Memoria iniciado correctamente.");
 
-  // Hilos
+  iniciar_estructuras_memoria();
 
+  // Prueba
+  //correr_prueba(logger);
+
+  //Hilos
   while(true)
   {
     int socketCliente = esperar_cliente(socketMemoria);
@@ -53,6 +61,9 @@ int main(void)
     //pthread_join(hiloCliente, NULL);
   }
 
+  liberar_memoria();
+  log_destroy(logger);
+  config_destroy(config);
 
   return EXIT_SUCCESS;
 }

@@ -23,6 +23,7 @@ void iniciar_estructuras_memoria()
   procesos = list_create();
 
   log_info(logger, "Estructuras de memoria inicializadas");
+  log_destroy(logger);
 }
 
 void iniciar_marcos(int cantidadMarcos)
@@ -59,7 +60,7 @@ TablaPrimerNivel *crear_tabla_primer_nivel()
   tabla->nroTablaPrimerNivel = tablasDePrimerNivel;
   tablasDePrimerNivel++;
 
-  for (int i = 0; i < MEMORIA_CONFIG.ENTRADAS_POR_TABLA; i++) // TODO checkeo de tamaño del proceso, quiza no hace falta completar toda la tabla
+  for (int i = 0; i < MEMORIA_CONFIG.ENTRADAS_POR_TABLA; i++) 
   {
     TablaSegundoNivel *tablaSegundoNivel = crear_tabla_segundo_nivel();
     list_add(tabla->entradas, tablaSegundoNivel);
@@ -97,42 +98,40 @@ Proceso *buscar_proceso_por_id(int idProceso)
   return list_find(procesos, &cmpProceso);
 }
 
-int obtener_numero_de_marco(int desplazamiento)
+void escribir_memoria(uint32_t valorAEscribir, int direccionFisica)
 {
-  return desplazamiento / MEMORIA_CONFIG.TAM_PAGINA;
-}
-
-char *escribir_memoria(int idProceso, uint32_t valorAEscribir, int direccionFisica)
-{
-  Logger *log = iniciar_logger_memoria();
-
-  // if(le pertenece el marco), escribir
-
-  Proceso *proceso = buscar_proceso_por_id(idProceso);
-  log_info(log, "id proceso: %d", proceso->idProceso);
-
-  int nroMarco = obtener_numero_de_marco(direccionFisica);
-  log_info(log, "numero de marco: %d", nroMarco);
+  Logger *logger = iniciar_logger_memoria();
 
   void *n = memoriaPrincipal + direccionFisica;
   memcpy(n, &valorAEscribir, 4);
 
-  return ""; // confirmacion
+  log_info(logger, "Valor escrito %d, en la posicion de memoria fisica %d", valorAEscribir, direccionFisica);
+  log_destroy(logger);
 }
 
-uint32_t leer_de_memoria(int idProceso, int direccionFisica)
+uint32_t leer_de_memoria(int direccionFisica)
 {
-  Logger *log = iniciar_logger_memoria();
-
-  // if(le pertenece el marco), escribir
-
-  Proceso *proceso = buscar_proceso_por_id(idProceso);
-  log_info(log, "id proceso: %d", proceso->idProceso);
+  Logger *logger = iniciar_logger_memoria();
 
   uint32_t leido;
   void *n = memoriaPrincipal + direccionFisica;
   memcpy(&leido, n, 4);
+
+  log_info(logger, "Valor leido %d, en la posicion de memoria fisica %d", leido, direccionFisica);  
+  log_destroy(logger);
+
   return leido;
+}
+
+void copiar_en_memoria(int direccionFisicaDestino, int direccionFisicaOrigen)
+{
+  uint32_t leido = leer_de_memoria(direccionFisicaOrigen);
+  escribir_memoria(leido, direccionFisicaDestino);
+}
+
+int obtener_numero_de_marco(int desplazamiento)
+{
+  return desplazamiento / MEMORIA_CONFIG.TAM_PAGINA;
 }
 
 Marco *primer_marco_libre() // First fit
@@ -172,11 +171,11 @@ int numero_de_marco(Marco *marco)
 
 Marco *asignar_pagina_a_marco(Proceso *proceso, int nroPagina) // la llamaria luego de que la cpu me pida la entrada a TP segundo nivel?
 {
-  Logger *log = iniciar_logger_memoria();
+  Logger *logger = iniciar_logger_memoria();
 
   // double d = (double) nroPagina / MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
   int numeroDeEntradaDelPrimerNivel = nroPagina / MEMORIA_CONFIG.ENTRADAS_POR_TABLA;  // floor(d);
-  int numeroDeEntradaDelSegundoNivel = nroPagina % MEMORIA_CONFIG.ENTRADAS_POR_TABLA; // checkear el %
+  int numeroDeEntradaDelSegundoNivel = nroPagina % MEMORIA_CONFIG.ENTRADAS_POR_TABLA; // checkear el % //TODO: ver como funciona la cuenta
 
   TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel->entradas, numeroDeEntradaDelPrimerNivel);
 
@@ -192,54 +191,65 @@ Marco *asignar_pagina_a_marco(Proceso *proceso, int nroPagina) // la llamaria lu
       marco->paginaActual = pagina;
       marco->idProceso = proceso->idProceso;
 
-      log_info(log, "Pagina %d del proceso %d, asignada al Marco %d", nroPagina, proceso->idProceso, numero_de_marco(marco));
+      log_info(logger, "Pagina %d del proceso %d, asignada al Marco %d", nroPagina, proceso->idProceso, numero_de_marco(marco));
     }
     else // memoria llena
     {
-      // correr algortimo sustitucion global
+      // correr algortimo sustitucion 
     }
   }
   else // tiene asignada la cantidad maxima de marcos por proceso
   {
-    // correr algortimo sustitucion local
+    // correr algortimo sustitucion 
   }
 
+  log_destroy(logger);
   return marco;
 }
 
 void suspender_proceso(int idProcesoASuspender)
 {
-  Proceso *proceso = buscar_proceso_por_id(idProcesoASuspender);
+  //Proceso *proceso = buscar_proceso_por_id(idProcesoASuspender);
 
   // TODO implementar suspension
 }
 
-void finalizar_proceso(int idProcesoAFinalizar)
+void finalizar_proceso(int idProcesoAFinalizar) //TODO: Debuggear la funcion, tira segmentation fault
 {
-  Proceso *proceso = buscar_proceso_por_id(idProcesoAFinalizar);
+  // Logger *logger = iniciar_logger_memoria();
+  // Proceso *proceso = buscar_proceso_por_id(idProcesoAFinalizar);
 
-  // void limpiar_proceso(){
+  // int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA; 
+  // for (int i = 0; i < entradas; i++) 
+  // {
+  //   TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel, i);
 
+  //   for (int j = 0; j < entradas; j++)
+  //   {
+  //     Pagina *pagina = list_get(tablaSegundoNivel->entradas, j);
+
+  //     free(pagina);
+  //   }
+
+  //   free(tablaSegundoNivel);
   // }
 
-  // list_destroy_and_destroy_elements(proceso->tablaPrimerNivel, &limpiar_proceso);
+  //log_info(logger, "Proceso %d finalizado"); 
 
-  int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA; // Itera por entradas del config
-  for (int i = 0; i < entradas; i++)
-  {
-    TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel, i);
-
-    for (int j = 0; j < entradas; j++)
-    {
-      Pagina *pagina = list_get(tablaSegundoNivel->entradas, j);
-
-      free(pagina);
-    }
-
-    free(tablaSegundoNivel);
-  }
-
-  free(proceso->tablaPrimerNivel);
-  free(proceso);
+  // free(proceso->tablaPrimerNivel);
+  // free(proceso);
+  // log_destroy(logger);
 }
-// make clean && make all && ./bin/consola.out ./pseudocodigo.txt 84
+
+void liberar_memoria()
+{
+  Logger *logger = iniciar_logger_memoria();
+
+  free(memoriaPrincipal);
+  log_info(logger, "Estructura de memoria liberada");
+
+  log_destroy(logger);
+
+  //TODO: borrar tambien el resto de estructuras administrativas
+}
+
