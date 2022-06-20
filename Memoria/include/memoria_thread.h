@@ -33,4 +33,8 @@ void escuchar_kernel(int socketCliente);
  */
 void escuchar_cpu(int socketCliente);
 
+void atender_creacion_de_proceso(int socketKernel, Logger *logger);
+void atender_suspension_de_proceso(int socketKernel, Logger *logger);
+void atender_finalizacion_de_proceso(int socketKernel, Logger *logger);
+
 #endif

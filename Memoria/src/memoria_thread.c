@@ -42,38 +42,25 @@ bool es_kernel(int socketCliente)
   return esKernel;
 }
 
-void escuchar_kernel(int socketCliente)
+void escuchar_kernel(int socketKernel)
 {
   Logger *logger = iniciar_logger_memoria();
 
   while (1)
   {
-    CodigoOperacion codOp = obtener_codigo_operacion(socketCliente);
-
-    t_list *lista;
-    Proceso *nuevoProceso;
-    int id, tamanio;
-    char *nroTablaPrimerNivel;
+    CodigoOperacion codOp = obtener_codigo_operacion(socketKernel);
 
     switch (codOp)
     {
-    case PROCESO_NUEVO: //TODO: Abstraer en otra funcion la logica e implementar la espera por acceso a memoria
-      lista = obtener_paquete_como_lista(socketCliente);
-      id = *(int *)list_get(lista, 0);
-      tamanio = *(int *)list_get(lista, 1);
-
-      nuevoProceso = crear_proceso(id, tamanio);
-      nroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
-      enviar_mensaje_a_servidor(nroTablaPrimerNivel, socketCliente);
-      log_info(logger, "Se envia a kernel el numero de tabla de primer nivel %d", nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
+    case PROCESO_NUEVO:
+      atender_creacion_de_proceso(socketKernel, logger);
       break;
 
     case SUSPENDER_PROCESO:
-      suspender_proceso(atoi(obtener_mensaje_del_cliente(socketCliente)));
-
+      atender_suspension_de_proceso(socketKernel, logger);
       break;
     case FINALIZAR_PROCESO:
-      finalizar_proceso(atoi(obtener_mensaje_del_cliente(socketCliente)));
+      atender_finalizacion_de_proceso(socketKernel, logger);
       break;
 
     case DESCONEXION:
@@ -89,13 +76,13 @@ void escuchar_kernel(int socketCliente)
   log_destroy(logger);
 }
 
-void escuchar_cpu(int socketCliente)
+void escuchar_cpu(int socketCPU)
 {
   Logger *logger = iniciar_logger_memoria();
 
   while (1)
   {
-    CodigoOperacion codOp = obtener_codigo_operacion(socketCliente);
+    CodigoOperacion codOp = obtener_codigo_operacion(socketCPU);
 
     switch (codOp)
     {
@@ -106,9 +93,52 @@ void escuchar_cpu(int socketCliente)
       log_warning(logger, "Operacion desconocida...");
       break;
     }
-    //TODO: agregar los otros case
+    // TODO: agregar los otros case
   }
 
   log_destroy(logger);
 }
 
+void atender_creacion_de_proceso(int socketKernel, Logger *logger)
+{
+  t_list *lista = obtener_paquete_como_lista(socketKernel);
+  int id = *(int *)list_get(lista, 0);
+  int tamanio = *(int *)list_get(lista, 1);
+
+  Proceso *nuevoProceso = crear_proceso(id, tamanio);
+  char* nroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
+
+  int retardoMemoria = MEMORIA_CONFIG.RETARDO_MEMORIA * 1000;
+  usleep(retardoMemoria);
+
+  enviar_mensaje_a_servidor(nroTablaPrimerNivel, socketKernel);
+  log_info(logger, "Se envia a kernel el numero de tabla de primer nivel %d", nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
+}
+
+void atender_suspension_de_proceso(int socketKernel, Logger *logger)
+{
+  t_list *lista = obtener_paquete_como_lista(socketKernel);
+  int id = *(int *)list_get(lista, 0);
+
+  suspender_proceso(id);
+
+  int retardoMemoria = MEMORIA_CONFIG.RETARDO_MEMORIA * 1000;
+  usleep(retardoMemoria);
+
+  enviar_mensaje_a_servidor("Proceso suspendido", socketKernel);
+  log_info(logger, "Se envia a kernel confirmacion de suspension del proceso %d", id);
+}
+
+void atender_finalizacion_de_proceso(int socketKernel, Logger *logger)
+{
+  t_list *lista = obtener_paquete_como_lista(socketKernel);
+  int id = *(int *)list_get(lista, 0);
+
+  finalizar_proceso(id);
+
+  int retardoMemoria = MEMORIA_CONFIG.RETARDO_MEMORIA * 1000;
+  usleep(retardoMemoria);
+
+  enviar_mensaje_a_servidor("Proceso finalizado", socketKernel);
+  log_info(logger, "Se envia a kernel confirmacion de finalizacion del proceso %d", id);
+}

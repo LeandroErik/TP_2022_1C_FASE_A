@@ -93,6 +93,8 @@ void ejecutar(Pcb *proceso)
 void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 {
     sacar_proceso_ejecutando();
+    int pid;
+    Paquete * paquete;
 
     switch (pcb->escenario->estado)
     {
@@ -121,6 +123,13 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 
         decrementar_cantidad_procesos_memoria();
         log_info(loggerPlanificacion, "Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
+
+        pid = pcb->pid;
+        paquete = crear_paquete(FINALIZAR_PROCESO);
+        agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
+        enviar_paquete_a_servidor(paquete, socketMemoria);
+        log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
+        obtener_mensaje_del_cliente(socketMemoria); //confirmacion de finalizacion
 
         // TODO:Avisar a consola asi se finaliza.
 
@@ -192,7 +201,14 @@ void monitorizarSuspension(Pcb *proceso)
 
         decrementar_cantidad_procesos_memoria();
 
-        // TODO:Avisar a memoria de la suspension
+        int pid = proceso->pid;
+        Paquete *paquete = crear_paquete(SUSPENDER_PROCESO);
+        agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
+        enviar_paquete_a_servidor(paquete, socketMemoria);
+        log_info(logger, "Se envio el proceso %d a la memoria para suspender", pid);
+        obtener_mensaje_del_cliente(socketMemoria); //confirmacion de suspension
+
+        // TODO:Recibir confirmacion de suspension
     }
 }
 

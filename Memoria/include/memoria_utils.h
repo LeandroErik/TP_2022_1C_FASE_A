@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <commons/string.h>
+#include <unistd.h>
 
 // Variables globales
 t_list *procesos;
