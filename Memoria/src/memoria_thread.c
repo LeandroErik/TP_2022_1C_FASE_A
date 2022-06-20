@@ -94,6 +94,7 @@ void escuchar_cpu(int socketCPU)
       break;
     }
     // TODO: agregar los otros case
+    // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/25
   }
 
   log_destroy(logger);
@@ -106,7 +107,7 @@ void atender_creacion_de_proceso(int socketKernel, Logger *logger)
   int tamanio = *(int *)list_get(lista, 1);
 
   Proceso *nuevoProceso = crear_proceso(id, tamanio);
-  char* nroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
+  char *nroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
 
   int retardoMemoria = MEMORIA_CONFIG.RETARDO_MEMORIA * 1000;
   usleep(retardoMemoria);

@@ -231,6 +231,7 @@ Marco *asignar_pagina_a_marco_libre(Proceso *proceso, int nroPagina) // TODO: Ve
 void suspender_proceso(int idProcesoASuspender)
 {
   // TODO implementar suspension
+  // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/24
 }
 
 void borrar_tablas_del_proceso(Proceso *proceso)

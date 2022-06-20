@@ -58,6 +58,7 @@ void ejecutar(Pcb *proceso)
 {
 
     // TODO: conectar a dispatch una sola vez y no cada vez que se necesita
+    //  https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/22
 
     int socketDispatch = conectar_con_cpu_dispatch();
 
@@ -94,7 +95,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 {
     sacar_proceso_ejecutando();
     int pid;
-    Paquete * paquete;
+    Paquete *paquete;
 
     switch (pcb->escenario->estado)
     {
@@ -129,9 +130,10 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
-        obtener_mensaje_del_cliente(socketMemoria); //confirmacion de finalizacion
+        obtener_mensaje_del_cliente(socketMemoria); // confirmacion de finalizacion
 
         // TODO:Avisar a consola asi se finaliza.
+        //  https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/23
 
         break;
 
@@ -206,9 +208,10 @@ void monitorizarSuspension(Pcb *proceso)
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(logger, "Se envio el proceso %d a la memoria para suspender", pid);
-        obtener_mensaje_del_cliente(socketMemoria); //confirmacion de suspension
+        obtener_mensaje_del_cliente(socketMemoria); // confirmacion de suspension
 
         // TODO:Recibir confirmacion de suspension
+        // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/24
     }
 }
 
@@ -292,6 +295,7 @@ void *planificador_largo_plazo()
         sem_wait(&despertarPlanificadorLargoPlazo);
         log_info(loggerPlanificacion, "[LARGO-PLAZO] Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
         // TODO:agrantizar mutua exclusion en las lesturas de tamanio
+        // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/26
         if (cantidadProcesosEnMemoria < KERNEL_CONFIG.GRADO_MULTIPROGRAMACION && (queue_size(colaNuevos) > 0 || queue_size(colaSuspendidoListo) > 0))
         {
             Pcb *procesoSaliente;

@@ -85,7 +85,8 @@ void manejar_paquete_kernel_interrupt(int socketKernel)
       log_warning(logger, "Conexión con Kernel en puerto Interrupt terminada.");
       log_destroy(logger);
       return;
-    /// TODO: revisar nombre del enum.
+    /// TODO: revisar nombre del enum
+    // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/21.
     case MENSAJE:
       log_info(logger, "Interrupción recibida de Kernel.");
       log_info(logger, "Interrupción: %s", obtener_mensaje_del_cliente(socketKernel));
