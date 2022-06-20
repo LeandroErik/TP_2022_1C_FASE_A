@@ -3,5 +3,4 @@ obj/
 .vscode/
 commons/
 *.log
-*.config
 *.txt
