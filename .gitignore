@@ -4,3 +4,4 @@ obj/
 commons/
 *.log
 *.txt
+*.config

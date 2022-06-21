@@ -192,4 +192,11 @@ void eliminar_proceso_de_lista_de_procesos(Proceso *proceso);
  */
 void desasignar_marcos_al_proceso(int idProceso);
 
+/**
+ * @brief Libera un solo marco de un proceso
+ *
+ * @param marco
+ */
+void desasignar_marco(Marco *marco);
+
 #endif

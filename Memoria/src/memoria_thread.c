@@ -100,6 +100,12 @@ void escuchar_cpu(int socketCPU)
   log_destroy(logger);
 }
 
+void realizar_espera_de_memoria()
+{
+  int retardoMemoria = MEMORIA_CONFIG.RETARDO_MEMORIA * 1000;
+  usleep(retardoMemoria);
+}
+
 void atender_creacion_de_proceso(int socketKernel, Logger *logger)
 {
   t_list *lista = obtener_paquete_como_lista(socketKernel);
@@ -109,8 +115,7 @@ void atender_creacion_de_proceso(int socketKernel, Logger *logger)
   Proceso *nuevoProceso = crear_proceso(id, tamanio);
   char *nroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
 
-  int retardoMemoria = MEMORIA_CONFIG.RETARDO_MEMORIA * 1000;
-  usleep(retardoMemoria);
+  realizar_espera_de_memoria();
 
   enviar_mensaje_a_servidor(nroTablaPrimerNivel, socketKernel);
   log_info(logger, "Se envia a kernel el numero de tabla de primer nivel %d", nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
@@ -123,8 +128,7 @@ void atender_suspension_de_proceso(int socketKernel, Logger *logger)
 
   suspender_proceso(id);
 
-  int retardoMemoria = MEMORIA_CONFIG.RETARDO_MEMORIA * 1000;
-  usleep(retardoMemoria);
+  realizar_espera_de_memoria();
 
   enviar_mensaje_a_servidor("Proceso suspendido", socketKernel);
   log_info(logger, "Se envia a kernel confirmacion de suspension del proceso %d", id);
@@ -137,8 +141,7 @@ void atender_finalizacion_de_proceso(int socketKernel, Logger *logger)
 
   finalizar_proceso(id);
 
-  int retardoMemoria = MEMORIA_CONFIG.RETARDO_MEMORIA * 1000;
-  usleep(retardoMemoria);
+  realizar_espera_de_memoria();
 
   enviar_mensaje_a_servidor("Proceso finalizado", socketKernel);
   log_info(logger, "Se envia a kernel confirmacion de finalizacion del proceso %d", id);
