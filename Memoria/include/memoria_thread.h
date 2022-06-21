@@ -19,4 +19,22 @@ void manejar_paquetes_clientes(int socketCliente);
  */
 bool es_kernel(int socketCliente);
 
+/**
+ * @brief Maneja un paquete enviado por un cliente (Kernel | CPU).
+ *
+ * @param socketCliente Socket del cliente (Kernel | CPU).
+ */
+void escuchar_kernel(int socketCliente);
+
+/**
+ * @brief Maneja un paquete enviado por un cliente (Kernel | CPU).
+ *
+ * @param socketCliente Socket del cliente (Kernel | CPU).
+ */
+void escuchar_cpu(int socketCliente);
+
+void atender_creacion_de_proceso(int socketKernel, Logger *logger);
+void atender_suspension_de_proceso(int socketKernel, Logger *logger);
+void atender_finalizacion_de_proceso(int socketKernel, Logger *logger);
+
 #endif

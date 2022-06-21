@@ -56,6 +56,10 @@ void iniciar_planificadores()
 
 void ejecutar(Pcb *proceso)
 {
+
+    // TODO: conectar a dispatch una sola vez y no cada vez que se necesita
+    //  https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/22
+
     int socketDispatch = conectar_con_cpu_dispatch();
 
     enviar_pcb(proceso, socketDispatch);
@@ -90,6 +94,8 @@ void ejecutar(Pcb *proceso)
 void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 {
     sacar_proceso_ejecutando();
+    int pid;
+    Paquete *paquete;
 
     switch (pcb->escenario->estado)
     {
@@ -109,7 +115,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 
         // Comienza el analisis de suspension (10 segundos)
         Hilo hiloMonitorizacionSuspension;
-        pthread_create(&hiloMonitorizacionSuspension, NULL, (void *)monitorizarSuspension, pcb);
+        pthread_create(&hiloMonitorizacionSuspension, NULL, &monitorizarSuspension, pcb);
 
         break;
 
@@ -119,7 +125,15 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         decrementar_cantidad_procesos_memoria();
         log_info(loggerPlanificacion, "Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
 
+        pid = pcb->pid;
+        paquete = crear_paquete(FINALIZAR_PROCESO);
+        agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
+        enviar_paquete_a_servidor(paquete, socketMemoria);
+        log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
+        obtener_mensaje_del_cliente(socketMemoria); // confirmacion de finalizacion
+
         // TODO:Avisar a consola asi se finaliza.
+        //  https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/23
 
         break;
 
@@ -174,7 +188,7 @@ void manejar_proceso_interrumpido(Pcb *pcb)
     ejecutar(pcbEjecutar);
 }
 
-void *monitorizarSuspension(Pcb *proceso)
+void monitorizarSuspension(Pcb *proceso)
 {
     int tiempoMaximoBloqueo = KERNEL_CONFIG.TIEMPO_MAXIMO_BLOQUEADO;
     // Pasados 10 segundos de bloqueado ,se suspende.
@@ -189,7 +203,15 @@ void *monitorizarSuspension(Pcb *proceso)
 
         decrementar_cantidad_procesos_memoria();
 
-        // TODO:Avisar a memoria de la suspension
+        int pid = proceso->pid;
+        Paquete *paquete = crear_paquete(SUSPENDER_PROCESO);
+        agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
+        enviar_paquete_a_servidor(paquete, socketMemoria);
+        log_info(logger, "Se envio el proceso %d a la memoria para suspender", pid);
+        obtener_mensaje_del_cliente(socketMemoria); // confirmacion de suspension
+
+        // TODO:Recibir confirmacion de suspension
+        // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/24
     }
 }
 
@@ -272,14 +294,19 @@ void *planificador_largo_plazo()
     {
         sem_wait(&despertarPlanificadorLargoPlazo);
         log_info(loggerPlanificacion, "[LARGO-PLAZO] Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
-
+        // TODO:agrantizar mutua exclusion en las lesturas de tamanio
+        // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/26
         if (cantidadProcesosEnMemoria < KERNEL_CONFIG.GRADO_MULTIPROGRAMACION && (queue_size(colaNuevos) > 0 || queue_size(colaSuspendidoListo) > 0))
         {
             Pcb *procesoSaliente;
 
             procesoSaliente = queue_is_empty(colaSuspendidoListo) ? extraer_proceso_nuevo() : extraer_proceso_suspendido_listo();
-
-            procesoSaliente->escenario->estado = LISTO;
+            // Agrego verificacion de que sea nuevo,porque puede que entre a listo de suspendido.
+            if (procesoSaliente->escenario->estado = NUEVO)
+            {
+                int tablaPaginasPrimerNivel = tabla_pagina_primer_nivel(procesoSaliente->pid, procesoSaliente->tamanio);
+                procesoSaliente->tablaPaginas = tablaPaginasPrimerNivel;
+            }
 
             agregar_proceso_listo(procesoSaliente);
 
@@ -296,34 +323,6 @@ void *planificador_largo_plazo()
     }
 }
 
-void imprimir_colas()
-{
-    log_info(loggerPlanificacion, "\
-    \n\tCola nuevos: %s \
-    \n\tCola listos: %s \
-    \n\tCola ejecutando: %s \
-    \n\tCola bloqueados: %s\
-    \n\tCola suspended - ready: % s\
-    \n\tCola terminados: %s",
-             leer_cola(colaNuevos),
-             leer_lista(colaListos), leer_cola(colaEjecutando), leer_cola(colaBloqueados), leer_cola(colaSuspendidoListo), leer_cola(colaFinalizado));
-}
-char *leer_lista(t_list *cola)
-{
-    char *out = string_new();
-
-    for (int i = 0; i < list_size(cola); i++)
-    {
-
-        Pcb *proceso_actual = list_get(cola, i);
-
-        string_append(&out, "[");
-
-        string_append(&out, string_itoa(proceso_actual->pid));
-        string_append(&out, "]");
-    }
-    return out;
-}
 void *planificador_corto_plazo_fifo()
 {
     log_info(loggerPlanificacion, "INICIO PLANIFICACION FIFO");
@@ -394,6 +393,7 @@ void agregar_proceso_nuevo(Pcb *procesoNuevo)
 }
 void agregar_proceso_listo(Pcb *procesoListo)
 {
+
     pthread_mutex_lock(&mutexColaListos);
 
     procesoListo->escenario->estado = LISTO;
@@ -405,6 +405,42 @@ void agregar_proceso_listo(Pcb *procesoListo)
     sem_post(&semaforoProcesoListo);
 
     imprimir_colas();
+}
+
+int tabla_pagina_primer_nivel(int pid, int tamanio)
+{
+
+    Paquete *paquete = crear_paquete(PROCESO_NUEVO);
+
+    agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
+    agregar_a_paquete(paquete, &tamanio, sizeof(unsigned int));
+
+    enviar_paquete_a_servidor(paquete, socketMemoria);
+
+    log_info(logger, "Se envio el proceso %d a la memoria", pid);
+
+    CodigoOperacion codOperacion = obtener_codigo_operacion(socketMemoria);
+
+    char *mensajeDeMemoria;
+    int tablaPrimerNivel;
+
+    switch (codOperacion)
+    {
+    case MENSAJE:
+
+        mensajeDeMemoria = obtener_mensaje_del_cliente(socketMemoria);
+        tablaPrimerNivel = atoi(mensajeDeMemoria);
+        log_info(logger, "Se recibio de memoria el numero de tabla de primer nivel del proceso");
+        break;
+
+    default:
+        log_warning(logger, "Operación desconocida.");
+        return EXIT_FAILURE;
+    }
+
+    eliminar_paquete(paquete);
+
+    return tablaPrimerNivel;
 }
 
 void agregar_proceso_ejecutando(Pcb *procesoEjecutando)
@@ -514,6 +550,7 @@ Pcb *sacar_proceso_bloqueado()
     pcbSaliente = queue_pop(colaBloqueados);
     log_info(loggerPlanificacion, "Proceso : [%d] salío de BLOQUEADO. (real ant : %d)", pcbSaliente->pid, pcbSaliente->tiempoRafagaRealAnterior);
     pthread_mutex_unlock(&mutexColaBloqueados);
+
     // Envio interrupcion por cada vez quesale de bloqueadoalgun proceso.
     bool esSrt = strcmp(KERNEL_CONFIG.ALGORITMO_PLANIFICACION, "SRT") == 0;
 
@@ -574,6 +611,35 @@ void decrementar_cantidad_procesos_memoria()
     pthread_mutex_unlock(&mutexcantidadProcesosMemoria);
 }
 
+// Varios
+void imprimir_colas()
+{
+    log_info(loggerPlanificacion, "\
+    \n\tCola nuevos: %s \
+    \n\tCola listos: %s \
+    \n\tCola ejecutando: %s \
+    \n\tCola bloqueados: %s\
+    \n\tCola suspended - ready: % s\
+    \n\tCola terminados: %s",
+             leer_cola(colaNuevos),
+             leer_lista(colaListos), leer_cola(colaEjecutando), leer_cola(colaBloqueados), leer_cola(colaSuspendidoListo), leer_cola(colaFinalizado));
+}
+char *leer_lista(t_list *cola)
+{
+    char *out = string_new();
+
+    for (int i = 0; i < list_size(cola); i++)
+    {
+
+        Pcb *proceso_actual = list_get(cola, i);
+
+        string_append(&out, "[");
+
+        string_append(&out, string_itoa(proceso_actual->pid));
+        string_append(&out, "]");
+    }
+    return out;
+}
 int obtener_tiempo_actual()
 {
     return time(NULL);

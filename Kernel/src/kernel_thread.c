@@ -55,6 +55,7 @@ void enviar_interrupcion()
   Logger *logger = iniciar_logger_kernel();
 
   log_info(logger, "Conectando con Servidor CPU via Interrupción en IP: %s, Puerto: %s", KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
+
   int socketInterrupcion = conectar_con_cpu_interrupt();
 
   if (socketInterrupcion < 0)
@@ -64,13 +65,11 @@ void enviar_interrupcion()
     return;
   }
 
-  log_info(logger, "Conexión con Interrupción establecida.");
-
   log_info(logger, "[INTERRUPCION] Enviando Interrupción al Servidor CPU...");
 
   enviar_mensaje_a_servidor("Interrupción externa", socketInterrupcion);
 
-  log_info(logger, "[INTERRUPCION] Saliendo del Puerto Interrupt...");
+  log_info(logger, "Saliendo del Puerto Interrupt...");
 
   liberar_conexion_con_servidor(socketInterrupcion);
 }
@@ -79,9 +78,6 @@ void manejar_conexion_memoria()
 {
   Logger *logger = iniciar_logger_kernel();
 
-  log_info(logger, "Conectando con Servidor Memoria...");
-  int socketMemoria = conectar_con_memoria();
-
   if (socketMemoria < 0)
   {
     log_warning(logger, "Conexión rechazada. El Servidor Memoria no está disponible.");
@@ -89,13 +85,9 @@ void manejar_conexion_memoria()
     return;
   }
 
-  log_info(logger, "Conexión con Memoria establecida.");
-
   log_info(logger, "Enviando Mensaje de inicio al Servidor Memoria...");
   enviar_mensaje_a_servidor("Kernel", socketMemoria);
   log_info(logger, "Mensaje de inicio enviado.");
 
-  log_info(logger, "Saliendo del Servidor Memoria...");
-  liberar_conexion_con_servidor(socketMemoria);
   log_destroy(logger);
 }

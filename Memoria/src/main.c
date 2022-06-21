@@ -1,4 +1,5 @@
 #include <memoria_utils.h>
+#include <main.h>
 
 int main(void)
 {
@@ -18,15 +19,21 @@ int main(void)
 
   log_info(logger, "Servidor Memoria iniciado correctamente.");
 
-  Hilo hiloCliente;
+  iniciar_estructuras_memoria();
 
-  while (true)
+  //Hilos
+  while(true)
   {
     int socketCliente = esperar_cliente(socketMemoria);
+    Hilo hiloCliente;
 
     pthread_create(&hiloCliente, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
-    pthread_join(hiloCliente, NULL);
+    //pthread_join(hiloCliente, NULL);
   }
+
+  liberar_memoria();
+  log_destroy(logger);
+  config_destroy(config);
 
   return EXIT_SUCCESS;
 }
