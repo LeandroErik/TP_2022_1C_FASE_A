@@ -68,20 +68,24 @@ TablaSegundoNivel *crear_tabla_segundo_nivel(int nroPrimerPaginaDeTabla);
  */
 Proceso *crear_proceso(int id, int tamanio);
 
-/**
- * @brief Escribir en Memoria Principal.
- * @param valorAEscribir El valor que se va a escribir en Memoria Principal.
- * @param desplazamiento Bytes que se va a desplazar en Memoria Principal.
- */
-void escribir_memoria(uint32_t valorAEscribir, int desplazamiento);
+void* leer_de_memoria(int direccionFisica, int desplazamiento);
+
+void escribir_en_memoria(void* datosAEscribir, int direccionFisica, int desplazamiento);
 
 /**
- * @brief Leer lo que hay en Memoria Principal.
- * @param desplazamiento Bytes que se va a desplazar en Memoria Principal.
+ * @brief Escribir un entero en Memoria Principal.
+ * @param valorAEscribir El valor que se va a escribir en Memoria Principal.
+ * @param direccionFisica 
+ */
+void escribir_entero_en_memoria(uint32_t valorAEscribir, int direccionFisica);
+
+/**
+ * @brief Leer un entero de la Memoria Principal.
+ * @param direccionFisica 
  *
  * @return Valor numerico de lo que hay en la direccion en memoria.
  */
-uint32_t leer_de_memoria(int desplazamiento);
+uint32_t leer_entero_de_memoria(int direccionFisica);
 
 /**
  * @brief Copia los datos de una direccion fisica en otra
@@ -89,7 +93,7 @@ uint32_t leer_de_memoria(int desplazamiento);
  * @param direccionFisicaDestino
  * @param direccionFisicaOrigen
  */
-void copiar_en_memoria(int direccionFisicaDestino, int direccionFisicaOrigen);
+void copiar_entero_en_memoria(int direccionFisicaDestino, int direccionFisicaOrigen);
 
 /**
  * @brief Busca el proceso en la lista de procesos.
@@ -198,5 +202,8 @@ void desasignar_marcos_al_proceso(int idProceso);
  * @param marco
  */
 void desasignar_marco(Marco *marco);
+
+void desasignar_pagina(Pagina* pagina);
+
 
 #endif

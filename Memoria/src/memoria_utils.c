@@ -107,24 +107,37 @@ Proceso *buscar_proceso_por_id(int idProceso)
   return list_find(procesos, &es_proceso);
 }
 
-void escribir_memoria(uint32_t valorAEscribir, int direccionFisica)
+//Funciones de escritura, lectura y copiado en memoria fisica
+void* leer_de_memoria(int direccionFisica, int desplazamiento) 
+{
+  void* leido;
+  void* direccionInicioDeLectura = memoriaPrincipal + direccionFisica;
+  memcpy(&leido, direccionInicioDeLectura, desplazamiento);
+
+  return leido;
+}
+
+void escribir_en_memoria(void* datosAEscribir, int direccionFisica, int desplazamiento)
+{
+  void* direccionInicioDeEscritura = memoriaPrincipal + direccionFisica;
+  memcpy(direccionInicioDeEscritura, &datosAEscribir, desplazamiento);
+}
+
+void escribir_entero_en_memoria(uint32_t valorAEscribir, int direccionFisica)
 {
   Logger *logger = iniciar_logger_memoria();
 
-  void *desplazamiento = memoriaPrincipal + direccionFisica;
-  memcpy(desplazamiento, &valorAEscribir, sizeof(uint32_t));
+  escribir_en_memoria((void*) valorAEscribir, direccionFisica, sizeof(uint32_t));
 
   log_info(logger, "Valor escrito %d, en la posicion de memoria fisica %d.", valorAEscribir, direccionFisica);
   log_destroy(logger);
 }
 
-uint32_t leer_de_memoria(int direccionFisica)
+uint32_t leer_entero_de_memoria(int direccionFisica)
 {
   Logger *logger = iniciar_logger_memoria();
 
-  uint32_t leido;
-  void *desplazamiento = memoriaPrincipal + direccionFisica;
-  memcpy(&leido, desplazamiento, sizeof(uint32_t));
+  uint32_t leido = (uint32_t) leer_de_memoria(direccionFisica, sizeof(uint32_t));
 
   log_info(logger, "Valor leido %d, en la posicion de memoria fisica %d.", leido, direccionFisica);
   log_destroy(logger);
@@ -132,18 +145,19 @@ uint32_t leer_de_memoria(int direccionFisica)
   return leido;
 }
 
-void copiar_en_memoria(int direccionFisicaDestino, int direccionFisicaOrigen)
+void copiar_entero_en_memoria(int direccionFisicaDestino, int direccionFisicaOrigen)
 {
   Logger *logger = iniciar_logger_memoria();
 
   log_info(logger, "Iniciando Copia:");
 
-  uint32_t leido = leer_de_memoria(direccionFisicaOrigen);
-  escribir_memoria(leido, direccionFisicaDestino);
+  uint32_t leido = leer_entero_de_memoria(direccionFisicaOrigen);
+  escribir_entero_en_memoria(leido, direccionFisicaDestino);
 
   log_info(logger, "Copia finalizada.");
   log_destroy(logger);
 }
+//Fin funciones de escritura, lectura y copia en memoria
 
 Marco *primer_marco_libre() // First fit
 {
@@ -182,7 +196,7 @@ int numero_de_marco(Marco *marco)
   return -1;
 }
 
-void asignar_pagina_del_proceso_al_marco(int idProceso, Pagina *pagina, Marco *marco)
+void asignar_pagina_del_proceso_al_marco(int idProceso, Pagina *pagina, Marco *marco) //TODO: validar si la pagina debe cargarse desde el swap
 {
   Logger *logger = iniciar_logger_memoria();
 
@@ -205,7 +219,7 @@ Pagina *obtener_pagina_del_proceso(Proceso *proceso, int nroPagina) // Tambien s
   return list_get(tablaSegundoNivel->entradas, numeroDeEntradaDelSegundoNivel);
 }
 
-Marco *asignar_pagina_a_marco_libre(Proceso *proceso, int nroPagina) // TODO: Ver cuando se llamaria
+Marco *asignar_pagina_a_marco_libre(Proceso *proceso, int nroPagina) // TODO: Ver cuando se llamaria 
 {
   Pagina *pagina = obtener_pagina_del_proceso(proceso, nroPagina);
   Marco *marco;
@@ -232,13 +246,25 @@ Marco *asignar_pagina_a_marco_libre(Proceso *proceso, int nroPagina) // TODO: Ve
 
 void desasignar_marco(Marco *marco)
 {
-  marco->paginaActual == NULL;
+  marco->paginaActual = NULL;
   marco->idProceso = -1;
+}
+
+void desasignar_pagina(Pagina* pagina)
+{
+  desasignar_marco(pagina->marcoAsignado);
+  pagina->marcoAsignado = NULL;
+  pagina->modificado=false;
+  pagina->uso=true; //TODO: checkear bits
 }
 
 void suspender_proceso(int idProcesoASuspender)
 {
+  Logger* logger = iniciar_logger_memoria();
+
   Proceso *proceso = buscar_proceso_por_id(idProcesoASuspender);
+  
+  log_info(logger, "Iniciando suspension del proceso %d", proceso->idProceso);
 
   int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
   for (int numeroDeTablaDeSegundoNivel = 0; numeroDeTablaDeSegundoNivel < entradas; numeroDeTablaDeSegundoNivel++)
@@ -248,14 +274,19 @@ void suspender_proceso(int idProcesoASuspender)
     for (int numeroPaginaSegundoNivel = 0; numeroPaginaSegundoNivel < entradas; numeroPaginaSegundoNivel++)
     {
       Pagina *pagina = list_get(tablaSegundoNivel->entradas, numeroPaginaSegundoNivel);
-      Marco *marcoDeLaPagina = pagina->marcoAsignado;
-      if (marcoDeLaPagina != NULL && pagina->modificado)
+      if (pagina->marcoAsignado != NULL)
       {
-        escribir_en_swap(numero_de_marco(marcoDeLaPagina), proceso);
-        desasignar_marco(marcoDeLaPagina);
+        if(pagina->modificado)
+        {
+          escribir_en_swap(pagina, proceso);
+        }
+        desasignar_pagina(pagina);
       }
     }
   }
+  
+  log_info(logger, "Proceso %d suspendido", proceso->idProceso);
+  log_destroy(logger);
 }
 
 void borrar_tablas_del_proceso(Proceso *proceso)
@@ -280,13 +311,13 @@ void borrar_tablas_del_proceso(Proceso *proceso)
 
 void eliminar_proceso_de_lista_de_procesos(Proceso *proceso)
 {
-  bool cmpProceso(void *_procesoLista)
+  bool es_proceso(void *_procesoLista)
   {
     Proceso *procesoLista = (Proceso *)_procesoLista;
     return procesoLista == proceso;
   }
 
-  list_remove_and_destroy_by_condition(procesos, &cmpProceso, &free);
+  list_remove_and_destroy_by_condition(procesos, &es_proceso, &free);
 }
 
 void desasignar_marcos_al_proceso(int idProceso)
