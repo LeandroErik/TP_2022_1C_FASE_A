@@ -106,11 +106,11 @@ Proceso *buscar_proceso_por_id(int idProceso);
 /**
  * @brief Le asigna una pagina al primer marco libre marco o realiza sustitucion si no lo hay.
  * @param proceso
- * @param nroPagina
+ * @param numeroPagina
  *
  * @return
  */
-Marco *asignar_pagina_a_marco_libre(Proceso *proceso, int nroPagina);
+Marco *asignar_pagina_a_marco_libre(Proceso *proceso, int numeroPagina);
 
 /**
  * @brief Asigna una pagina del proceso a un marco
@@ -125,10 +125,10 @@ void asignar_pagina_del_proceso_al_marco(int idProceso, Pagina *pagina, Marco *m
  * @brief Obtiene la pagina fisica del proceso, en base a su numero de pagina
  *
  * @param proceso
- * @param nroPagina
+ * @param numeroPagina
  * @return Pagina*
  */
-Pagina *obtener_pagina_del_proceso(Proceso *proceso, int nroPagina);
+Pagina *obtener_pagina_del_proceso(Proceso *proceso, int numeroPagina);
 
 /**
  * @brief busca el primer marco libre en la memoria principal y lo retorna
@@ -145,14 +145,6 @@ Marco *primer_marco_libre();
  * @return false
  */
 bool tiene_marcos_por_asignar(Proceso *proceso);
-
-/**
- * @brief Retorna el numero de marco que referencia el puntero
- *
- * @param marco
- * @return int
- */
-int numero_de_marco(Marco *marco);
 
 /**
  * @brief Suspende un proceso

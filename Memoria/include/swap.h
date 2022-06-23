@@ -34,13 +34,7 @@ void borrar_archivo_swap_del_proceso(Proceso *proceso);
  */
 void escribir_en_swap(Pagina* pagina, Proceso *proceso);
 
-void* leer_pagina_de_archivo_swap(int numeroPagina, FILE* archivoSwap);
-
 void escribir_datos_de_pagina_en_memoria();
-
-void escribir_datos_del_marco_en_archivo_swap(void* datosDelmarco, int numeroPagina, FILE* archivoSwap);
-
-void* leer_contenido_del_marco(int numeroMarco);
 
 void escribir_en_swap(Pagina* pagina, Proceso *proceso);
 

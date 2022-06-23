@@ -113,12 +113,12 @@ void atender_creacion_de_proceso(int socketKernel, Logger *logger)
   int tamanio = *(int *)list_get(lista, 1);
 
   Proceso *nuevoProceso = crear_proceso(id, tamanio);
-  char *nroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
+  char *numeroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->numeroTablaPrimerNivel);
 
   realizar_espera_de_memoria();
 
-  enviar_mensaje_a_servidor(nroTablaPrimerNivel, socketKernel);
-  log_info(logger, "Se envia a kernel el numero de tabla de primer nivel %d", nuevoProceso->tablaPrimerNivel->nroTablaPrimerNivel);
+  enviar_mensaje_a_servidor(numeroTablaPrimerNivel, socketKernel);
+  log_info(logger, "Se envia a kernel el numero de tabla de primer nivel %d", nuevoProceso->tablaPrimerNivel->numeroTablaPrimerNivel);
 }
 
 void atender_suspension_de_proceso(int socketKernel, Logger *logger)

@@ -17,17 +17,19 @@ void correr_prueba()
   finalizar_proceso(procesoNuevo2->idProceso);
 
   Proceso* procesoNuevo3 = crear_proceso(2, 192);  
-  asignar_pagina_a_marco_libre(procesoNuevo3, 1);
   asignar_pagina_a_marco_libre(procesoNuevo3, 0);
+  asignar_pagina_a_marco_libre(procesoNuevo3, 1);
 
+  //hardcode como si el proceso escribiera en memoria, no esta implementado aun
+  escribir_entero_en_memoria(12, 100);
   TablaSegundoNivel* ts = list_get(procesoNuevo3->tablaPrimerNivel->entradas, 0);
-  Pagina* pagina = list_get(ts->entradas, 0);
+  Pagina* pagina = list_get(ts->entradas, 1);
   pagina->modificado = true;
 
   suspender_proceso(procesoNuevo3->idProceso);
   asignar_pagina_a_marco_libre(procesoNuevo3, 1);
 
-  //finalizar_proceso(procesoNuevo3->idProceso);
+  finalizar_proceso(procesoNuevo3->idProceso);
 
   //Escritura, lectura y copia en memoria
   // escribir_entero_en_memoria(12, 100);
@@ -58,15 +60,15 @@ int main(void)
 
   correr_prueba();
 
-  //Hilos
-  while(true)
-  {
-    int socketCliente = esperar_cliente(socketMemoria);
-    Hilo hiloCliente;
+  // //Hilos
+  // while(true)
+  // {
+  //   int socketCliente = esperar_cliente(socketMemoria);
+  //   Hilo hiloCliente;
 
-    pthread_create(&hiloCliente, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
-    //pthread_join(hiloCliente, NULL);
-  }
+  //   pthread_create(&hiloCliente, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
+  //   //pthread_join(hiloCliente, NULL);
+  // }
 
   liberar_memoria();
   log_destroy(logger);

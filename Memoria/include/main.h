@@ -6,12 +6,13 @@ typedef struct Pagina Pagina;
 typedef struct
 {
     int idProceso;
+    int numeroMarco;
     Pagina *paginaActual; // NULL = vacio
 } Marco;
 
 struct Pagina
 {
-    int nroPagina;
+    int numeroPagina;
     bool uso;
     bool modificado;
     Marco *marcoAsignado;
@@ -25,7 +26,7 @@ typedef struct
 typedef struct
 {
     t_list *entradas; // cada entrada es puntero a tabla 2 nivel
-    int nroTablaPrimerNivel;
+    int numeroTablaPrimerNivel;
 } TablaPrimerNivel;
 
 typedef struct
