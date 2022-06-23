@@ -68,20 +68,20 @@ TablaSegundoNivel *crear_tabla_segundo_nivel(int nroPrimerPaginaDeTabla);
  */
 Proceso *crear_proceso(int id, int tamanio);
 
-void* leer_de_memoria(int direccionFisica, int desplazamiento);
+void *leer_de_memoria(int direccionFisica, int desplazamiento);
 
-void escribir_en_memoria(void* datosAEscribir, int direccionFisica, int desplazamiento);
+void escribir_en_memoria(void *datosAEscribir, int direccionFisica, int desplazamiento);
 
 /**
  * @brief Escribir un entero en Memoria Principal.
  * @param valorAEscribir El valor que se va a escribir en Memoria Principal.
- * @param direccionFisica 
+ * @param direccionFisica
  */
 void escribir_entero_en_memoria(uint32_t valorAEscribir, int direccionFisica);
 
 /**
  * @brief Leer un entero de la Memoria Principal.
- * @param direccionFisica 
+ * @param direccionFisica
  *
  * @return Valor numerico de lo que hay en la direccion en memoria.
  */
@@ -115,11 +115,11 @@ Marco *asignar_pagina_a_marco_libre(Proceso *proceso, int numeroPagina);
 /**
  * @brief Asigna una pagina del proceso a un marco
  *
- * @param idProceso
+ * @param proceso
  * @param pagina
  * @param marco
  */
-void asignar_pagina_del_proceso_al_marco(int idProceso, Pagina *pagina, Marco *marco);
+void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco *marco);
 
 /**
  * @brief Obtiene la pagina fisica del proceso, en base a su numero de pagina
@@ -195,7 +195,19 @@ void desasignar_marcos_al_proceso(int idProceso);
  */
 void desasignar_marco(Marco *marco);
 
-void desasignar_pagina(Pagina* pagina);
+/**
+ * @brief
+ *
+ * @param pagina
+ */
+void desasignar_pagina(Pagina *pagina);
 
+Marco *correr_algortimo_sustitucion(Proceso *proceso);
+
+Marco *correr_clock(Proceso *proceso, Logger *logger);
+
+Marco *correr_clock_modificado(Proceso *proceso, Logger *logger);
+
+Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina);
 
 #endif

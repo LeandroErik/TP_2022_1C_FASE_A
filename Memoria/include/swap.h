@@ -32,11 +32,29 @@ void borrar_archivo_swap_del_proceso(Proceso *proceso);
  * @param numeroDeMarco
  * @param proceso
  */
-void escribir_en_swap(Pagina* pagina, Proceso *proceso);
+void escribir_en_swap(Pagina *pagina, Proceso *proceso);
 
+/**
+ * @brief
+ *
+ */
 void escribir_datos_de_pagina_en_memoria();
 
-void escribir_en_swap(Pagina* pagina, Proceso *proceso);
+/**
+ * @brief
+ *
+ * @param pagina
+ * @param proceso
+ */
+void escribir_en_swap(Pagina *pagina, Proceso *proceso);
 
+/**
+ * @brief
+ *
+ * @param proceso
+ * @param numeroPagina
+ * @param numeroMarco
+ */
+void escribir_datos_de_pagina_en_memoria(Proceso *proceso, int numeroPagina, int numeroMarco);
 
 #endif

@@ -13,6 +13,7 @@ typedef struct
 struct Pagina
 {
     int numeroPagina;
+    bool paginaVacia;
     bool uso;
     bool modificado;
     Marco *marcoAsignado;
@@ -34,7 +35,9 @@ typedef struct
     int idProceso;
     int tamanio;
     TablaPrimerNivel *tablaPrimerNivel;
-    FILE* archivoSwap;
+    FILE *archivoSwap;
+    t_list *paginasAsignadas;
+    int posicionDelPunteroDeSustitucion;
 } Proceso;
 
 #endif
