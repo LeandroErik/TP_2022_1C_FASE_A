@@ -47,11 +47,11 @@ void correr_prueba()
 
   finalizar_proceso(procesoNuevo3->idProceso);
 
-  // Escritura, lectura y copia en memoria
-  //  escribir_entero_en_memoria(12, 100);
-  //  leer_entero_de_memoria(100);
-  //  copiar_entero_en_memoria(120,100);
-  //  leer_entero_de_memoria(120);
+  // //Escritura, lectura y copia en memoria
+  // escribir_entero_en_memoria(12, 100);
+  // leer_entero_de_memoria(100);
+  // copiar_entero_en_memoria(120, 100);
+  // leer_entero_de_memoria(120);
 }
 
 int main(void)

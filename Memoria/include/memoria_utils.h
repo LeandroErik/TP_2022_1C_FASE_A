@@ -68,10 +68,6 @@ TablaSegundoNivel *crear_tabla_segundo_nivel(int nroPrimerPaginaDeTabla);
  */
 Proceso *crear_proceso(int id, int tamanio);
 
-void *leer_de_memoria(int direccionFisica, int desplazamiento);
-
-void escribir_en_memoria(void *datosAEscribir, int direccionFisica, int desplazamiento);
-
 /**
  * @brief Escribir un entero en Memoria Principal.
  * @param valorAEscribir El valor que se va a escribir en Memoria Principal.
@@ -186,7 +182,7 @@ void eliminar_proceso_de_lista_de_procesos(Proceso *proceso);
  *
  * @param idProceso
  */
-void desasignar_marcos_al_proceso(int idProceso);
+void desasignar_marcos_al_proceso(Proceso* proceso);
 
 /**
  * @brief Libera un solo marco de un proceso
@@ -200,14 +196,18 @@ void desasignar_marco(Marco *marco);
  *
  * @param pagina
  */
-void desasignar_pagina(Pagina *pagina);
+void desasignar_pagina(Proceso* proceso, Pagina *pagina);
 
-Marco *correr_algortimo_sustitucion(Proceso *proceso);
+bool hay_que_sustituir_pagina_del_proceso(Proceso* proceso, Marco* marcoLibre);
+
+Marco *marco_del_proceso_sustituido(Proceso *proceso);
 
 Marco *correr_clock(Proceso *proceso, Logger *logger);
 
 Marco *correr_clock_modificado(Proceso *proceso, Logger *logger);
 
 Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina);
+
+void sacar_pagina_de_paginas_asignadas(Proceso *proceso, Pagina *pagina);
 
 #endif
