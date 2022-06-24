@@ -20,7 +20,12 @@ typedef enum CodigoOperacion
   INTERRUPCION,
   PROCESO_NUEVO,
   SUSPENDER_PROCESO,
-  FINALIZAR_PROCESO
+  FINALIZAR_PROCESO,
+  PEDIDO_TABLA_SEGUNDO_NIVEL,
+  PEDIDO_MARCO,
+  ESCRIBIR_EN_MEMORIA,
+  LEER_DE_MEMORIA,
+  COPIAR_EN_MEMORIA
 } CodigoOperacion;
 
 typedef enum Estado
@@ -240,5 +245,13 @@ Pcb *deserializar_pcb(int socketCliente);
  * @param socketCliente Socket del cliente.
  */
 void enviar_paquete_a_cliente(Paquete *paquete, int socketCliente);
+
+/**
+ * @brief Envia un mensaje al cliente conectado
+ * 
+ * @param mensaje Mensaje a enviar.
+ * @param socketCliente Socket del cliente.
+ */
+void enviar_mensaje_a_cliente(char *mensaje, int socketCliente);
 
 #endif

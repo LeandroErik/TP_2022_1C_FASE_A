@@ -251,3 +251,8 @@ void enviar_paquete_a_cliente(Paquete *paquete, int socketCliente)
 {
   enviar_paquete_a_servidor(paquete, socketCliente);
 }
+
+void enviar_mensaje_a_cliente(char *mensaje, int socketCliente)
+{
+  enviar_mensaje_a_servidor(mensaje, socketCliente);
+}

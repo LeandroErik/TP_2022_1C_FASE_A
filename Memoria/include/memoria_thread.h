@@ -63,4 +63,17 @@ void atender_finalizacion_de_proceso(int socketKernel, Logger *logger);
  */
 void realizar_espera_de_memoria();
 
+void enviar_estructuras_de_memoria_a_cpu(int socketCPU, Logger* logger);
+
+void atender_pedido_de_tabla_de_segundo_nivel(int socketCPU, Logger *logger);
+
+void atender_pedido_de_marco(int socketCPU, Logger *logger);
+
+void atender_escritura_en_memoria(int socketCPU, Logger *logger);
+
+void atender_lectura_de_memoria(int socketCPU, Logger *logger);
+
+void atender_copiado_en_memoria(int socketCPU, Logger *logger);
+
+
 #endif

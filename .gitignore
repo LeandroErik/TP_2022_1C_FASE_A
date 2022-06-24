@@ -5,3 +5,4 @@ commons/
 *.log
 *.txt
 *.config
+.github/
