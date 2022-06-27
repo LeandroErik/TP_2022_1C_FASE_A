@@ -44,24 +44,28 @@ int main(void)
 
 void correr_prueba() //Prueba hardcodeada
 {
-  // Proceso *procesoNuevo1 = crear_proceso(0, 256); // id, tamanio
+  Proceso *procesoNuevo1 = crear_proceso(0, 256);
 
-  // asignar_pagina_a_marco_libre(procesoNuevo1, 3);
-  // asignar_pagina_a_marco_libre(procesoNuevo1, 1);
-  // asignar_pagina_a_marco_libre(procesoNuevo1, 0);
+  asignar_numero_pagina_a_marco_libre(procesoNuevo1, 3);
+  asignar_numero_pagina_a_marco_libre(procesoNuevo1, 1);
+  asignar_numero_pagina_a_marco_libre(procesoNuevo1, 0);
 
-  // Proceso* procesoNuevo2 = crear_proceso(1, 192);
+  Proceso* procesoNuevo2 = crear_proceso(1, 192);
 
-  // asignar_pagina_a_marco_libre(procesoNuevo2, 2);
+  asignar_numero_pagina_a_marco_libre(procesoNuevo2, 2);
 
-  // finalizar_proceso(procesoNuevo1->idProceso);
-  // finalizar_proceso(procesoNuevo2->idProceso);
+  printf("%d \n", obtener_numero_tabla_segundo_nivel(1, 2));
+  printf("%d \n", obtener_numero_tabla_segundo_nivel(0, 3));
+  printf("%d \n", obtener_numero_marco(5, 2));
+
+  finalizar_proceso(procesoNuevo1->idProceso);
+  finalizar_proceso(procesoNuevo2->idProceso);
 
   Proceso *procesoNuevo3 = crear_proceso(2, 640);
-  asignar_pagina_a_marco_libre(procesoNuevo3, 0);
-  asignar_pagina_a_marco_libre(procesoNuevo3, 1);
-  asignar_pagina_a_marco_libre(procesoNuevo3, 2);
-  asignar_pagina_a_marco_libre(procesoNuevo3, 3);
+  asignar_numero_pagina_a_marco_libre(procesoNuevo3, 0);
+  asignar_numero_pagina_a_marco_libre(procesoNuevo3, 1);
+  asignar_numero_pagina_a_marco_libre(procesoNuevo3, 2);
+  asignar_numero_pagina_a_marco_libre(procesoNuevo3, 3);
 
   // hardcode como si el proceso escribiera en memoria, no esta implementado aun
   // escribir_entero_en_memoria(12, 100);
@@ -82,15 +86,9 @@ void correr_prueba() //Prueba hardcodeada
   pagina->modificado = true;
   pagina->paginaVacia = false;
 
-  asignar_pagina_a_marco_libre(procesoNuevo3, 4);
+  asignar_numero_pagina_a_marco_libre(procesoNuevo3, 4);
 
   suspender_proceso(procesoNuevo3->idProceso);
 
   finalizar_proceso(procesoNuevo3->idProceso);
-
-  // //Escritura, lectura y copia en memoria
-  // escribir_entero_en_memoria(12, 100);
-  // leer_entero_de_memoria(100);
-  // copiar_entero_en_memoria(120, 100);
-  // leer_entero_de_memoria(120);
 }

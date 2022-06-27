@@ -22,6 +22,7 @@ struct Pagina
 typedef struct
 {
     t_list *entradas; // puntero a paginas
+    int numeroTablaSegundoNivel;
 } TablaSegundoNivel;
 
 typedef struct

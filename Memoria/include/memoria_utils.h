@@ -16,7 +16,7 @@
 t_list *procesos;
 t_list *marcos;
 void *memoriaPrincipal;
-int tablasDePrimerNivel;
+int tablasDePrimerNivel, tablasDeSegundoNivel;
 
 /**
  * @brief Inicia un logger en el Módulo Memoria.
@@ -102,11 +102,13 @@ Proceso *buscar_proceso_por_id(int idProceso);
 /**
  * @brief Le asigna una pagina al primer marco libre marco o realiza sustitucion si no lo hay.
  * @param proceso
- * @param numeroPagina
+ * @param pagina
  *
  * @return
  */
-Marco *asignar_pagina_a_marco_libre(Proceso *proceso, int numeroPagina);
+Marco *asignar_pagina_a_marco_libre(Proceso *proceso, Pagina* pagina);
+
+Marco *asignar_numero_pagina_a_marco_libre(Proceso *proceso, int numeroPagina); //TODO: Borrar despues
 
 /**
  * @brief Asigna una pagina del proceso a un marco
@@ -124,7 +126,7 @@ void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco
  * @param numeroPagina
  * @return Pagina*
  */
-Pagina *obtener_pagina_del_proceso(Proceso *proceso, int numeroPagina);
+Pagina *obtener_pagina_del_proceso(Proceso *proceso, int numeroPagina); //TODO: Borrar despues
 
 /**
  * @brief busca el primer marco libre en la memoria principal y lo retorna
@@ -209,5 +211,13 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger);
 Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina);
 
 void sacar_pagina_de_paginas_asignadas(Proceso *proceso, Pagina *pagina);
+
+int obtener_numero_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaATablaDePrimerNivel);
+
+int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundoNivel);
+
+TablaPrimerNivel* buscar_tabla_primer_nivel_por_numero(int numeroTablaPrimerNivel);
+
+Proceso* buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNivel);
 
 #endif

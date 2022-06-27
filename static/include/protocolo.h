@@ -25,7 +25,8 @@ typedef enum CodigoOperacion
   PEDIDO_MARCO,
   ESCRIBIR_EN_MEMORIA,
   LEER_DE_MEMORIA,
-  COPIAR_EN_MEMORIA
+  COPIAR_EN_MEMORIA,
+  ESTRUCTURAS_MEMORIA
 } CodigoOperacion;
 
 typedef enum Estado
