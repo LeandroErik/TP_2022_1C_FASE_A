@@ -27,21 +27,16 @@ FILE *crear_archivo_swap(int idProceso);
 void borrar_archivo_swap_del_proceso(Proceso *proceso);
 
 /**
- * @brief
+ * @brief Escribe en el marco la pagina del proceso, traida de swap
  *
- * @param numeroDeMarco
  * @param proceso
+ * @param numeroPagina
+ * @param numeroMarco
  */
-void escribir_en_swap(Pagina *pagina, Proceso *proceso);
+void escribir_datos_de_pagina_en_memoria(Proceso *proceso, int numeroPagina, int numeroMarco);
 
 /**
- * @brief
- *
- */
-void escribir_datos_de_pagina_en_memoria();
-
-/**
- * @brief
+ * @brief Escribe la pagina del proceso en su archivo swap
  *
  * @param pagina
  * @param proceso
@@ -49,12 +44,9 @@ void escribir_datos_de_pagina_en_memoria();
 void escribir_en_swap(Pagina *pagina, Proceso *proceso);
 
 /**
- * @brief
+ * @brief Se realiza la espera en milisegundos por acceso a swap
  *
- * @param proceso
- * @param numeroPagina
- * @param numeroMarco
  */
-void escribir_datos_de_pagina_en_memoria(Proceso *proceso, int numeroPagina, int numeroMarco);
+void realizar_espera_swap();
 
 #endif

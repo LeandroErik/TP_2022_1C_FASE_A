@@ -122,22 +122,22 @@ void realizar_espera_de_memoria()
 // Funciones atender CPU
 void enviar_estructuras_de_memoria_a_cpu(int socketCPU, Logger *logger)
 {
-  Paquete* paquete = crear_paquete(ESTRUCTURAS_MEMORIA);
+  Paquete *paquete = crear_paquete(ESTRUCTURAS_MEMORIA);
   agregar_a_paquete(paquete, &MEMORIA_CONFIG.ENTRADAS_POR_TABLA, sizeof(int));
   agregar_a_paquete(paquete, &MEMORIA_CONFIG.TAM_PAGINA, sizeof(int));
-  enviar_paquete_a_cliente(paquete, socketCPU);  // TODO: Ver si es necesario enviar algo mas
+  enviar_paquete_a_cliente(paquete, socketCPU); // TODO: Ver si es necesario enviar algo mas
 
   log_info(logger, "Se envian a CPU las estructuras basicas de memoria");
 }
 
 void atender_pedido_de_tabla_de_segundo_nivel(int socketCPU, Logger *logger)
 {
-  t_list *lista = obtener_paquete_como_lista(socketCPU);
+  Lista *lista = obtener_paquete_como_lista(socketCPU);
   int numeroTablaPrimerNivel = *(int *)list_get(lista, 0);
   int entradaATablaDePrimerNivel = *(int *)list_get(lista, 1);
 
   int numeroTablaSegundoNivel = obtener_numero_tabla_segundo_nivel(numeroTablaPrimerNivel, entradaATablaDePrimerNivel);
- 
+
   realizar_espera_de_memoria();
 
   enviar_mensaje_a_cliente(string_itoa(numeroTablaSegundoNivel), socketCPU);
@@ -146,7 +146,7 @@ void atender_pedido_de_tabla_de_segundo_nivel(int socketCPU, Logger *logger)
 
 void atender_pedido_de_marco(int socketCPU, Logger *logger)
 {
-  t_list *lista = obtener_paquete_como_lista(socketCPU);
+  Lista *lista = obtener_paquete_como_lista(socketCPU);
   int numeroTablaSegundoNivel = *(int *)list_get(lista, 0);
   int entradaATablaDeSegundoNivel = *(int *)list_get(lista, 1);
 
@@ -159,22 +159,19 @@ void atender_pedido_de_marco(int socketCPU, Logger *logger)
 
 void atender_escritura_en_memoria(int socketCPU, Logger *logger)
 {
-  t_list *lista = obtener_paquete_como_lista(socketCPU);
+  Lista *lista = obtener_paquete_como_lista(socketCPU);
   int direccionFisicaAEscribir = *(int *)list_get(lista, 0);
   uint32_t numeroAEscribir = *(uint32_t *)list_get(lista, 1);
 
-
-
-  // TODO: escribir en esa direccion
+  escribir_entero_en_memoria(numeroAEscribir, direccionFisicaAEscribir);
 }
 
 void atender_lectura_de_memoria(int socketCPU, Logger *logger)
 {
-  t_list *lista = obtener_paquete_como_lista(socketCPU);
+  Lista *lista = obtener_paquete_como_lista(socketCPU);
   int direccionFisicaALeer = *(int *)list_get(lista, 0);
 
-  uint32_t leido = 0;
-  // TODO: Leer
+  uint32_t leido = leer_entero_de_memoria(direccionFisicaALeer);
 
   realizar_espera_de_memoria();
   enviar_mensaje_a_cliente(string_itoa(leido), socketCPU);
@@ -183,17 +180,17 @@ void atender_lectura_de_memoria(int socketCPU, Logger *logger)
 
 void atender_copiado_en_memoria(int socketCPU, Logger *logger)
 {
-  t_list *lista = obtener_paquete_como_lista(socketCPU);
+  Lista *lista = obtener_paquete_como_lista(socketCPU);
   int direccionFisicaDestino = *(int *)list_get(lista, 0);
   int direccionFisicaOrigen = *(int *)list_get(lista, 1);
 
-  // TODO: copiar
+  copiar_entero_en_memoria(direccionFisicaDestino, direccionFisicaOrigen);
 }
 
 // Funciones atender KERNEL
 void atender_creacion_de_proceso(int socketKernel, Logger *logger)
 {
-  t_list *lista = obtener_paquete_como_lista(socketKernel);
+  Lista *lista = obtener_paquete_como_lista(socketKernel);
   int id = *(int *)list_get(lista, 0);
   int tamanio = *(int *)list_get(lista, 1);
 
@@ -208,7 +205,7 @@ void atender_creacion_de_proceso(int socketKernel, Logger *logger)
 
 void atender_suspension_de_proceso(int socketKernel, Logger *logger)
 {
-  t_list *lista = obtener_paquete_como_lista(socketKernel);
+  Lista *lista = obtener_paquete_como_lista(socketKernel);
   int id = *(int *)list_get(lista, 0);
 
   suspender_proceso(id);
@@ -221,7 +218,7 @@ void atender_suspension_de_proceso(int socketKernel, Logger *logger)
 
 void atender_finalizacion_de_proceso(int socketKernel, Logger *logger)
 {
-  t_list *lista = obtener_paquete_como_lista(socketKernel);
+  Lista *lista = obtener_paquete_como_lista(socketKernel);
   int id = *(int *)list_get(lista, 0);
 
   finalizar_proceso(id);

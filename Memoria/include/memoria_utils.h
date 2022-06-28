@@ -13,8 +13,8 @@
 #include <unistd.h>
 
 // Variables globales
-t_list *procesos;
-t_list *marcos;
+Lista *procesos;
+Lista *marcos;
 void *memoriaPrincipal;
 int tablasDePrimerNivel, tablasDeSegundoNivel;
 
@@ -69,6 +69,14 @@ TablaSegundoNivel *crear_tabla_segundo_nivel(int nroPrimerPaginaDeTabla);
 Proceso *crear_proceso(int id, int tamanio);
 
 /**
+ * @brief Retorna el marco en el que esta contenida la direccion fisica
+ *
+ * @param direccionFisica
+ * @return Marco*
+ */
+Marco *marco_de_direccion_fisica(int direccionFisica);
+
+/**
  * @brief Escribir un entero en Memoria Principal.
  * @param valorAEscribir El valor que se va a escribir en Memoria Principal.
  * @param direccionFisica
@@ -100,15 +108,21 @@ void copiar_entero_en_memoria(int direccionFisicaDestino, int direccionFisicaOri
 Proceso *buscar_proceso_por_id(int idProceso);
 
 /**
+ * @brief Agrega la nueva pagina asignada en la posicion correspondiente
+ *
+ * @param proceso
+ * @param pagina
+ */
+void agregar_pagina_a_paginas_asignadas_del_proceso(Proceso *proceso, Pagina *pagina);
+
+/**
  * @brief Le asigna una pagina al primer marco libre marco o realiza sustitucion si no lo hay.
  * @param proceso
  * @param pagina
  *
- * @return
+ * @return Marco*
  */
-Marco *asignar_pagina_a_marco_libre(Proceso *proceso, Pagina* pagina);
-
-Marco *asignar_numero_pagina_a_marco_libre(Proceso *proceso, int numeroPagina); //TODO: Borrar despues
+Marco *asignar_pagina_a_marco_libre(Proceso *proceso, Pagina *pagina);
 
 /**
  * @brief Asigna una pagina del proceso a un marco
@@ -118,15 +132,6 @@ Marco *asignar_numero_pagina_a_marco_libre(Proceso *proceso, int numeroPagina); 
  * @param marco
  */
 void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco *marco);
-
-/**
- * @brief Obtiene la pagina fisica del proceso, en base a su numero de pagina
- *
- * @param proceso
- * @param numeroPagina
- * @return Pagina*
- */
-Pagina *obtener_pagina_del_proceso(Proceso *proceso, int numeroPagina); //TODO: Borrar despues
 
 /**
  * @brief busca el primer marco libre en la memoria principal y lo retorna
@@ -184,7 +189,7 @@ void eliminar_proceso_de_lista_de_procesos(Proceso *proceso);
  *
  * @param idProceso
  */
-void desasignar_marcos_al_proceso(Proceso* proceso);
+void desasignar_marcos_al_proceso(Proceso *proceso);
 
 /**
  * @brief Libera un solo marco de un proceso
@@ -194,30 +199,97 @@ void desasignar_marcos_al_proceso(Proceso* proceso);
 void desasignar_marco(Marco *marco);
 
 /**
- * @brief
+ * @brief Pone a la pagina sin un marco asignado.
  *
+ * @param proceso
  * @param pagina
  */
-void desasignar_pagina(Proceso* proceso, Pagina *pagina);
+void desasignar_pagina(Proceso *proceso, Pagina *pagina);
 
-bool hay_que_sustituir_pagina_del_proceso(Proceso* proceso, Marco* marcoLibre);
-
-Marco *marco_del_proceso_sustituido(Proceso *proceso);
-
-Marco *correr_clock(Proceso *proceso, Logger *logger);
-
-Marco *correr_clock_modificado(Proceso *proceso, Logger *logger);
-
+/**
+ * @brief Desasigna el marco asignado a la pagina, lo escribe en swap y lo retorna.
+ *
+ * @param proceso
+ * @param pagina
+ * @return Marco*
+ */
 Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina);
 
+/**
+ * @brief Retorna si correponde sustitucion por limite de marcos asignados o memoria llena
+ *
+ * @param proceso
+ * @param marcoLibre
+ * @return true
+ * @return false
+ */
+bool hay_que_sustituir_pagina_del_proceso(Proceso *proceso, Marco *marcoLibre);
+
+/**
+ * @brief Retorna el marco del proceso que se sustitutuyo
+ *
+ * @param proceso
+ * @return Marco*
+ */
+Marco *marco_del_proceso_sustituido(Proceso *proceso);
+
+/**
+ * @brief Corre el algoritmo de sustitucion Clock
+ *
+ * @param proceso
+ * @param logger
+ * @return Marco*
+ */
+Marco *correr_clock(Proceso *proceso, Logger *logger);
+
+/**
+ * @brief Corre el algoritmo de sustitucion Clock Modificado
+ *
+ * @param proceso
+ * @param logger
+ * @return Marco*
+ */
+Marco *correr_clock_modificado(Proceso *proceso, Logger *logger);
+
+/**
+ * @brief Saca la pagina de la lista de paginas asignadas a un marco del proceso
+ *
+ * @param proceso
+ * @param pagina
+ */
 void sacar_pagina_de_paginas_asignadas(Proceso *proceso, Pagina *pagina);
 
+/**
+ * @brief Retorna el numero de tabla de segundo nivel de la entrada de la tabla de primer nivel.
+ *
+ * @param numeroTablaPrimerNivel
+ * @param entradaATablaDePrimerNivel
+ * @return int
+ */
 int obtener_numero_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaATablaDePrimerNivel);
 
+/**
+ * @brief Retorna el numero de marco asignado a la pagina de la entrada de la tabla de segundo nivel.
+ * @param numeroTablaSegundoNivel
+ * @param entradaATablaDeSegundoNivel
+ * @return int
+ */
 int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundoNivel);
 
-TablaPrimerNivel* buscar_tabla_primer_nivel_por_numero(int numeroTablaPrimerNivel);
+/**
+ * @brief Retorna un puntero a la tabla de primer nivel buscada.
+ *
+ * @param numeroTablaPrimerNivel
+ * @return TablaPrimerNivel*
+ */
+TablaPrimerNivel *buscar_tabla_primer_nivel_por_numero(int numeroTablaPrimerNivel);
 
-Proceso* buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNivel);
+/**
+ * @brief Retorna el proceso que tiene dicho numero de tabla de segundo nivel.
+ *
+ * @param numeroTablaSegundoNivel
+ * @return Proceso*
+ */
+Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNivel);
 
 #endif

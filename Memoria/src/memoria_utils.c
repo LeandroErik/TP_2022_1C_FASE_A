@@ -95,7 +95,7 @@ TablaSegundoNivel *crear_tabla_segundo_nivel(int nroPrimerPaginaDeTabla)
     pag->numeroPagina = i + nroPrimerPaginaDeTabla;
     pag->paginaVacia = true;
     pag->modificado = false;
-    pag->uso = true;
+    pag->uso = false;
     pag->marcoAsignado = NULL;
     list_add(tabla->entradas, pag);
   }
@@ -104,12 +104,23 @@ TablaSegundoNivel *crear_tabla_segundo_nivel(int nroPrimerPaginaDeTabla)
 // Fin funciones de estructuras
 
 // Funciones de escritura, lectura y copiado en memoria fisica
+Marco *marco_de_direccion_fisica(int direccionFisica)
+{
+  int numeroDeMarco = direccionFisica / MEMORIA_CONFIG.TAM_PAGINA;
+  return list_get(marcos, numeroDeMarco);
+}
+
 void escribir_entero_en_memoria(uint32_t valorAEscribir, int direccionFisica)
 {
   Logger *logger = iniciar_logger_memoria();
 
   void *direccionInicioEscritura = memoriaPrincipal + direccionFisica;
   memcpy(direccionInicioEscritura, &valorAEscribir, sizeof(valorAEscribir));
+
+  Marco *marcoEscrito = marco_de_direccion_fisica(direccionFisica);
+  marcoEscrito->paginaActual->modificado = true;
+  marcoEscrito->paginaActual->paginaVacia = false;
+  marcoEscrito->paginaActual->uso = true;
 
   log_info(logger, "Valor escrito %d, en la posicion de memoria fisica %d.", valorAEscribir, direccionFisica);
   log_destroy(logger);
@@ -122,6 +133,9 @@ uint32_t leer_entero_de_memoria(int direccionFisica)
   uint32_t leido;
   void *direccionInicioLectura = memoriaPrincipal + direccionFisica;
   memcpy(&leido, direccionInicioLectura, sizeof(leido));
+
+  Marco *marcoEscrito = marco_de_direccion_fisica(direccionFisica);
+  marcoEscrito->paginaActual->uso = true;
 
   log_info(logger, "Valor leido %d, de la posicion de memoria fisica %d.", leido, direccionFisica);
   log_destroy(logger);
@@ -172,6 +186,12 @@ bool tiene_marcos_por_asignar(Proceso *proceso)
   return cantidadDePaginasAsignadas < MEMORIA_CONFIG.MARCOS_POR_PROCESO;
 }
 
+void agregar_pagina_a_paginas_asignadas_del_proceso(Proceso *proceso, Pagina *pagina)
+{
+  // TODO: Ver en que posicion de la lista habria que agregar, por numero de marco? donde se reemplazo? al final? y actualizar el puntero
+  list_add(proceso->paginasAsignadas, pagina);
+}
+
 void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco *marco)
 {
   Logger *logger = iniciar_logger_memoria();
@@ -181,8 +201,7 @@ void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco
     escribir_datos_de_pagina_en_memoria(proceso, pagina->numeroPagina, marco->numeroMarco);
   }
 
-  list_add(proceso->paginasAsignadas, pagina);
-  // TODO: deberia agregarse en la posicion de la lista en la que se sustituyo (que es la del cont-1) excepto si es 0 o si no se sustituyo (que seria al final)
+  agregar_pagina_a_paginas_asignadas_del_proceso(proceso, pagina);
   pagina->marcoAsignado = marco;
   marco->paginaActual = pagina;
   marco->idProceso = proceso->idProceso;
@@ -191,26 +210,9 @@ void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco
   log_destroy(logger);
 }
 
-Pagina *obtener_pagina_del_proceso(Proceso *proceso, int numeroPagina) // TODO: Borrar despues, no se usa mas que para hardcodeo de pruebas
-{
-  // double numeroEntradasPrimerNivel = numeroPagina / MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
-  int numeroDeEntradaDelPrimerNivel = floor(numeroPagina / MEMORIA_CONFIG.ENTRADAS_POR_TABLA);
-  int numeroDeEntradaDelSegundoNivel = numeroPagina % MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
-
-  TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel->entradas, numeroDeEntradaDelPrimerNivel);
-
-  return list_get(tablaSegundoNivel->entradas, numeroDeEntradaDelSegundoNivel);
-}
-
 bool hay_que_sustituir_pagina_del_proceso(Proceso *proceso, Marco *marcoLibre)
 {
   return !tiene_marcos_por_asignar(proceso) || marcoLibre == NULL;
-}
-
-Marco *asignar_numero_pagina_a_marco_libre(Proceso *proceso, int numeroPagina) // TODO: Es para poder hardcodear pruebas, despues borrar
-{
-  Pagina *pagina = obtener_pagina_del_proceso(proceso, numeroPagina);
-  return asignar_pagina_a_marco_libre(proceso, pagina);
 }
 
 Marco *asignar_pagina_a_marco_libre(Proceso *proceso, Pagina *pagina)
@@ -333,7 +335,7 @@ void desasignar_pagina(Proceso *proceso, Pagina *pagina)
   desasignar_marco(pagina->marcoAsignado);
   pagina->marcoAsignado = NULL;
   pagina->modificado = false;
-  pagina->uso = true; // TODO: checkear bits
+  pagina->uso = true;
   sacar_pagina_de_paginas_asignadas(proceso, pagina);
 }
 
