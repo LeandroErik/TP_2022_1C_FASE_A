@@ -67,7 +67,11 @@ void enviar_interrupcion()
 
   log_info(logger, "[INTERRUPCION] Enviando Interrupción al Servidor CPU...");
 
-  enviar_mensaje_a_servidor("Interrupción externa", socketInterrupcion);
+  Paquete *paquete = crear_paquete(INTERRUPCION);
+
+  enviar_paquete_a_servidor(paquete, socketInterrupcion);
+
+  eliminar_paquete(paquete);
 
   log_info(logger, "Saliendo del Puerto Interrupt...");
 
