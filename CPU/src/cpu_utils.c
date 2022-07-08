@@ -91,6 +91,34 @@ void ejecutar_exit(Pcb *pcb, int socketKernel)
   eliminar_paquete(paquete);
 }
 
+void ejecutar_read(int direccionFisica)
+{
+  Paquete *paquete = crear_paquete(LEER_DE_MEMORIA);
+  agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
+  enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  eliminar_paquete(paquete);
+}
+
+void ejecutar_write(Pcb *proceso, int direccionFisica, int valor)
+{
+  Paquete *paquete = crear_paquete(ESCRIBIR_EN_MEMORIA);
+  agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
+  agregar_a_paquete(paquete, &valor, sizeof(int));
+  enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  eliminar_paquete(paquete);
+}
+
+void ejecutar_copy(Pcb *proceso, int direccionFisicoDestino, int direccionLogicaOrigen)
+{
+  int direccionFisicaOrigen = llamar_mmu(proceso, direccionLogicaOrigen);
+
+  Paquete *paquete = crear_paquete(COPIAR_EN_MEMORIA);
+  agregar_a_paquete(paquete, &direccionFisicoDestino, sizeof(int));
+  agregar_a_paquete(paquete, &direccionFisicaOrigen, sizeof(int));
+  enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  eliminar_paquete(paquete);
+}
+
 void atender_interrupcion(Pcb *pcb, int socketKernel)
 {
   pcb->escenario->estado = INTERRUPCION_EXTERNA;
@@ -130,6 +158,9 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       return;
     }
     pcb->contadorPrograma++;
+
+    int direccionFisica;
+
     switch (instruccion)
     {
     case NOOP:
@@ -141,10 +172,19 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       ejecutar_io(pcb, lineaInstruccion->parametros[0], socketKernel);
       break;
     case READ:
+      log_info(logger, "Ejecutando READ");
+      direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
+      ejecutar_read(direccionFisica);
       break;
     case COPY:
+      log_info(logger, "Ejecutando COPY");
+      direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
+      ejecutar_copy(pcb, direccionFisica, lineaInstruccion->parametros[1]);
       break;
     case WRITE:
+      log_info(logger, "Ejecutando WRITE");
+      direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
+      ejecutar_write(pcb, direccionFisica, lineaInstruccion->parametros[1]);
       break;
     case EXIT:
       log_info(logger, "Ejecutando EXIT");
@@ -161,4 +201,42 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       return;
     }
   }
+}
+
+int llamar_mmu(Pcb *proceso, int direccionLogica)
+{
+  int numeroTablaPrimerNivel = proceso->tablaPaginas;
+  int numeroPagina = floor((float)direccionLogica / ESTRUCTURA_MEMORIA.TAMANIO_PAGINA);
+  int entradaTablaPrimerNivel = floor((float)numeroPagina / ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA);
+  int entradaTablaSegundoNivel = numeroPagina % ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA;
+
+  int numeroTablaSegundoNivel = pedir_tabla_segundo_nivel(numeroTablaPrimerNivel, entradaTablaPrimerNivel);
+  int numeroMarco = pedir_marco(numeroTablaSegundoNivel, entradaTablaSegundoNivel);
+  int desplazamiento = direccionLogica - numeroPagina * ESTRUCTURA_MEMORIA.TAMANIO_PAGINA;
+
+  return numeroMarco * ESTRUCTURA_MEMORIA.TAMANIO_PAGINA + desplazamiento;
+}
+
+int pedir_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaTablaPrimerNivel)
+{
+  Paquete *paquete = crear_paquete(PEDIDO_TABLA_SEGUNDO_NIVEL);
+  agregar_a_paquete(paquete, &numeroTablaPrimerNivel, sizeof(int));
+  agregar_a_paquete(paquete, &entradaTablaPrimerNivel, sizeof(int));
+
+  enviar_paquete_a_cliente(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  eliminar_paquete(paquete);
+
+  return atoi(obtener_mensaje_del_cliente(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA));
+}
+
+int pedir_marco(int numeroTablaSegundoNivel, int entradaTablaSegundoNivel)
+{
+  Paquete *paquete = crear_paquete(PEDIDO_MARCO);
+  agregar_a_paquete(paquete, &numeroTablaSegundoNivel, sizeof(int));
+  agregar_a_paquete(paquete, &entradaTablaSegundoNivel, sizeof(int));
+
+  enviar_paquete_a_cliente(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  eliminar_paquete(paquete);
+
+  return atoi(obtener_mensaje_del_cliente(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA));
 }

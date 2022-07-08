@@ -5,6 +5,9 @@
 #include <socket/servidor.h>
 #include <cpu_config.h>
 #include <cpu_thread.h>
+#include <math.h>
+
+bool seNecesitaAtenderInterrupcion;
 
 /**
  * @brief Iniciar un logger en el Módulo CPU.
@@ -82,6 +85,31 @@ void ejecutar_io(Pcb *pcb, int tiempoBloqueadoIO, int socketKernel);
 void ejecutar_exit(Pcb *pcb, int socketKernel);
 
 /**
+ * @brief Lee el valor de una dirección de memoria.
+ *
+ * @param direccionFisica Dirección de memoria.
+ */
+void ejecutar_read(int direccionFisica);
+
+/**
+ * @brief Escribe un valor en una dirección de memoria.
+ *
+ * @param proceso Proceso.
+ * @param direccionFisica Dirección de memoria.
+ * @param valor Valor a escribir.
+ */
+void ejecutar_write(Pcb *proceso, int direccionFisica, int valor);
+
+/**
+ * @brief Copia el valor de una dirección de memoria a otra.
+ *
+ * @param proceso Proceso.
+ * @param direccionDestino Dirección de memoria destino.
+ * @param direccionOrigen Dirección de memoria origen.
+ */
+void ejecutar_copy(Pcb *proceso, int direccionDestino, int direccionOrigen);
+
+/**
  * @brief Lee las líneas de instrucciones dadas por el PCB en el orden que diga el contador de programa.
  *
  * @param pcb PCB.
@@ -89,8 +117,39 @@ void ejecutar_exit(Pcb *pcb, int socketKernel);
  */
 void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel);
 
-bool seNecesitaAtenderInterrupcion;
-
+/**
+ * @brief "Atiende" una interrupción, modificando el PCB y se lo devuelve a Kernel.
+ *
+ * @param pcb PCB.
+ * @param socketKernel Socket de Kernel.
+ */
 void atender_interrupcion(Pcb *pcb, int socketKernel);
+
+/**
+ * @brief "Llama" al MMU para solicitar una dirección de memoria.
+ *
+ * @param proceso Proceso.
+ * @param direccionLogica Dirección lógica.
+ * @return Dirección física.
+ */
+int llamar_mmu(Pcb *proceso, int direccionLogica);
+
+/**
+ * @brief Pide el número de tabla de segundo nivel a Memoria.
+ *
+ * @param numeroTablaPrimerNivel Número de tabla de primer nivel.
+ * @param entradaTablaPrimerNivel Entrada de tabla de primer nivel.
+ * @return Número de tabla de segundo nivel.
+ */
+int pedir_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaTablaPrimerNivel);
+
+/**
+ * @brief Pide el marco a Memoria.
+ *
+ * @param numeroTablaSegundoNivel Número de tabla de segundo nivel.
+ * @param entradaTablaSegundoNivel Entrada de tabla de segundo nivel.
+ * @return Número de marco.
+ */
+int pedir_marco(int numeroTablaSegundoNivel, int entradaTablaSegundoNivel);
 
 #endif

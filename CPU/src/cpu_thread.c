@@ -2,9 +2,23 @@
 
 void esperar_kernel_dispatch(int socketCpu)
 {
+  Logger *logger = iniciar_logger_cpu();
+  log_info(logger, "Conectando con Servidor Memoria...");
+  int socketMemoria = conectar_con_memoria();
+
+  if (socketMemoria < 0)
+  {
+    log_warning(logger, "Conexión rechazada. El Servidor Memoria no está disponible.");
+    log_destroy(logger);
+    return;
+  }
+
+  log_info(logger, "Conexión con Memoria establecida.");
+
+  realizar_handshake_con_memoria(socketMemoria);
+
   while (true)
   {
-    Logger *logger = iniciar_logger_cpu();
     log_info(logger, "Esperando a Kernel que se conecte al puerto Dispatch...");
     int socketKernel = esperar_cliente(socketCpu);
 
@@ -101,27 +115,40 @@ void manejar_paquete_kernel_interrupt(int socketKernel)
   }
 }
 
-void manejar_conexion_memoria(int socketCpu)
+void realizar_handshake_con_memoria(int socketMemoria)
 {
   Logger *logger = iniciar_logger_cpu();
-
-  log_info(logger, "Conectando con Servidor Memoria...");
-  int socketMemoria = conectar_con_memoria();
-
-  if (socketMemoria < 0)
-  {
-    log_warning(logger, "Conexión rechazada. El Servidor Memoria no está disponible.");
-    log_destroy(logger);
-    return;
-  }
-
-  log_info(logger, "Conexión con Memoria establecida.");
 
   log_info(logger, "Enviando Mensaje de inicio al Servidor Memoria...");
   enviar_mensaje_a_servidor("CPU", socketMemoria);
   log_info(logger, "Mensaje de inicio enviado.");
 
-  log_info(logger, "Saliendo del Servidor Memoria...");
-  liberar_conexion_con_servidor(socketMemoria);
+  CodigoOperacion codigoOperacion = obtener_codigo_operacion(socketMemoria);
+
+  switch (codigoOperacion)
+  {
+  case ESTRUCTURAS_MEMORIA:
+    cargar_estructura_memoria(socketMemoria);
+    break;
+  default:
+    break;
+  }
+
+  log_destroy(logger);
+}
+
+void cargar_estructura_memoria(int socketMemoria)
+{
+  Logger *logger = iniciar_logger_cpu();
+
+  log_info(logger, "Cargando estructura de memoria...");
+
+  Lista *lista_plana = obtener_paquete_como_lista(socketMemoria);
+
+  ESTRUCTURA_MEMORIA.SOCKET_MEMORIA = socketMemoria;
+  ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA = *(int *)list_get(lista_plana, 0);
+  ESTRUCTURA_MEMORIA.TAMANIO_PAGINA = *(int *)list_get(lista_plana, 1);
+
+  log_info(logger, "Estructura de memoria cargada.");
   log_destroy(logger);
 }
