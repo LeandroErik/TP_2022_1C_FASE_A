@@ -21,15 +21,18 @@ int main(void)
 
   iniciar_estructuras_memoria();
 
-  //Hilos
-  while(true)
-  {
-    int socketCliente = esperar_cliente(socketMemoria);
-    Hilo hiloCliente;
+  log_info(logger, "Esperando a los clientes CPU y Kernel");
 
-    pthread_create(&hiloCliente, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
-    //pthread_join(hiloCliente, NULL);
-  }
+  //Hilos
+  Hilo hiloCliente1, hiloCliente2;
+  int socketCliente = esperar_cliente(socketMemoria);
+  pthread_create(&hiloCliente1, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
+
+  socketCliente = esperar_cliente(socketMemoria);
+  pthread_create(&hiloCliente2, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);
+
+  pthread_join(hiloCliente1, NULL);
+  pthread_join(hiloCliente2, NULL);
 
   liberar_memoria();
   log_destroy(logger);

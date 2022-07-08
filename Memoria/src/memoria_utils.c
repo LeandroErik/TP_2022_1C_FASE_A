@@ -18,7 +18,9 @@ void iniciar_estructuras_memoria()
   Logger *logger = iniciar_logger_memoria();
 
   tablasDePrimerNivel = 0;
+  tablasDeSegundoNivel = 0;
   memoriaPrincipal = (void *)malloc(MEMORIA_CONFIG.TAM_MEMORIA);
+  memset(memoriaPrincipal, '0', MEMORIA_CONFIG.TAM_MEMORIA);
   int cantidadMarcos = MEMORIA_CONFIG.TAM_MEMORIA / MEMORIA_CONFIG.TAM_PAGINA;
   iniciar_marcos(cantidadMarcos);
   procesos = list_create();
@@ -30,9 +32,10 @@ void iniciar_estructuras_memoria()
 void iniciar_marcos(int cantidadMarcos)
 {
   marcos = list_create();
-  for (int i = 0; i < cantidadMarcos; i++)
+  for (int numeroDeMarco = 0; numeroDeMarco < cantidadMarcos; numeroDeMarco++)
   {
     Marco *marco = malloc(sizeof(Marco));
+    marco->numeroMarco = numeroDeMarco;
     marco->idProceso = -1;
     marco->paginaActual = NULL;
     list_add(marcos, marco);
@@ -47,6 +50,8 @@ Proceso *crear_proceso(int id, int tamanio)
   proceso->idProceso = id;
   proceso->tamanio = tamanio;
   proceso->tablaPrimerNivel = crear_tabla_primer_nivel();
+  proceso->paginasAsignadas = list_create();
+  proceso->posicionDelPunteroDeSustitucion = 0;
 
   log_info(logger, "Se creo el Proceso: %d, tamanio: %d", proceso->idProceso, proceso->tamanio);
 
@@ -63,13 +68,13 @@ TablaPrimerNivel *crear_tabla_primer_nivel()
 {
   TablaPrimerNivel *tabla = malloc(sizeof(TablaPrimerNivel));
   tabla->entradas = list_create();
-  tabla->nroTablaPrimerNivel = tablasDePrimerNivel;
+  tabla->numeroTablaPrimerNivel = tablasDePrimerNivel;
   tablasDePrimerNivel++;
 
   int entradasPorTabla = MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
-  for (int i = 0; i < entradasPorTabla; i++)
+  for (int numeroTablaSegundoNivel = 0; numeroTablaSegundoNivel < entradasPorTabla; numeroTablaSegundoNivel++)
   {
-    TablaSegundoNivel *tablaSegundoNivel = crear_tabla_segundo_nivel(i * entradasPorTabla);
+    TablaSegundoNivel *tablaSegundoNivel = crear_tabla_segundo_nivel(numeroTablaSegundoNivel * entradasPorTabla);
     list_add(tabla->entradas, tablaSegundoNivel);
   }
 
@@ -80,69 +85,87 @@ TablaSegundoNivel *crear_tabla_segundo_nivel(int nroPrimerPaginaDeTabla)
 {
   TablaSegundoNivel *tabla = malloc(sizeof(TablaSegundoNivel));
   tabla->entradas = list_create();
+  tabla->numeroTablaSegundoNivel = tablasDeSegundoNivel;
+  tablasDeSegundoNivel++;
 
   int entradasPorTabla = MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
   for (int i = 0; i < entradasPorTabla; i++)
   {
     Pagina *pag = malloc(sizeof(Pagina));
-    pag->nroPagina = i + nroPrimerPaginaDeTabla;
+    pag->numeroPagina = i + nroPrimerPaginaDeTabla;
+    pag->paginaVacia = true;
     pag->modificado = false;
-    pag->uso = true;
+    pag->uso = false;
     pag->marcoAsignado = NULL;
     list_add(tabla->entradas, pag);
   }
   return tabla;
 }
-//
+// Fin funciones de estructuras
 
-Proceso *buscar_proceso_por_id(int idProceso)
+// Funciones de escritura, lectura y copiado en memoria fisica
+Marco *marco_de_direccion_fisica(int direccionFisica)
 {
-
-  bool cmpProceso(void *_proceso)
-  {
-    Proceso *proceso = (Proceso *)_proceso;
-    return proceso->idProceso == idProceso;
-  }
-
-  return list_find(procesos, &cmpProceso);
+  int numeroDeMarco = direccionFisica / MEMORIA_CONFIG.TAM_PAGINA;
+  return list_get(marcos, numeroDeMarco);
 }
 
-void escribir_memoria(uint32_t valorAEscribir, int direccionFisica)
+void escribir_entero_en_memoria(uint32_t valorAEscribir, int direccionFisica)
 {
   Logger *logger = iniciar_logger_memoria();
 
-  void *n = memoriaPrincipal + direccionFisica;
-  memcpy(n, &valorAEscribir, 4);
+  void *direccionInicioEscritura = memoriaPrincipal + direccionFisica;
+  memcpy(direccionInicioEscritura, &valorAEscribir, sizeof(valorAEscribir));
+
+  Marco *marcoEscrito = marco_de_direccion_fisica(direccionFisica);
+  marcoEscrito->paginaActual->modificado = true;
+  marcoEscrito->paginaActual->paginaVacia = false;
+  marcoEscrito->paginaActual->uso = true;
 
   log_info(logger, "Valor escrito %d, en la posicion de memoria fisica %d.", valorAEscribir, direccionFisica);
   log_destroy(logger);
 }
 
-uint32_t leer_de_memoria(int direccionFisica)
+uint32_t leer_entero_de_memoria(int direccionFisica)
 {
   Logger *logger = iniciar_logger_memoria();
 
   uint32_t leido;
-  void *n = memoriaPrincipal + direccionFisica;
-  memcpy(&leido, n, 4);
+  void *direccionInicioLectura = memoriaPrincipal + direccionFisica;
+  memcpy(&leido, direccionInicioLectura, sizeof(leido));
 
-  log_info(logger, "Valor leido %d, en la posicion de memoria fisica %d.", leido, direccionFisica);
+  Marco *marcoEscrito = marco_de_direccion_fisica(direccionFisica);
+  marcoEscrito->paginaActual->uso = true;
+
+  log_info(logger, "Valor leido %d, de la posicion de memoria fisica %d.", leido, direccionFisica);
   log_destroy(logger);
 
   return leido;
 }
 
-void copiar_en_memoria(int direccionFisicaDestino, int direccionFisicaOrigen)
+void copiar_entero_en_memoria(int direccionFisicaDestino, int direccionFisicaOrigen)
 {
   Logger *logger = iniciar_logger_memoria();
 
   log_info(logger, "Iniciando Copia:");
 
-  uint32_t leido = leer_de_memoria(direccionFisicaOrigen);
-  escribir_memoria(leido, direccionFisicaDestino);
+  uint32_t leido = leer_entero_de_memoria(direccionFisicaOrigen);
+  escribir_entero_en_memoria(leido, direccionFisicaDestino);
 
   log_info(logger, "Copia finalizada.");
   log_destroy(logger);
+}
+// Fin funciones de escritura, lectura y copia en memoria
+
+Proceso *buscar_proceso_por_id(int idProceso)
+{
+  bool es_proceso(void *_proceso)
+  {
+    Proceso *proceso = (Proceso *)_proceso;
+    return proceso->idProceso == idProceso;
+  }
+
+  return list_find(procesos, &es_proceso);
 }
 
 Marco *primer_marco_libre() // First fit
@@ -158,126 +181,240 @@ Marco *primer_marco_libre() // First fit
 
 bool tiene_marcos_por_asignar(Proceso *proceso)
 {
-  bool tiene_pagina_asignada_del_proceso(void *_marco)
-  {
-    Marco *marco = (Marco *)_marco;
-    return marco->idProceso == proceso->idProceso;
-  }
+  int cantidadDePaginasAsignadas = list_size(proceso->paginasAsignadas);
 
-  return list_count_satisfying(marcos, &tiene_pagina_asignada_del_proceso) < MEMORIA_CONFIG.MARCOS_POR_PROCESO;
+  return cantidadDePaginasAsignadas < MEMORIA_CONFIG.MARCOS_POR_PROCESO;
 }
 
-int numero_de_marco(Marco *marco)
+void agregar_pagina_a_paginas_asignadas_del_proceso(Proceso *proceso, Pagina *pagina)
 {
-  for (int i = 0; i < list_size(marcos); i++)
-  {
-    if (list_get(marcos, i) == marco)
-    {
-      return i;
-    }
-  }
-
-  return -1;
+  // TODO: Ver en que posicion de la lista habria que agregar, por numero de marco? donde se reemplazo? al final? y actualizar el puntero
+  list_add(proceso->paginasAsignadas, pagina);
 }
 
-void asignar_pagina_del_proceso_al_marco(int idProceso, Pagina *pagina, Marco *marco)
+void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco *marco)
 {
   Logger *logger = iniciar_logger_memoria();
 
+  if (!pagina->paginaVacia) // Para saber si hay que traer info de swap o no
+  {
+    escribir_datos_de_pagina_en_memoria(proceso, pagina->numeroPagina, marco->numeroMarco);
+  }
+
+  agregar_pagina_a_paginas_asignadas_del_proceso(proceso, pagina);
   pagina->marcoAsignado = marco;
   marco->paginaActual = pagina;
-  marco->idProceso = idProceso;
+  marco->idProceso = proceso->idProceso;
 
-  log_info(logger, "Pagina %d del proceso %d, asignada al Marco %d", pagina->nroPagina, idProceso, numero_de_marco(marco));
+  log_info(logger, "Pagina %d del proceso %d, asignada al Marco %d", pagina->numeroPagina, proceso->idProceso, marco->numeroMarco);
   log_destroy(logger);
 }
 
-Pagina *obtener_pagina_del_proceso(Proceso *proceso, int nroPagina) // Tambien se podria buscar el nroPagina en las tablas del proceso, uso cuenta de la MMU
+bool hay_que_sustituir_pagina_del_proceso(Proceso *proceso, Marco *marcoLibre)
 {
-  double d = (double)nroPagina / MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
-  int numeroDeEntradaDelPrimerNivel = floor(d);
-  int numeroDeEntradaDelSegundoNivel = nroPagina % MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
-
-  TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel->entradas, numeroDeEntradaDelPrimerNivel);
-
-  return list_get(tablaSegundoNivel->entradas, numeroDeEntradaDelSegundoNivel);
+  return !tiene_marcos_por_asignar(proceso) || marcoLibre == NULL;
 }
 
-Marco *asignar_pagina_a_marco_libre(Proceso *proceso, int nroPagina) // TODO: Ver cuando se llamaria
+Marco *asignar_pagina_a_marco_libre(Proceso *proceso, Pagina *pagina)
 {
-  Pagina *pagina = obtener_pagina_del_proceso(proceso, nroPagina);
-  Marco *marco;
+  Logger *logger = iniciar_logger_memoria();
 
-  if (tiene_marcos_por_asignar(proceso))
+  Marco *marco = primer_marco_libre();
+  if (hay_que_sustituir_pagina_del_proceso(proceso, marco))
   {
-    marco = primer_marco_libre();
-    if (marco != NULL)
-    {
-      asignar_pagina_del_proceso_al_marco(proceso->idProceso, pagina, marco);
-    }
-    else // memoria llena
-    {
-      // correr algortimo sustitucion
-    }
+    log_info(logger, "No se pudo asignar la pagina %d del proceso %d, se debe realizar una sustitucion", pagina->numeroPagina, proceso->idProceso);
+    marco = marco_del_proceso_sustituido(proceso);
   }
-  else // tiene asignada la cantidad maxima de marcos por proceso
-  {
-    // correr algortimo sustitucion
-  }
+  asignar_pagina_del_proceso_al_marco(proceso, pagina, marco);
 
+  log_destroy(logger);
   return marco;
+}
+
+Marco *marco_del_proceso_sustituido(Proceso *proceso)
+{
+  Logger *logger = iniciar_logger_memoria();
+
+  Marco *marcoSustituido;
+  bool esClock = !strcmp(MEMORIA_CONFIG.ALGORITMO_REEMPLAZO, "CLOCK");
+  if (esClock)
+  {
+    log_info(logger, "Iniciando algoritmo de sustitucion Clock");
+    marcoSustituido = correr_clock(proceso, logger);
+  }
+  else
+  {
+    log_info(logger, "Iniciando algoritmo de sustitucion Clock-M");
+    marcoSustituido = correr_clock_modificado(proceso, logger);
+  }
+
+  log_destroy(logger);
+  return marcoSustituido;
+}
+
+Marco *correr_clock(Proceso *proceso, Logger *logger)
+{
+  Marco *marcoSustituido;
+  bool eligioVictima = false;
+  int numeroDePaginasAsignadas = list_size(proceso->paginasAsignadas);
+  while (!eligioVictima)
+  {
+    Pagina *pagina = list_get(proceso->paginasAsignadas, proceso->posicionDelPunteroDeSustitucion);
+    if (!pagina->uso)
+    {
+      eligioVictima = true;
+      log_info(logger, "Victima elegida pagina %d del proceso %d", pagina->numeroPagina, proceso->idProceso);
+      marcoSustituido = desalojar_pagina(proceso, pagina);
+    }
+    else
+    {
+      pagina->uso = false;
+    }
+
+    proceso->posicionDelPunteroDeSustitucion++;
+    if (proceso->posicionDelPunteroDeSustitucion == numeroDePaginasAsignadas)
+    {
+      proceso->posicionDelPunteroDeSustitucion = 0;
+    }
+  }
+
+  return marcoSustituido;
+}
+
+Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
+{
+  Marco *marcoSustituido;
+  bool eligioVictima = false;
+  int numeroDePaginasAsignadas = list_size(proceso->paginasAsignadas);
+
+  int contadorDeVueltas = 0;
+  while (!eligioVictima)
+  {
+    Pagina *pagina = list_get(proceso->paginasAsignadas, proceso->posicionDelPunteroDeSustitucion);
+    if (!pagina->uso)
+    {
+      if (!pagina->modificado || contadorDeVueltas == 3)
+      {
+        eligioVictima = true;
+        log_info(logger, "Victima elegida pagina %d del proceso %d", pagina->numeroPagina, proceso->idProceso);
+        marcoSustituido = desalojar_pagina(proceso, pagina);
+      }
+    }
+    else if (contadorDeVueltas == 1)
+    {
+      pagina->uso = false;
+    }
+
+    proceso->posicionDelPunteroDeSustitucion++;
+    if (proceso->posicionDelPunteroDeSustitucion == numeroDePaginasAsignadas)
+    {
+      proceso->posicionDelPunteroDeSustitucion = 0;
+      contadorDeVueltas++;
+    }
+  }
+
+  return marcoSustituido;
+}
+
+Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina)
+{
+  Marco *marcoDesasignado = pagina->marcoAsignado;
+  escribir_en_swap(pagina, proceso);
+  desasignar_pagina(proceso, pagina);
+  return marcoDesasignado;
+}
+
+void desasignar_marco(Marco *marco)
+{
+  marco->paginaActual = NULL;
+  marco->idProceso = -1;
+}
+
+void desasignar_pagina(Proceso *proceso, Pagina *pagina)
+{
+  desasignar_marco(pagina->marcoAsignado);
+  pagina->marcoAsignado = NULL;
+  pagina->modificado = false;
+  pagina->uso = true;
+  sacar_pagina_de_paginas_asignadas(proceso, pagina);
+}
+
+void sacar_pagina_de_paginas_asignadas(Proceso *proceso, Pagina *pagina)
+{
+  bool es_pagina(void *_paginaLista)
+  {
+    Pagina *paginaLista = (Pagina *)_paginaLista;
+    return paginaLista == pagina;
+  }
+
+  list_remove_by_condition(proceso->paginasAsignadas, &es_pagina);
 }
 
 void suspender_proceso(int idProcesoASuspender)
 {
-  // TODO implementar suspension
-  // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/24
+  Logger *logger = iniciar_logger_memoria();
+
+  Proceso *proceso = buscar_proceso_por_id(idProcesoASuspender);
+  log_info(logger, "Iniciando suspension del proceso %d", proceso->idProceso);
+
+  while (!list_is_empty(proceso->paginasAsignadas))
+  {
+    Pagina *pagina = list_get(proceso->paginasAsignadas, 0);
+    if (pagina->modificado)
+    {
+      escribir_en_swap(pagina, proceso);
+    }
+    desasignar_pagina(proceso, pagina);
+  }
+
+  proceso->posicionDelPunteroDeSustitucion = 0;
+
+  log_info(logger, "Proceso %d suspendido", proceso->idProceso);
+  log_destroy(logger);
 }
 
 void borrar_tablas_del_proceso(Proceso *proceso)
 {
   int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
-  for (int i = 0; i < entradas; i++)
+  for (int numeroDeTablaDeSegundoNivel = 0; numeroDeTablaDeSegundoNivel < entradas; numeroDeTablaDeSegundoNivel++)
   {
-    TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel->entradas, i);
+    TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel->entradas, numeroDeTablaDeSegundoNivel);
 
-    for (int j = 0; j < entradas; j++)
+    for (int entradaDePagina = 0; entradaDePagina < entradas; entradaDePagina++)
     {
-      Pagina *pagina = list_get(tablaSegundoNivel->entradas, j);
+      Pagina *pagina = list_get(tablaSegundoNivel->entradas, entradaDePagina);
 
       free(pagina);
     }
 
+    list_destroy(tablaSegundoNivel->entradas);
     free(tablaSegundoNivel);
   }
 
+  list_destroy(proceso->tablaPrimerNivel->entradas);
+  list_destroy(proceso->paginasAsignadas);
   free(proceso->tablaPrimerNivel);
 }
 
 void eliminar_proceso_de_lista_de_procesos(Proceso *proceso)
 {
-  bool cmpProceso(void *_procesoLista)
+  bool es_proceso(void *_procesoLista)
   {
     Proceso *procesoLista = (Proceso *)_procesoLista;
     return procesoLista == proceso;
   }
 
-  list_remove_and_destroy_by_condition(procesos, &cmpProceso, &free);
+  list_remove_and_destroy_by_condition(procesos, &es_proceso, &free);
 }
 
-void desasignar_marcos_al_proceso(int idProceso)
+void desasignar_marcos_al_proceso(Proceso *proceso)
 {
-  void limpiar_marco_si_lo_tiene_el_proceso(void *_marco)
+  int cantidadDePaginasAsignadas = list_size(proceso->paginasAsignadas);
+  for (int numeroPaginaAsignada = 0; numeroPaginaAsignada < cantidadDePaginasAsignadas; numeroPaginaAsignada++)
   {
-    Marco *marco = (Marco *)_marco;
-    if (marco->idProceso == idProceso)
-    {
-      marco->idProceso = -1;
-      marco->paginaActual = NULL;
-    }
+    Pagina *pagina = list_get(proceso->paginasAsignadas, numeroPaginaAsignada);
+    desasignar_marco(pagina->marcoAsignado);
   }
-
-  list_iterate(marcos, &limpiar_marco_si_lo_tiene_el_proceso);
 }
 
 void finalizar_proceso(int idProcesoAFinalizar)
@@ -285,10 +422,10 @@ void finalizar_proceso(int idProcesoAFinalizar)
   Logger *logger = iniciar_logger_memoria();
   Proceso *proceso = buscar_proceso_por_id(idProcesoAFinalizar);
 
-  borrar_tablas_del_proceso(proceso);
   borrar_archivo_swap_del_proceso(proceso);
+  desasignar_marcos_al_proceso(proceso);
+  borrar_tablas_del_proceso(proceso);
   eliminar_proceso_de_lista_de_procesos(proceso);
-  desasignar_marcos_al_proceso(idProcesoAFinalizar);
 
   log_info(logger, "Proceso %d finalizado", idProcesoAFinalizar);
   log_destroy(logger);
@@ -299,10 +436,67 @@ void liberar_memoria()
   Logger *logger = iniciar_logger_memoria();
 
   list_destroy_and_destroy_elements(marcos, &free);
-
   free(memoriaPrincipal);
-  free(procesos);
+  list_destroy(procesos);
 
   log_info(logger, "Estructuras de memoria liberadas");
   log_destroy(logger);
+}
+
+// TODO: De aca para abajo, ver si modelar como lista global las tablas, para evitar recorrer todos los procesos
+int obtener_numero_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaATablaDePrimerNivel)
+{
+  TablaPrimerNivel *tablaPrimerNivelBuscada = buscar_tabla_primer_nivel_por_numero(numeroTablaPrimerNivel);
+  TablaSegundoNivel *tablaSegundoNivelBuscada = list_get(tablaPrimerNivelBuscada->entradas, entradaATablaDePrimerNivel);
+
+  return tablaSegundoNivelBuscada->numeroTablaSegundoNivel;
+}
+
+int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundoNivel)
+{
+  Proceso *proceso = buscar_proceso_de_tabla_segundo_nivel_numero(numeroTablaSegundoNivel);
+
+  int numeroTablaSegundoNivelBuscada = numeroTablaSegundoNivel % MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
+  TablaSegundoNivel *tablaSegundoNivelBuscada = list_get(proceso->tablaPrimerNivel->entradas, numeroTablaSegundoNivelBuscada);
+
+  Pagina *paginaBuscada = list_get(tablaSegundoNivelBuscada->entradas, entradaATablaDeSegundoNivel);
+
+  if (paginaBuscada->marcoAsignado == NULL)
+  {
+    asignar_pagina_a_marco_libre(proceso, paginaBuscada);
+  }
+
+  return paginaBuscada->marcoAsignado->numeroMarco;
+}
+
+TablaPrimerNivel *buscar_tabla_primer_nivel_por_numero(int numeroTablaPrimerNivel)
+{
+  bool proceso_de_numero_de_tabla_primer_nivel(void *_procesoLista)
+  {
+    Proceso *procesoLista = (Proceso *)_procesoLista;
+    return procesoLista->tablaPrimerNivel->numeroTablaPrimerNivel == numeroTablaPrimerNivel;
+  }
+
+  Proceso *proceso = list_find(procesos, &proceso_de_numero_de_tabla_primer_nivel);
+  return proceso->tablaPrimerNivel;
+}
+
+Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNivel)
+{
+  int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
+  int numeroProcesos = list_size(procesos);
+  for (int numeroProceso = 0; numeroProceso < numeroProcesos; numeroProceso++)
+  {
+    Proceso *proceso = list_get(procesos, numeroProceso);
+    for (int entradaTablaPrimerNivel = 0; entradaTablaPrimerNivel < entradas; entradaTablaPrimerNivel++)
+    {
+      TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel->entradas, entradaTablaPrimerNivel);
+      if (tablaSegundoNivel->numeroTablaSegundoNivel == numeroTablaSegundoNivel)
+      {
+        return proceso;
+      }
+    }
+  }
+
+  return NULL;
 }
