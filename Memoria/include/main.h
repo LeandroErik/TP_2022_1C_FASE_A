@@ -6,26 +6,29 @@ typedef struct Pagina Pagina;
 typedef struct
 {
     int idProceso;
-    Pagina *paginaActual; // NULL = vacio
+    int numeroMarco;
+    Pagina *paginaActual; // NULL = marco vacio
 } Marco;
 
 struct Pagina
 {
-    int nroPagina;
+    int numeroPagina;
+    bool paginaVacia;
     bool uso;
     bool modificado;
-    Marco *marcoAsignado;
+    Marco *marcoAsignado; //NULL = presencia 0
 };
 
 typedef struct
 {
-    t_list *entradas; // puntero a paginas
+    Lista *entradas; 
+    int numeroTablaSegundoNivel;
 } TablaSegundoNivel;
 
 typedef struct
 {
-    t_list *entradas; // cada entrada es puntero a tabla 2 nivel
-    int nroTablaPrimerNivel;
+    Lista *entradas; 
+    int numeroTablaPrimerNivel;
 } TablaPrimerNivel;
 
 typedef struct
@@ -33,7 +36,9 @@ typedef struct
     int idProceso;
     int tamanio;
     TablaPrimerNivel *tablaPrimerNivel;
-    FILE* archivoSwap;
+    FILE *archivoSwap;
+    Lista *paginasAsignadas;
+    int posicionDelPunteroDeSustitucion;
 } Proceso;
 
 #endif
