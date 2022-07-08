@@ -12,8 +12,11 @@ int main(void)
     rellenar_configuracion_kernel(config);
 
     int socketKernel = iniciar_servidor_kernel();
+
     log_info(logger, "Conectando con Servidor Memoria.");
     socketMemoria = conectar_con_memoria();
+    log_info(logger, "Conectando con Servidor CPU-Dispatch.");
+    socketDispatch = conectar_con_cpu_dispatch();
 
     inicializar_semaforos();
     inicializar_colas_procesos();
@@ -28,11 +31,17 @@ int main(void)
     pthread_join(hiloConsolas, NULL);
     pthread_join(hiloConexionMemoria, NULL);
 
+    liberar_estructuras();
+    liberar_semaforos();
+
     apagar_servidor(socketKernel);
     log_info(logger, "Servidor Kernel finalizado.");
 
-    log_info(logger, "Saliendo del Servidor Memoria...");
     liberar_conexion_con_servidor(socketMemoria);
+    log_info(logger, "Saliendo del Servidor Memoria...");
+
+    liberar_conexion_con_servidor(socketDispatch);
+    log_info(logger, "Saliendo del Servidor CPU-Dispatch...");
 
     log_destroy(logger);
     config_destroy(config);

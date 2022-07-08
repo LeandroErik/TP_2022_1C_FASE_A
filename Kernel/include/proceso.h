@@ -50,6 +50,7 @@ Semaforo despertarPlanificadorLargoPlazo;
 Semaforo semaforoCantidadProcesosEjecutando;
 
 int socketMemoria;
+int socketDispatch;
 
 /*Hilos*/
 Hilo hilo_planificador_largo_plazo;
@@ -68,6 +69,7 @@ void inicializar_semaforos();
 
 /*Planificadores*/
 void *planificador_largo_plazo();
+bool sePuedeAgregarMasProcesos();
 void *planificador_mediano_plazo();
 void *planificador_corto_plazo_fifo();
 
@@ -102,6 +104,9 @@ char *leer_lista(t_list *);
 /*Monitores de variables globales*/
 void incrementar_cantidad_procesos_memoria();
 void decrementar_cantidad_procesos_memoria();
+
+int lectura_cola_mutex(t_queue *, pthread_mutex_t *);
+
 /**
  * @brief Imprime las colas de planificacion
  *
@@ -140,5 +145,10 @@ int tiempo_total_bloqueado();
 void manejar_proceso_interrumpido(Pcb *);
 
 int tabla_pagina_primer_nivel(int pid, int tamanio);
+
+void liberar_estructuras();
+void liberar_instruccion(LineaInstruccion *);
+void liberar_pcb(Pcb *);
+void liberar_semaforos();
 
 #endif

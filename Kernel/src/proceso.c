@@ -56,12 +56,6 @@ void iniciar_planificadores()
 
 void ejecutar(Pcb *proceso)
 {
-
-    // TODO: conectar a dispatch una sola vez y no cada vez que se necesita
-    //  https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/22
-
-    int socketDispatch = conectar_con_cpu_dispatch();
-
     enviar_pcb(proceso, socketDispatch);
 
     log_info(logger, "Envio el proceso con PID : %d de CPU!", proceso->pid);
@@ -87,8 +81,6 @@ void ejecutar(Pcb *proceso)
         log_warning(logger, "Operación desconocida.");
         break;
     }
-
-    liberar_conexion_con_servidor(socketDispatch);
 }
 
 void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
@@ -101,9 +93,6 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
     {
     case INTERRUPCION_EXTERNA:
         log_info(loggerPlanificacion, "[INTERRUPCION]Proceso : [%d] fue INTERRUPIDO.", pcb->pid);
-        // Libero la conexion asi no se bloquea el cpu en la espera de un codigo de operacion(Asi puede espera a otro procesos)
-        liberar_conexion_con_servidor(socketDispatch);
-
         log_info(loggerPlanificacion, "Tiempo ejecucion [%d]: %d.", pcb->pid, obtener_tiempo_actual() - pcb->tiempoInicioEjecucion);
         manejar_proceso_interrumpido(pcb);
 
@@ -234,23 +223,6 @@ void *queue_peek_at(t_queue *self, int index)
     return list_get(self->elements, index);
 }
 
-char *leer_cola(t_queue *cola)
-{
-    char *out = string_new();
-
-    for (int i = 0; i < queue_size(cola); i++)
-    {
-
-        Pcb *proceso_actual = queue_peek_at(cola, i);
-
-        string_append(&out, "[");
-
-        string_append(&out, string_itoa(proceso_actual->pid));
-        string_append(&out, "]");
-    }
-    return out;
-}
-
 /*Planificadores*/
 
 void *dispositivo_io()
@@ -294,9 +266,8 @@ void *planificador_largo_plazo()
     {
         sem_wait(&despertarPlanificadorLargoPlazo);
         log_info(loggerPlanificacion, "[LARGO-PLAZO] Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
-        // TODO:agrantizar mutua exclusion en las lesturas de tamanio
-        // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/26
-        if (cantidadProcesosEnMemoria < KERNEL_CONFIG.GRADO_MULTIPROGRAMACION && (queue_size(colaNuevos) > 0 || queue_size(colaSuspendidoListo) > 0))
+
+        if (sePuedeAgregarMasProcesos())
         {
             Pcb *procesoSaliente;
 
@@ -321,6 +292,11 @@ void *planificador_largo_plazo()
             incrementar_cantidad_procesos_memoria();
         }
     }
+}
+
+bool sePuedeAgregarMasProcesos()
+{
+    return cantidadProcesosEnMemoria < KERNEL_CONFIG.GRADO_MULTIPROGRAMACION && (lectura_cola_mutex(colaNuevos, &mutexColaNuevos) > 0 || lectura_cola_mutex(colaSuspendidoListo, &mutexColaSuspendidoListo) > 0);
 }
 
 void *planificador_corto_plazo_fifo()
@@ -551,7 +527,7 @@ Pcb *sacar_proceso_bloqueado()
     log_info(loggerPlanificacion, "Proceso : [%d] salío de BLOQUEADO. (real ant : %d)", pcbSaliente->pid, pcbSaliente->tiempoRafagaRealAnterior);
     pthread_mutex_unlock(&mutexColaBloqueados);
 
-    // Envio interrupcion por cada vez quesale de bloqueadoalgun proceso.
+    // Envio interrupcion por cada vez que sale de bloqueado algun proceso.
     bool esSrt = strcmp(KERNEL_CONFIG.ALGORITMO_PLANIFICACION, "SRT") == 0;
 
     if (esSrt)
@@ -611,6 +587,15 @@ void decrementar_cantidad_procesos_memoria()
     pthread_mutex_unlock(&mutexcantidadProcesosMemoria);
 }
 
+int lectura_cola_mutex(t_queue *cola, pthread_mutex_t *semaforoMutex)
+{
+    int tamanio;
+    pthread_mutex_lock(semaforoMutex);
+    tamanio = queue_size(cola);
+    pthread_mutex_unlock(semaforoMutex);
+    return tamanio;
+}
+
 // Varios
 void imprimir_colas()
 {
@@ -640,6 +625,22 @@ char *leer_lista(t_list *cola)
     }
     return out;
 }
+char *leer_cola(t_queue *cola)
+{
+    char *out = string_new();
+
+    for (int i = 0; i < queue_size(cola); i++)
+    {
+
+        Pcb *proceso_actual = queue_peek_at(cola, i);
+
+        string_append(&out, "[");
+
+        string_append(&out, string_itoa(proceso_actual->pid));
+        string_append(&out, "]");
+    }
+    return out;
+}
 int obtener_tiempo_actual()
 {
     return time(NULL);
@@ -659,4 +660,53 @@ float obtener_tiempo_de_trabajo_actual(Pcb *proceso)
 bool ordenar_segun_tiempo_de_trabajo(void *procesoA, void *procesoB)
 {
     return obtener_tiempo_de_trabajo_actual((Pcb *)procesoA) < obtener_tiempo_de_trabajo_actual((Pcb *)procesoB);
+}
+
+void liberar_estructuras()
+{
+    queue_destroy_and_destroy_elements(colaListos, (void *)liberar_pcb);
+
+    queue_destroy_and_destroy_elements(colaNuevos, (void *)liberar_pcb);
+
+    queue_destroy_and_destroy_elements(colaBloqueados, (void *)liberar_pcb);
+
+    queue_destroy_and_destroy_elements(colaEjecutando, (void *)liberar_pcb);
+
+    queue_destroy_and_destroy_elements(colaSuspendidoListo, (void *)liberar_pcb);
+
+    queue_destroy_and_destroy_elements(colaFinalizado, (void *)liberar_pcb);
+}
+void liberar_pcb(Pcb *pcb)
+{
+    free(pcb->escenario);
+    // list_destroy_and_destroy_elements(pcb->instrucciones, liberar_instruccion);
+
+    free(pcb);
+}
+void liberar_instruccion(LineaInstruccion *linea)
+{
+    free(linea->identificador);
+}
+
+void liberar_semaforos()
+{
+    pthread_mutex_destroy(&mutexNumeroProceso);
+    pthread_mutex_destroy(&mutexProcesoListo);
+    pthread_mutex_destroy(&mutexColaNuevos);
+    pthread_mutex_destroy(&mutexColaListos);
+    pthread_mutex_destroy(&mutexColaBloqueados);
+    pthread_mutex_destroy(&mutexColaEjecutando);
+    pthread_mutex_destroy(&mutexColaFinalizado);
+    pthread_mutex_destroy(&mutexColaSuspendidoListo);
+    pthread_mutex_destroy(&mutex_cola);
+    pthread_mutex_destroy(&mutexcantidadProcesosMemoria);
+
+    sem_destroy(&semaforoProcesoNuevo);
+    sem_destroy(&semaforoProcesoListo);
+    sem_destroy(&semaforoProcesoEjecutando);
+    sem_destroy(&contadorBloqueados);
+    sem_destroy(&analizarSuspension);
+    sem_destroy(&suspensionFinalizada);
+    sem_destroy(&despertarPlanificadorLargoPlazo);
+    sem_destroy(&semaforoCantidadProcesosEjecutando);
 }
