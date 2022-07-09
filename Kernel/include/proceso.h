@@ -23,6 +23,9 @@ t_queue *colaEjecutando;
 t_queue *colaFinalizado;
 t_queue *colaSuspendidoListo;
 
+t_list *hilosConsola;
+t_list *hilosMonitorizadores;
+
 /*semaforos*/
 pthread_mutex_t mutexNumeroProceso;
 pthread_mutex_t mutexProcesoListo;
@@ -77,7 +80,7 @@ void *planificador_corto_plazo_srt();
 
 void *dispositivo_io();
 
-void monitorizarSuspension(Pcb *);
+void *monitorizarSuspension(Pcb *);
 
 /*Transiciones*/
 void agregar_proceso_nuevo(Pcb *);
@@ -117,7 +120,7 @@ void imprimir_colas();
  * @brief saca al proceso de la cola de ejecucion
  *
  */
-void sacar_proceso_ejecutando();
+Pcb *sacar_proceso_ejecutando();
 
 /**
  * @brief saca al proceso de la cola de bloqueados

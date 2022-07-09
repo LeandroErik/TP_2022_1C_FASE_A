@@ -1,7 +1,32 @@
 #include <kernel_utils.h>
+#include <signal.h>
+
+void interprete_de_seniales(int senial)
+{
+    switch (senial)
+    {
+    case SIGINT:
+        // Termino la ejecucion del kernel
+        pthread_cancel(hiloConsolas);
+        pthread_cancel(hiloConexionMemoria);
+        pthread_cancel(hilo_planificador_largo_plazo);
+        pthread_cancel(hilo_planificador_corto_plazo);
+        pthread_cancel(hilo_dispositivo_io);
+
+        for (int i = 0; i < list_size(hilosConsola); i++)
+        {
+            pthread_cancel(list_get(hilosConsola, i));
+        }
+        for (int i = 0; i < list_size(hilosMonitorizadores); i++)
+        {
+            pthread_cancel(list_get(hilosMonitorizadores, i));
+        }
+    }
+}
 
 int main(void)
 {
+    signal(SIGINT, interprete_de_seniales);
     idProcesoGlobal = 0;
     cantidadProcesosEnMemoria = 0;
 
@@ -22,14 +47,17 @@ int main(void)
     inicializar_colas_procesos();
     iniciar_planificadores();
 
-    Hilo hiloConsolas;
-    Hilo hiloConexionMemoria;
-
     pthread_create(&hiloConsolas, NULL, (void *)esperar_consola, (void *)socketKernel);
     pthread_create(&hiloConexionMemoria, NULL, (void *)manejar_conexion_memoria, NULL);
 
     pthread_join(hiloConsolas, NULL);
+    pthread_detach(hiloConsolas);
+
     pthread_join(hiloConexionMemoria, NULL);
+    pthread_detach(hiloConexionMemoria);
+
+    liberar_estructuras();
+    liberar_semaforos();
 
     liberar_estructuras();
     liberar_semaforos();
@@ -44,6 +72,7 @@ int main(void)
     log_info(logger, "Saliendo del Servidor CPU-Dispatch...");
 
     log_destroy(logger);
+    log_destroy(loggerPlanificacion);
     config_destroy(config);
 
     return EXIT_SUCCESS;

@@ -196,7 +196,7 @@ void deserializar_lista_de_instrucciones(Lista *listaInstrucciones, Lista *lista
     LineaInstruccion *lineaInstruccion = malloc(sizeof(LineaInstruccion));
     short base = 3 * i;
 
-    lineaInstruccion->identificador = list_get(listaPlana, base + indiceLista + 1);
+    lineaInstruccion->identificador = string_duplicate(list_get(listaPlana, base + indiceLista + 1));
     lineaInstruccion->parametros[0] = *(int *)list_get(listaPlana, base + indiceLista + 2);
     lineaInstruccion->parametros[1] = *(int *)list_get(listaPlana, base + indiceLista + 3);
 
@@ -239,14 +239,13 @@ Pcb *deserializar_pcb(int socketCliente)
 
   deserializar_lista_de_instrucciones(listaResultado, propiedadesPlanas, 8, 10);
 
-  pcb->instrucciones = list_duplicate(listaResultado);
+  pcb->instrucciones = listaResultado;
 
-  list_destroy(propiedadesPlanas);
-  list_destroy(listaResultado);
+  // liberar_instrucciones_de_lista_pcb(propiedadesPlanas);
+  list_destroy_and_destroy_elements(propiedadesPlanas, &free);
 
   return pcb;
 }
-
 void enviar_paquete_a_cliente(Paquete *paquete, int socketCliente)
 {
   enviar_paquete_a_servidor(paquete, socketCliente);

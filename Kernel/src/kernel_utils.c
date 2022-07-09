@@ -29,7 +29,7 @@ int rellenar_lista_instrucciones(Lista *listaInstrucciones, int socketCliente)
   int tamanioProceso = *(int *)list_get(listaPlana, 0);
   deserializar_lista_de_instrucciones(listaInstrucciones, listaPlana, 1, 1);
 
-  list_destroy(listaPlana);
+  list_destroy_and_destroy_elements(listaPlana, &free);
 
   return tamanioProceso;
 }
@@ -65,7 +65,6 @@ Pcb *generar_pcb(int socketCliente)
 
 int conectar_con_cpu_dispatch()
 {
-  Logger *logger = iniciar_logger_kernel();
 
   log_info(logger, "Conectando con Servidor CPU via Dispatch en IP: %s y Puerto: %s", KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_DISPATCH);
 
@@ -74,7 +73,6 @@ int conectar_con_cpu_dispatch()
   if (socketCPUDispatch < 0)
   {
     log_error(logger, "Conexión rechazada. El Servidor CPU/Puerto Dispatch no está disponible. %d", socketCPUDispatch);
-    log_destroy(logger);
     return DESCONEXION;
   }
 

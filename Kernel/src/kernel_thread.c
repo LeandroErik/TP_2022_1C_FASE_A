@@ -4,23 +4,24 @@ void esperar_consola(int socketKernel)
 {
   while (true)
   {
-    Logger *logger = iniciar_logger_kernel();
+
     log_info(logger, "Esperando conexiones de Consola...");
     int socketConsola = esperar_cliente(socketKernel);
 
     if (socketConsola < 0)
     {
       log_warning(logger, "Consola desconectada.");
-      log_destroy(logger);
+
       return;
     }
 
     log_info(logger, "Conexión de Consola establecida.");
-    log_destroy(logger);
 
     Hilo hiloConsola;
     pthread_create(&hiloConsola, NULL, (void *)manejar_paquete_consola, (void *)socketConsola);
+    list_add(hilosConsola, hiloConsola);
     pthread_join(hiloConsola, NULL);
+    pthread_detach(hiloConsola);
   }
 }
 
@@ -28,17 +29,18 @@ void manejar_paquete_consola(int socketConsola)
 {
   while (true)
   {
-    Logger *logger = iniciar_logger_kernel();
-
+    char *mensaje;
     switch (obtener_codigo_operacion(socketConsola))
     {
     case DESCONEXION:
       log_warning(logger, "Conexión de Consola terminada.");
-      log_destroy(logger);
+
       return;
     case MENSAJE:
       log_info(logger, "Mensaje recibido de Consola.");
-      log_info(logger, "Mensaje: %s", obtener_mensaje_del_cliente(socketConsola));
+      mensaje = obtener_mensaje_del_cliente(socketConsola);
+      log_info(logger, "Mensaje: %s", mensaje);
+      free(mensaje);
       break;
     case LINEAS_CODIGO:
       log_info(logger, "Lineas de Código recibidas de Consola.");
@@ -52,7 +54,6 @@ void manejar_paquete_consola(int socketConsola)
 
 void enviar_interrupcion()
 {
-  Logger *logger = iniciar_logger_kernel();
 
   log_info(logger, "Conectando con Servidor CPU via Interrupción en IP: %s, Puerto: %s", KERNEL_CONFIG.IP, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
 
@@ -61,7 +62,7 @@ void enviar_interrupcion()
   if (socketInterrupcion < 0)
   {
     log_error(logger, "Conexión rechazada. El Servidor CPU/Puerto Interrupción no está disponible.");
-    log_destroy(logger);
+
     return;
   }
 
@@ -80,18 +81,15 @@ void enviar_interrupcion()
 
 void manejar_conexion_memoria()
 {
-  Logger *logger = iniciar_logger_kernel();
 
   if (socketMemoria < 0)
   {
     log_warning(logger, "Conexión rechazada. El Servidor Memoria no está disponible.");
-    log_destroy(logger);
+
     return;
   }
 
   log_info(logger, "Enviando Mensaje de inicio al Servidor Memoria...");
   enviar_mensaje_a_servidor("Kernel", socketMemoria);
   log_info(logger, "Mensaje de inicio enviado.");
-
-  log_destroy(logger);
 }

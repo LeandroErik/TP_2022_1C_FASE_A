@@ -34,22 +34,29 @@ void inicializar_colas_procesos()
     colaBloqueados = queue_create();
     colaSuspendidoListo = queue_create();
     colaFinalizado = queue_create();
+
+    hilosConsola = list_create();
+    hilosMonitorizadores = list_create();
 }
 
 void iniciar_planificadores()
 {
     pthread_create(&hilo_planificador_largo_plazo, NULL, planificador_largo_plazo, NULL);
+    pthread_detach(hilo_planificador_largo_plazo);
 
     if (strcmp(KERNEL_CONFIG.ALGORITMO_PLANIFICACION, "FIFO") != 0)
     {
         pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo_srt, NULL);
+        pthread_detach(hilo_planificador_corto_plazo);
     }
     else
     {
         pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo_fifo, NULL);
+        pthread_detach(hilo_planificador_corto_plazo);
     }
 
     pthread_create(&hilo_dispositivo_io, NULL, dispositivo_io, NULL);
+    pthread_detach(hilo_dispositivo_io);
 }
 
 /*Funciones del proceso*/
@@ -85,7 +92,9 @@ void ejecutar(Pcb *proceso)
 
 void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 {
-    sacar_proceso_ejecutando();
+    Pcb *actual = sacar_proceso_ejecutando();
+    liberar_pcb(actual);
+
     int pid;
     Paquete *paquete;
 
@@ -104,7 +113,9 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 
         // Comienza el analisis de suspension (10 segundos)
         Hilo hiloMonitorizacionSuspension;
-        pthread_create(&hiloMonitorizacionSuspension, NULL, &monitorizarSuspension, pcb);
+        pthread_create(&hiloMonitorizacionSuspension, NULL, monitorizarSuspension, pcb);
+        list_add(hilosMonitorizadores, hiloMonitorizacionSuspension);
+        pthread_detach(hiloMonitorizacionSuspension);
 
         break;
 
@@ -119,8 +130,9 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
-        obtener_mensaje_del_cliente(socketMemoria); // confirmacion de finalizacion
-
+        char *mensaje = obtener_mensaje_del_cliente(socketMemoria); // confirmacion de finalizacion
+        free(mensaje);
+        eliminar_paquete(paquete);
         // TODO:Avisar a consola asi se finaliza.
         //  https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/23
 
@@ -177,7 +189,7 @@ void manejar_proceso_interrumpido(Pcb *pcb)
     ejecutar(pcbEjecutar);
 }
 
-void monitorizarSuspension(Pcb *proceso)
+void *monitorizarSuspension(Pcb *proceso)
 {
     int tiempoMaximoBloqueo = KERNEL_CONFIG.TIEMPO_MAXIMO_BLOQUEADO;
     // Pasados 10 segundos de bloqueado ,se suspende.
@@ -194,14 +206,19 @@ void monitorizarSuspension(Pcb *proceso)
 
         int pid = proceso->pid;
         Paquete *paquete = crear_paquete(SUSPENDER_PROCESO);
+
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
         enviar_paquete_a_servidor(paquete, socketMemoria);
-        log_info(logger, "Se envio el proceso %d a la memoria para suspender", pid);
-        obtener_mensaje_del_cliente(socketMemoria); // confirmacion de suspension
+        log_info(logger, "Se envio el proceso %d a la memoria para SUSPENDER", pid);
 
+        char *mensaje = obtener_mensaje_del_cliente(socketMemoria); // confirmacion de suspension
+        free(mensaje);
+        eliminar_paquete(paquete);
         // TODO:Recibir confirmacion de suspension
         // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/24
     }
+
+    return NULL;
 }
 
 /*Varios*/
@@ -411,6 +428,7 @@ int tabla_pagina_primer_nivel(int pid, int tamanio)
 
     default:
         log_warning(logger, "Operación desconocida.");
+        eliminar_paquete(paquete);
         return EXIT_FAILURE;
     }
 
@@ -501,14 +519,16 @@ void agregar_proceso_suspendido_listo(Pcb *procesoSuspendidoListo)
 
 /*Funciones para sacar procesos a cola.*/
 
-void sacar_proceso_ejecutando()
+Pcb *sacar_proceso_ejecutando()
 {
-
+    Pcb *pcbSaliente;
     pthread_mutex_lock(&mutexColaEjecutando);
 
-    Pcb *pcbSaliente = queue_pop(colaEjecutando);
+    pcbSaliente = queue_pop(colaEjecutando);
     log_info(loggerPlanificacion, "Proceso : [%d] salío de EJECUTANDO.", pcbSaliente->pid);
+
     pthread_mutex_unlock(&mutexColaEjecutando);
+
     // le aviso al planificador de corto plazo
     sem_post(&semaforoCantidadProcesosEjecutando);
 
@@ -516,6 +536,7 @@ void sacar_proceso_ejecutando()
     sem_post(&despertarPlanificadorLargoPlazo);
 
     imprimir_colas();
+    return pcbSaliente;
 }
 
 Pcb *sacar_proceso_bloqueado()
@@ -599,15 +620,29 @@ int lectura_cola_mutex(t_queue *cola, pthread_mutex_t *semaforoMutex)
 // Varios
 void imprimir_colas()
 {
-    log_info(loggerPlanificacion, "\
+    char *strcolaNuevos = leer_cola(colaNuevos);
+    char *strcolaListos = leer_lista(colaListos);
+    char *strcolaEjecutando = leer_cola(colaEjecutando);
+    char *strcolaBloqueados = leer_cola(colaBloqueados);
+    char *strcolaSuspendidoListo = leer_cola(colaSuspendidoListo);
+    char *strcolaFinalizado = leer_cola(colaFinalizado);
+
+    log_info(logger, "\
     \n\tCola nuevos: %s \
     \n\tCola listos: %s \
     \n\tCola ejecutando: %s \
     \n\tCola bloqueados: %s\
     \n\tCola suspended - ready: % s\
     \n\tCola terminados: %s",
-             leer_cola(colaNuevos),
-             leer_lista(colaListos), leer_cola(colaEjecutando), leer_cola(colaBloqueados), leer_cola(colaSuspendidoListo), leer_cola(colaFinalizado));
+             strcolaNuevos,
+             strcolaListos, strcolaEjecutando, strcolaBloqueados, strcolaSuspendidoListo, strcolaFinalizado);
+
+    free(strcolaNuevos);
+    free(strcolaListos);
+    free(strcolaEjecutando);
+    free(strcolaBloqueados);
+    free(strcolaSuspendidoListo);
+    free(strcolaFinalizado);
 }
 char *leer_lista(t_list *cola)
 {
@@ -619,9 +654,10 @@ char *leer_lista(t_list *cola)
         Pcb *proceso_actual = list_get(cola, i);
 
         string_append(&out, "[");
-
-        string_append(&out, string_itoa(proceso_actual->pid));
+        char *pid = string_itoa(proceso_actual->pid);
+        string_append(&out, pid);
         string_append(&out, "]");
+        free(pid);
     }
     return out;
 }
@@ -635,12 +671,14 @@ char *leer_cola(t_queue *cola)
         Pcb *proceso_actual = queue_peek_at(cola, i);
 
         string_append(&out, "[");
-
-        string_append(&out, string_itoa(proceso_actual->pid));
+        char *pid = string_itoa(proceso_actual->pid);
+        string_append(&out, pid);
         string_append(&out, "]");
+        free(pid);
     }
     return out;
 }
+
 int obtener_tiempo_actual()
 {
     return time(NULL);
@@ -664,7 +702,8 @@ bool ordenar_segun_tiempo_de_trabajo(void *procesoA, void *procesoB)
 
 void liberar_estructuras()
 {
-    queue_destroy_and_destroy_elements(colaListos, (void *)liberar_pcb);
+
+    list_destroy_and_destroy_elements(colaListos, (void *)liberar_pcb);
 
     queue_destroy_and_destroy_elements(colaNuevos, (void *)liberar_pcb);
 
@@ -675,17 +714,24 @@ void liberar_estructuras()
     queue_destroy_and_destroy_elements(colaSuspendidoListo, (void *)liberar_pcb);
 
     queue_destroy_and_destroy_elements(colaFinalizado, (void *)liberar_pcb);
+
+    list_destroy(hilosConsola);
+
+    list_destroy(hilosMonitorizadores);
 }
 void liberar_pcb(Pcb *pcb)
 {
     free(pcb->escenario);
-    // list_destroy_and_destroy_elements(pcb->instrucciones, liberar_instruccion);
+
+    list_destroy_and_destroy_elements(pcb->instrucciones, &liberar_instruccion);
 
     free(pcb);
 }
 void liberar_instruccion(LineaInstruccion *linea)
 {
     free(linea->identificador);
+
+    free(linea);
 }
 
 void liberar_semaforos()
