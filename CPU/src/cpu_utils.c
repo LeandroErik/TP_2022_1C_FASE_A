@@ -1,5 +1,11 @@
 #include <cpu_utils.h>
 
+typedef struct EntradaTlb
+{
+  int numeroPagina;
+  int numeroMarco;
+} EntradaTlb;
+
 Logger *iniciar_logger_cpu()
 {
   return log_create("CPU.log", "CPU", true, LOG_LEVEL_INFO);
@@ -93,10 +99,14 @@ void ejecutar_exit(Pcb *pcb, int socketKernel)
 
 void ejecutar_read(int direccionFisica)
 {
+  Logger *logger = iniciar_logger_cpu();
   Paquete *paquete = crear_paquete(LEER_DE_MEMORIA);
   agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   eliminar_paquete(paquete);
+  char *valor = obtener_mensaje_del_cliente(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  log_info(logger, "Se recibio el valor %s de memoria", valor);
+  log_destroy(logger);
 }
 
 void ejecutar_write(Pcb *proceso, int direccionFisica, int valor)
@@ -189,6 +199,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
     case EXIT:
       log_info(logger, "Ejecutando EXIT");
       ejecutar_exit(pcb, socketKernel);
+      limpiar_tlb();
       break;
     default:
       log_error(logger, "Instrucción desconocida: %s", lineaInstruccion->identificador);
@@ -203,16 +214,90 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
   }
 }
 
+bool esta_en_tlb(int numeroPagina)
+{
+
+  bool es_numero_pagina(void *_entradaTLB)
+  {
+    EntradaTlb *entradaTLB = (EntradaTlb *)_entradaTLB;
+    return entradaTLB->numeroPagina == numeroPagina;
+  }
+
+  return list_any_satisfy(tlb, &es_numero_pagina);
+}
+
+int devolver_marco_por_tlb(int numeroPagina)
+{
+  bool es_numero_pagina(void *_entradaTLB)
+  {
+    EntradaTlb *entradaTLB = (EntradaTlb *)_entradaTLB;
+    return entradaTLB->numeroPagina == numeroPagina;
+  }
+
+  EntradaTlb *entradaTlb = (EntradaTlb *)list_find(tlb, &es_numero_pagina);
+
+  return entradaTlb->numeroMarco;
+}
+
+void agregar_a_tlb(int numeroPagina, int numeroMarco)
+{
+  if (list_size(tlb) <= CPU_CONFIG.ENTRADAS_TLB)
+  {
+    EntradaTlb *entradaTLB = (EntradaTlb *)malloc(sizeof(EntradaTlb));
+
+    entradaTLB->numeroPagina = numeroPagina;
+    entradaTLB->numeroMarco = numeroMarco;
+
+    list_add(tlb, entradaTLB);
+  }
+  else
+  {
+    // TODO: Implementar método de sustitución (FIFO | LRU).
+    // 1. Elegir víctima.
+    // 2. Borrar víctima de la lista.
+    // 3. Llamar agregar_a_tlb().
+  }
+}
+
+void limpiar_tlb()
+{
+  list_clean_and_destroy_elements(tlb, &free);
+}
+
+void mostrar_tlb()
+{
+  Logger *logger = iniciar_logger_cpu();
+
+  log_info(logger, "TLB:");
+  for (int i = 0; i < list_size(tlb); i++)
+  {
+    EntradaTlb *entradaTLB = (EntradaTlb *)list_get(tlb, i);
+    log_info(logger, "Entrada %d TLB:\n\t- Número de página: %d\n\t- Número de marco: %d\n\n", i, entradaTLB->numeroPagina, entradaTLB->numeroMarco);
+  }
+
+  log_destroy(logger);
+}
+
 int llamar_mmu(Pcb *proceso, int direccionLogica)
 {
-  int numeroTablaPrimerNivel = proceso->tablaPaginas;
   int numeroPagina = floor((float)direccionLogica / ESTRUCTURA_MEMORIA.TAMANIO_PAGINA);
-  int entradaTablaPrimerNivel = floor((float)numeroPagina / ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA);
-  int entradaTablaSegundoNivel = numeroPagina % ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA;
-
-  int numeroTablaSegundoNivel = pedir_tabla_segundo_nivel(numeroTablaPrimerNivel, entradaTablaPrimerNivel);
-  int numeroMarco = pedir_marco(numeroTablaSegundoNivel, entradaTablaSegundoNivel);
   int desplazamiento = direccionLogica - numeroPagina * ESTRUCTURA_MEMORIA.TAMANIO_PAGINA;
+  int numeroMarco;
+
+  if (esta_en_tlb(numeroPagina))
+    numeroMarco = devolver_marco_por_tlb(numeroPagina);
+
+  else
+  {
+    int numeroTablaPrimerNivel = proceso->tablaPaginas;
+    int entradaTablaPrimerNivel = floor((float)numeroPagina / ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA);
+    int entradaTablaSegundoNivel = numeroPagina % ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA;
+    int numeroTablaSegundoNivel = pedir_tabla_segundo_nivel(numeroTablaPrimerNivel, entradaTablaPrimerNivel);
+    numeroMarco = pedir_marco(numeroTablaSegundoNivel, entradaTablaSegundoNivel);
+
+    agregar_a_tlb(numeroPagina, numeroMarco);
+    mostrar_tlb();
+  }
 
   return numeroMarco * ESTRUCTURA_MEMORIA.TAMANIO_PAGINA + desplazamiento;
 }

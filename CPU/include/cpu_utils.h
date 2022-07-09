@@ -9,6 +9,8 @@
 
 bool seNecesitaAtenderInterrupcion;
 
+Lista *tlb;
+
 /**
  * @brief Iniciar un logger en el Módulo CPU.
  *

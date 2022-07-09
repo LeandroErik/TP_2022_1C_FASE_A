@@ -6,6 +6,7 @@ int main(void)
 {
   Config *config = config_create("CPU.config");
   Logger *logger = iniciar_logger_cpu();
+  tlb = list_create();
 
   rellenar_configuracion_cpu(config);
 

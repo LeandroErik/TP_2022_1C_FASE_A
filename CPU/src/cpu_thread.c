@@ -75,7 +75,7 @@ void manejar_paquete_kernel_dispatch(int socketKernel)
     case PCB:
       log_info(logger, "PCB recibido de Kernel.");
       pcb = deserializar_pcb(socketKernel);
-      mostrar_pcb(logger, pcb);
+      // mostrar_pcb(logger, pcb);
       ejecutar_lista_instrucciones_del_pcb(pcb, socketKernel);
       break;
 

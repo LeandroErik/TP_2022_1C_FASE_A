@@ -171,10 +171,11 @@ void atender_lectura_de_memoria(int socketCPU, Logger *logger)
   Lista *lista = obtener_paquete_como_lista(socketCPU);
   int direccionFisicaALeer = *(int *)list_get(lista, 0);
 
-  uint32_t leido = leer_entero_de_memoria(direccionFisicaALeer);
+  int leido = leer_entero_de_memoria(direccionFisicaALeer);
 
   realizar_espera_de_memoria();
   enviar_mensaje_a_cliente(string_itoa(leido), socketCPU);
+  log_info(logger, "Numero leido en string %s", string_itoa(leido));
   log_info(logger, "Se envia a CPU el numero leido %d", leido);
 }
 
