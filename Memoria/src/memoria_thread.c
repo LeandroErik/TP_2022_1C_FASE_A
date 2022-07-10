@@ -55,13 +55,16 @@ void escuchar_kernel(int socketKernel)
     switch (codOp)
     {
     case PROCESO_NUEVO:
+      log_info(logger, "Se recibio un pedido de creacion de proceso de Kernel");
       atender_creacion_de_proceso(socketKernel, logger);
       break;
 
     case SUSPENDER_PROCESO:
+      log_info(logger, "Se recibio un pedido de suspension de proceso de Kernel");
       atender_suspension_de_proceso(socketKernel, logger);
       break;
     case FINALIZAR_PROCESO:
+      log_info(logger, "Se recibio un pedido de finalizacion de proceso de Kernel");
       atender_finalizacion_de_proceso(socketKernel, logger);
       break;
 
@@ -88,18 +91,23 @@ void escuchar_cpu(int socketCPU)
     switch (codOp)
     {
     case PEDIDO_TABLA_SEGUNDO_NIVEL:
+      log_info(logger, "Se recibio un pedido de numero de tabla de segundo nivel de CPU");
       atender_pedido_de_tabla_de_segundo_nivel(socketCPU, logger);
       break;
     case PEDIDO_MARCO:
+      log_info(logger, "Se recibio un pedido de numero de marco de CPU");
       atender_pedido_de_marco(socketCPU, logger);
       break;
     case ESCRIBIR_EN_MEMORIA:
+      log_info(logger, "Se recibio un pedido de escritura en memoria de CPU");
       atender_escritura_en_memoria(socketCPU, logger);
       break;
     case LEER_DE_MEMORIA:
+      log_info(logger, "Se recibio un pedido de lectura en memoria de CPU");
       atender_lectura_de_memoria(socketCPU, logger);
       break;
     case COPIAR_EN_MEMORIA:
+      log_info(logger, "Se recibio un pedido de copiado en memoria de CPU");
       atender_copiado_en_memoria(socketCPU, logger);
       break;
     case DESCONEXION:
@@ -125,7 +133,8 @@ void enviar_estructuras_de_memoria_a_cpu(int socketCPU, Logger *logger)
   Paquete *paquete = crear_paquete(ESTRUCTURAS_MEMORIA);
   agregar_a_paquete(paquete, &MEMORIA_CONFIG.ENTRADAS_POR_TABLA, sizeof(int));
   agregar_a_paquete(paquete, &MEMORIA_CONFIG.TAM_PAGINA, sizeof(int));
-  enviar_paquete_a_cliente(paquete, socketCPU); // TODO: Ver si es necesario enviar algo mas
+  enviar_paquete_a_cliente(paquete, socketCPU); 
+  eliminar_paquete(paquete);
 
   log_info(logger, "Se envian a CPU las estructuras basicas de memoria");
 }
@@ -175,7 +184,6 @@ void atender_lectura_de_memoria(int socketCPU, Logger *logger)
 
   realizar_espera_de_memoria();
   enviar_mensaje_a_cliente(string_itoa(leido), socketCPU);
-  log_info(logger, "Numero leido en string %s", string_itoa(leido));
   log_info(logger, "Se envia a CPU el numero leido %d", leido);
 }
 

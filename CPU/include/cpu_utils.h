@@ -154,4 +154,6 @@ int pedir_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaTablaPrimer
  */
 int pedir_marco(int numeroTablaSegundoNivel, int entradaTablaSegundoNivel);
 
+void limpiar_tlb();
+
 #endif

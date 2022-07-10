@@ -29,6 +29,12 @@ void iniciar_estructuras_memoria()
   log_destroy(logger);
 }
 
+void iniciar_semaforos()
+{
+  //sem_init(&semaforoMarcos, 0, 0);
+  pthread_mutex_init(&semaforoProcesos, NULL);
+}
+
 void iniciar_marcos(int cantidadMarcos)
 {
   marcos = list_create();
@@ -56,12 +62,18 @@ Proceso *crear_proceso(int id, int tamanio)
   log_info(logger, "Se creo el Proceso: %d, tamanio: %d", proceso->idProceso, proceso->tamanio);
 
   proceso->archivoSwap = crear_archivo_swap(id);
-
-  list_add(procesos, proceso);
+  agregar_proceso_a_lista_de_procesos(proceso);
 
   log_destroy(logger);
 
   return proceso;
+}
+
+void agregar_proceso_a_lista_de_procesos(Proceso* proceso)
+{
+  pthread_mutex_lock(&semaforoProcesos);
+  list_add(procesos, proceso);
+  pthread_mutex_unlock(&semaforoProcesos);
 }
 
 TablaPrimerNivel *crear_tabla_primer_nivel()
@@ -159,13 +171,18 @@ void copiar_entero_en_memoria(int direccionFisicaDestino, int direccionFisicaOri
 
 Proceso *buscar_proceso_por_id(int idProceso)
 {
+  pthread_mutex_lock(&semaforoProcesos);
+
   bool es_proceso(void *_proceso)
   {
     Proceso *proceso = (Proceso *)_proceso;
     return proceso->idProceso == idProceso;
   }
 
-  return list_find(procesos, &es_proceso);
+  Proceso* proceso = list_find(procesos, &es_proceso);
+  pthread_mutex_unlock(&semaforoProcesos);
+
+  return proceso;
 }
 
 Marco *primer_marco_libre() // First fit
@@ -324,7 +341,7 @@ Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina)
   return marcoDesasignado;
 }
 
-void desasignar_marco(Marco *marco)
+void desasignar_marco(Marco *marco) //TODO: Ver si necesita sincronizarse
 {
   marco->paginaActual = NULL;
   marco->idProceso = -1;
@@ -398,6 +415,8 @@ void borrar_tablas_del_proceso(Proceso *proceso)
 
 void eliminar_proceso_de_lista_de_procesos(Proceso *proceso)
 {
+  pthread_mutex_lock(&semaforoProcesos);
+
   bool es_proceso(void *_procesoLista)
   {
     Proceso *procesoLista = (Proceso *)_procesoLista;
@@ -405,6 +424,8 @@ void eliminar_proceso_de_lista_de_procesos(Proceso *proceso)
   }
 
   list_remove_and_destroy_by_condition(procesos, &es_proceso, &free);
+
+  pthread_mutex_unlock(&semaforoProcesos);
 }
 
 void desasignar_marcos_al_proceso(Proceso *proceso)
@@ -431,6 +452,12 @@ void finalizar_proceso(int idProcesoAFinalizar)
   log_destroy(logger);
 }
 
+void destruir_semaforos()
+{
+  //sem_destroy(&semaforoMarcos);
+  pthread_mutex_destroy(&semaforoProcesos);
+}
+
 void liberar_memoria()
 {
   Logger *logger = iniciar_logger_memoria();
@@ -438,23 +465,24 @@ void liberar_memoria()
   list_destroy_and_destroy_elements(marcos, &free);
   free(memoriaPrincipal);
   list_destroy(procesos);
+  destruir_semaforos();
+  
 
   log_info(logger, "Estructuras de memoria liberadas");
   log_destroy(logger);
 }
 
-// TODO: De aca para abajo, ver si modelar como lista global las tablas, para evitar recorrer todos los procesos
 int obtener_numero_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaATablaDePrimerNivel)
 {
-  TablaPrimerNivel *tablaPrimerNivelBuscada = buscar_tabla_primer_nivel_por_numero(numeroTablaPrimerNivel);
-  TablaSegundoNivel *tablaSegundoNivelBuscada = list_get(tablaPrimerNivelBuscada->entradas, entradaATablaDePrimerNivel);
-
-  return tablaSegundoNivelBuscada->numeroTablaSegundoNivel;
+  return numeroTablaPrimerNivel * MEMORIA_CONFIG.ENTRADAS_POR_TABLA + entradaATablaDePrimerNivel;
 }
 
 int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundoNivel)
 {
+  printf("numeroTabla: %d, entradaTabla: %d\n", numeroTablaSegundoNivel, entradaATablaDeSegundoNivel);
+
   Proceso *proceso = buscar_proceso_de_tabla_segundo_nivel_numero(numeroTablaSegundoNivel);
+  printf("Proceso encontrado: %d\n", proceso->idProceso);
 
   int numeroTablaSegundoNivelBuscada = numeroTablaSegundoNivel % MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
   TablaSegundoNivel *tablaSegundoNivelBuscada = list_get(proceso->tablaPrimerNivel->entradas, numeroTablaSegundoNivelBuscada);
@@ -469,21 +497,10 @@ int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundo
   return paginaBuscada->marcoAsignado->numeroMarco;
 }
 
-TablaPrimerNivel *buscar_tabla_primer_nivel_por_numero(int numeroTablaPrimerNivel)
-{
-  bool proceso_de_numero_de_tabla_primer_nivel(void *_procesoLista)
-  {
-    Proceso *procesoLista = (Proceso *)_procesoLista;
-    return procesoLista->tablaPrimerNivel->numeroTablaPrimerNivel == numeroTablaPrimerNivel;
-  }
-
-  Proceso *proceso = list_find(procesos, &proceso_de_numero_de_tabla_primer_nivel);
-  return proceso->tablaPrimerNivel;
-}
-
 Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNivel)
 {
   int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
+  pthread_mutex_lock(&semaforoProcesos);
   int numeroProcesos = list_size(procesos);
   for (int numeroProceso = 0; numeroProceso < numeroProcesos; numeroProceso++)
   {
@@ -493,10 +510,17 @@ Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNive
       TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel->entradas, entradaTablaPrimerNivel);
       if (tablaSegundoNivel->numeroTablaSegundoNivel == numeroTablaSegundoNivel)
       {
+        pthread_mutex_unlock(&semaforoProcesos);
         return proceso;
       }
     }
   }
 
   return NULL;
+}
+
+void destruir_hilos(Hilo hiloCliente1, Hilo hiloCliente2)
+{
+  pthread_detach(hiloCliente1);
+  pthread_detach(hiloCliente2);
 }
