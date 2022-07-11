@@ -144,13 +144,16 @@ void atender_pedido_de_tabla_de_segundo_nivel(int socketCPU, Logger *logger)
   Lista *lista = obtener_paquete_como_lista(socketCPU);
   int numeroTablaPrimerNivel = *(int *)list_get(lista, 0);
   int entradaATablaDePrimerNivel = *(int *)list_get(lista, 1);
+  list_destroy_and_destroy_elements(lista, &free);
 
   int numeroTablaSegundoNivel = obtener_numero_tabla_segundo_nivel(numeroTablaPrimerNivel, entradaATablaDePrimerNivel);
 
   realizar_espera_de_memoria();
 
-  enviar_mensaje_a_cliente(string_itoa(numeroTablaSegundoNivel), socketCPU);
+  char* numeroComoString = string_itoa(numeroTablaSegundoNivel);
+  enviar_mensaje_a_cliente(numeroComoString, socketCPU);
   log_info(logger, "Se envia a CPU el numero de tabla de segundo nivel %d", numeroTablaSegundoNivel);
+  free(numeroComoString);
 }
 
 void atender_pedido_de_marco(int socketCPU, Logger *logger)
@@ -158,12 +161,16 @@ void atender_pedido_de_marco(int socketCPU, Logger *logger)
   Lista *lista = obtener_paquete_como_lista(socketCPU);
   int numeroTablaSegundoNivel = *(int *)list_get(lista, 0);
   int entradaATablaDeSegundoNivel = *(int *)list_get(lista, 1);
+  list_destroy_and_destroy_elements(lista, &free);
 
   int numeroMarco = obtener_numero_marco(numeroTablaSegundoNivel, entradaATablaDeSegundoNivel);
 
   realizar_espera_de_memoria();
-  enviar_mensaje_a_cliente(string_itoa(numeroMarco), socketCPU);
+
+  char* numeroComoString = string_itoa(numeroMarco);
+  enviar_mensaje_a_cliente(numeroComoString, socketCPU);
   log_info(logger, "Se envia a CPU el numero de marco %d", numeroMarco);
+  free(numeroComoString);
 }
 
 void atender_escritura_en_memoria(int socketCPU, Logger *logger)
@@ -171,6 +178,7 @@ void atender_escritura_en_memoria(int socketCPU, Logger *logger)
   Lista *lista = obtener_paquete_como_lista(socketCPU);
   int direccionFisicaAEscribir = *(int *)list_get(lista, 0);
   uint32_t numeroAEscribir = *(uint32_t *)list_get(lista, 1);
+  list_destroy_and_destroy_elements(lista, &free);
 
   escribir_entero_en_memoria(numeroAEscribir, direccionFisicaAEscribir);
 }
@@ -179,12 +187,16 @@ void atender_lectura_de_memoria(int socketCPU, Logger *logger)
 {
   Lista *lista = obtener_paquete_como_lista(socketCPU);
   int direccionFisicaALeer = *(int *)list_get(lista, 0);
+  list_destroy_and_destroy_elements(lista, &free);
 
   int leido = leer_entero_de_memoria(direccionFisicaALeer);
 
   realizar_espera_de_memoria();
-  enviar_mensaje_a_cliente(string_itoa(leido), socketCPU);
+
+  char* leidoComoString = string_itoa(leido);
+  enviar_mensaje_a_cliente(leidoComoString, socketCPU);
   log_info(logger, "Se envia a CPU el numero leido %d", leido);
+  free(leidoComoString);
 }
 
 void atender_copiado_en_memoria(int socketCPU, Logger *logger)
@@ -192,6 +204,7 @@ void atender_copiado_en_memoria(int socketCPU, Logger *logger)
   Lista *lista = obtener_paquete_como_lista(socketCPU);
   int direccionFisicaDestino = *(int *)list_get(lista, 0);
   int direccionFisicaOrigen = *(int *)list_get(lista, 1);
+  list_destroy_and_destroy_elements(lista, &free);
 
   copiar_entero_en_memoria(direccionFisicaDestino, direccionFisicaOrigen);
 }
@@ -202,6 +215,7 @@ void atender_creacion_de_proceso(int socketKernel, Logger *logger)
   Lista *lista = obtener_paquete_como_lista(socketKernel);
   int id = *(int *)list_get(lista, 0);
   int tamanio = *(int *)list_get(lista, 1);
+  list_destroy_and_destroy_elements(lista, &free);
 
   Proceso *nuevoProceso = crear_proceso(id, tamanio);
   char *numeroTablaPrimerNivel = string_itoa(nuevoProceso->tablaPrimerNivel->numeroTablaPrimerNivel);
@@ -210,12 +224,14 @@ void atender_creacion_de_proceso(int socketKernel, Logger *logger)
 
   enviar_mensaje_a_cliente(numeroTablaPrimerNivel, socketKernel);
   log_info(logger, "Se envia a kernel el numero de tabla de primer nivel %d", nuevoProceso->tablaPrimerNivel->numeroTablaPrimerNivel);
+  free(numeroTablaPrimerNivel);
 }
 
 void atender_suspension_de_proceso(int socketKernel, Logger *logger)
 {
   Lista *lista = obtener_paquete_como_lista(socketKernel);
   int id = *(int *)list_get(lista, 0);
+  list_destroy_and_destroy_elements(lista, &free);
 
   suspender_proceso(id);
 
@@ -229,6 +245,7 @@ void atender_finalizacion_de_proceso(int socketKernel, Logger *logger)
 {
   Lista *lista = obtener_paquete_como_lista(socketKernel);
   int id = *(int *)list_get(lista, 0);
+  list_destroy_and_destroy_elements(lista, &free);
 
   finalizar_proceso(id);
 
