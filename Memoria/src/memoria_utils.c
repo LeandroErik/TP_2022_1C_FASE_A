@@ -31,7 +31,7 @@ void iniciar_estructuras_memoria()
 
 void iniciar_semaforos()
 {
-  //sem_init(&semaforoMarcos, 0, 0);
+  // sem_init(&semaforoMarcos, 0, 0);
   pthread_mutex_init(&semaforoProcesos, NULL);
 }
 
@@ -69,7 +69,7 @@ Proceso *crear_proceso(int id, int tamanio)
   return proceso;
 }
 
-void agregar_proceso_a_lista_de_procesos(Proceso* proceso)
+void agregar_proceso_a_lista_de_procesos(Proceso *proceso)
 {
   pthread_mutex_lock(&semaforoProcesos);
   list_add(procesos, proceso);
@@ -179,7 +179,7 @@ Proceso *buscar_proceso_por_id(int idProceso)
     return proceso->idProceso == idProceso;
   }
 
-  Proceso* proceso = list_find(procesos, &es_proceso);
+  Proceso *proceso = list_find(procesos, &es_proceso);
   pthread_mutex_unlock(&semaforoProcesos);
 
   return proceso;
@@ -341,7 +341,7 @@ Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina)
   return marcoDesasignado;
 }
 
-void desasignar_marco(Marco *marco) //TODO: Ver si necesita sincronizarse
+void desasignar_marco(Marco *marco) // TODO: Ver si necesita sincronizarse
 {
   marco->paginaActual = NULL;
   marco->idProceso = -1;
@@ -454,7 +454,7 @@ void finalizar_proceso(int idProcesoAFinalizar)
 
 void destruir_semaforos()
 {
-  //sem_destroy(&semaforoMarcos);
+  // sem_destroy(&semaforoMarcos);
   pthread_mutex_destroy(&semaforoProcesos);
 }
 
@@ -466,7 +466,6 @@ void liberar_memoria()
   free(memoriaPrincipal);
   list_destroy(procesos);
   destruir_semaforos();
-  
 
   log_info(logger, "Estructuras de memoria liberadas");
   log_destroy(logger);
@@ -479,28 +478,33 @@ int obtener_numero_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaAT
 
 int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundoNivel)
 {
-  printf("numeroTabla: %d, entradaTabla: %d\n", numeroTablaSegundoNivel, entradaATablaDeSegundoNivel);
+  printf("Pedidos de CPU: numeroTabla: %d, entradaTabla: %d\n", numeroTablaSegundoNivel, entradaATablaDeSegundoNivel);
 
   Proceso *proceso = buscar_proceso_de_tabla_segundo_nivel_numero(numeroTablaSegundoNivel);
-  printf("Proceso encontrado: %d\n", proceso->idProceso);
 
-  int numeroTablaSegundoNivelBuscada = numeroTablaSegundoNivel % MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
-  TablaSegundoNivel *tablaSegundoNivelBuscada = list_get(proceso->tablaPrimerNivel->entradas, numeroTablaSegundoNivelBuscada);
-
-  Pagina *paginaBuscada = list_get(tablaSegundoNivelBuscada->entradas, entradaATablaDeSegundoNivel);
-
-  if (paginaBuscada->marcoAsignado == NULL)
+  if (proceso != NULL)
   {
-    asignar_pagina_a_marco_libre(proceso, paginaBuscada);
-  }
+    int numeroTablaSegundoNivelBuscada = numeroTablaSegundoNivel % MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
+    TablaSegundoNivel *tablaSegundoNivelBuscada = list_get(proceso->tablaPrimerNivel->entradas, numeroTablaSegundoNivelBuscada);
 
-  return paginaBuscada->marcoAsignado->numeroMarco;
+    Pagina *paginaBuscada = list_get(tablaSegundoNivelBuscada->entradas, entradaATablaDeSegundoNivel);
+
+    if (paginaBuscada->marcoAsignado == NULL)
+    {
+      asignar_pagina_a_marco_libre(proceso, paginaBuscada);
+    }
+      return paginaBuscada->marcoAsignado->numeroMarco;
+  }
+  else
+    return -1; //proceso no encontrado
 }
 
 Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNivel)
 {
   int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
+
   pthread_mutex_lock(&semaforoProcesos);
+
   int numeroProcesos = list_size(procesos);
   for (int numeroProceso = 0; numeroProceso < numeroProcesos; numeroProceso++)
   {
@@ -515,6 +519,12 @@ Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNive
       }
     }
   }
+
+  // si llego aca es porque no existe dicho proceso
+  pthread_mutex_unlock(&semaforoProcesos);
+  Logger *logger = iniciar_logger_memoria();
+  log_error(logger, "No existe proceso de numero de tabla de segundo nivel %d", numeroTablaSegundoNivel);
+  log_destroy(logger);
 
   return NULL;
 }
