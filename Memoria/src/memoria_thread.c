@@ -133,10 +133,8 @@ void enviar_estructuras_de_memoria_a_cpu(int socketCPU, Logger *logger)
   Paquete *paquete = crear_paquete(ESTRUCTURAS_MEMORIA);
   agregar_a_paquete(paquete, &MEMORIA_CONFIG.ENTRADAS_POR_TABLA, sizeof(int));
   agregar_a_paquete(paquete, &MEMORIA_CONFIG.TAM_PAGINA, sizeof(int));
-  enviar_paquete_a_cliente(paquete, socketCPU); 
+  enviar_paquete_a_cliente(paquete, socketCPU);
   eliminar_paquete(paquete);
-
-  log_info(logger, "Se envian a CPU las estructuras basicas de memoria");
 }
 
 void atender_pedido_de_tabla_de_segundo_nivel(int socketCPU, Logger *logger)
@@ -150,7 +148,7 @@ void atender_pedido_de_tabla_de_segundo_nivel(int socketCPU, Logger *logger)
 
   realizar_espera_de_memoria();
 
-  char* numeroComoString = string_itoa(numeroTablaSegundoNivel);
+  char *numeroComoString = string_itoa(numeroTablaSegundoNivel);
   enviar_mensaje_a_cliente(numeroComoString, socketCPU);
   log_info(logger, "Se envia a CPU el numero de tabla de segundo nivel %d", numeroTablaSegundoNivel);
   free(numeroComoString);
@@ -167,7 +165,7 @@ void atender_pedido_de_marco(int socketCPU, Logger *logger)
 
   realizar_espera_de_memoria();
 
-  char* numeroComoString = string_itoa(numeroMarco);
+  char *numeroComoString = string_itoa(numeroMarco);
   enviar_mensaje_a_cliente(numeroComoString, socketCPU);
   log_info(logger, "Se envia a CPU el numero de marco %d", numeroMarco);
   free(numeroComoString);
@@ -193,7 +191,7 @@ void atender_lectura_de_memoria(int socketCPU, Logger *logger)
 
   realizar_espera_de_memoria();
 
-  char* leidoComoString = string_itoa(leido);
+  char *leidoComoString = string_itoa(leido);
   enviar_mensaje_a_cliente(leidoComoString, socketCPU);
   log_info(logger, "Se envia a CPU el numero leido %d", leido);
   free(leidoComoString);

@@ -254,5 +254,28 @@ void enviar_paquete_a_cliente(Paquete *paquete, int socketCliente)
 
 void enviar_mensaje_a_cliente(char *mensaje, int socketCliente)
 {
-  enviar_mensaje_a_servidor(mensaje, socketCliente);
+  Paquete *paquete = crear_paquete(MENSAJE);
+  agregar_a_paquete(paquete, mensaje, strlen(mensaje) + 1);
+  enviar_paquete_a_cliente(paquete, socketCliente);
+  eliminar_paquete(paquete);
+}
+
+char *obtener_mensaje_del_servidor(int socketServidor)
+{
+  Lista *listaMensaje;
+  char *mensaje;
+
+  switch (obtener_codigo_operacion(socketServidor))
+  {
+  case MENSAJE:
+    listaMensaje = obtener_paquete_como_lista(socketServidor);
+    mensaje = string_duplicate(list_get(listaMensaje, 0));
+    list_destroy(listaMensaje);
+    break;
+
+  default:
+    break;
+  }
+
+  return mensaje;
 }

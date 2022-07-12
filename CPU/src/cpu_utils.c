@@ -103,10 +103,12 @@ void ejecutar_read(int direccionFisica)
   Paquete *paquete = crear_paquete(LEER_DE_MEMORIA);
   agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
-  eliminar_paquete(paquete);
-  char *valor = obtener_mensaje_del_cliente(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+
+  char *valor = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   log_info(logger, "Se recibio el valor %s de memoria", valor);
+
   free(valor);
+  eliminar_paquete(paquete);
   log_destroy(logger);
 }
 
@@ -281,7 +283,7 @@ void mostrar_tlb()
 
 int llamar_mmu(Pcb *proceso, int direccionLogica)
 {
-  Logger* logger = iniciar_logger_cpu();
+  Logger *logger = iniciar_logger_cpu();
   int numeroPagina = floor((float)direccionLogica / ESTRUCTURA_MEMORIA.TAMANIO_PAGINA);
   int desplazamiento = direccionLogica - numeroPagina * ESTRUCTURA_MEMORIA.TAMANIO_PAGINA;
   int numeroMarco;
@@ -297,7 +299,7 @@ int llamar_mmu(Pcb *proceso, int direccionLogica)
     int numeroTablaSegundoNivel = pedir_tabla_segundo_nivel(numeroTablaPrimerNivel, entradaTablaPrimerNivel);
     log_info(logger, "numero de tabla de segundo nivel recibido: %d", numeroTablaSegundoNivel);
     numeroMarco = pedir_marco(numeroTablaSegundoNivel, entradaTablaSegundoNivel);
-    log_info(logger, "numero de marco recibido: %d", numeroMarco);    
+    log_info(logger, "numero de marco recibido: %d", numeroMarco);
     agregar_a_tlb(numeroPagina, numeroMarco);
     mostrar_tlb();
     log_destroy(logger);
@@ -315,7 +317,7 @@ int pedir_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaTablaPrimer
   enviar_paquete_a_cliente(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   eliminar_paquete(paquete);
 
-  char* mensaje = obtener_mensaje_del_cliente(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  char *mensaje = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   int numeroTablaSegundoNivel = atoi(mensaje);
   free(mensaje);
 
@@ -331,9 +333,9 @@ int pedir_marco(int numeroTablaSegundoNivel, int entradaTablaSegundoNivel)
   enviar_paquete_a_cliente(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   eliminar_paquete(paquete);
 
-  char* mensaje = obtener_mensaje_del_cliente(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  char *mensaje = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   int numeroMarco = atoi(mensaje);
   free(mensaje);
-  
+
   return numeroMarco;
 }

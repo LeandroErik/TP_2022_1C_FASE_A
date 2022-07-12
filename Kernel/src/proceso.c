@@ -119,10 +119,8 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
-        obtener_mensaje_del_cliente(socketMemoria); // confirmacion de finalizacion
-
-        // TODO:Avisar a consola asi se finaliza.
-        //  https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/23
+        char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de finalizacion
+        log_info(logger, confirmacion);
 
         break;
 
@@ -197,7 +195,7 @@ void monitorizarSuspension(Pcb *proceso)
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(logger, "Se envio el proceso %d a la memoria para suspender", pid);
-        obtener_mensaje_del_cliente(socketMemoria); // confirmacion de suspension
+        obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
 
         // TODO:Recibir confirmacion de suspension
         // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/24
@@ -395,24 +393,13 @@ int tabla_pagina_primer_nivel(int pid, int tamanio)
 
     log_info(logger, "Se envio el proceso %d a la memoria", pid);
 
-    CodigoOperacion codOperacion = obtener_codigo_operacion(socketMemoria);
-
     char *mensajeDeMemoria;
     int tablaPrimerNivel;
 
-    switch (codOperacion)
-    {
-    case MENSAJE:
-
-        mensajeDeMemoria = obtener_mensaje_del_cliente(socketMemoria);
-        tablaPrimerNivel = atoi(mensajeDeMemoria);
-        log_info(logger, "Se recibio de memoria el numero de tabla de primer nivel del proceso");
-        break;
-
-    default:
-        log_warning(logger, "Operación desconocida.");
-        return EXIT_FAILURE;
-    }
+    mensajeDeMemoria = obtener_mensaje_del_servidor(socketMemoria);
+    puts(mensajeDeMemoria);
+    tablaPrimerNivel = atoi(mensajeDeMemoria);
+    log_info(logger, "Se recibio de memoria el numero de tabla de primer nivel del proceso");
 
     eliminar_paquete(paquete);
 
