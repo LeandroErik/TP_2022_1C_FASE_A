@@ -196,9 +196,6 @@ void monitorizarSuspension(Pcb *proceso)
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(logger, "Se envio el proceso %d a la memoria para suspender", pid);
         obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
-
-        // TODO:Recibir confirmacion de suspension
-        // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/24
     }
 }
 

@@ -43,9 +43,9 @@ void iniciar_estructuras_memoria();
 
 /**
  * @brief Inicia los marcos de la memoria
- * @param cantidadMarcos Numero de marcos que tendra la memoria
+ * 
  */
-void iniciar_marcos(int cantidadMarcos);
+void iniciar_marcos();
 
 /**
  * @brief Crear tabla de primer nivel

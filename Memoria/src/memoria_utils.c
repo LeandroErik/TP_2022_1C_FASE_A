@@ -19,10 +19,11 @@ void iniciar_estructuras_memoria()
 
   tablasDePrimerNivel = 0;
   tablasDeSegundoNivel = 0;
+
   memoriaPrincipal = (void *)malloc(MEMORIA_CONFIG.TAM_MEMORIA);
   memset(memoriaPrincipal, '0', MEMORIA_CONFIG.TAM_MEMORIA);
-  int cantidadMarcos = MEMORIA_CONFIG.TAM_MEMORIA / MEMORIA_CONFIG.TAM_PAGINA;
-  iniciar_marcos(cantidadMarcos);
+
+  iniciar_marcos();
   procesos = list_create();
 
   log_info(logger, "Estructuras de memoria inicializadas");
@@ -35,8 +36,9 @@ void iniciar_semaforos()
   pthread_mutex_init(&semaforoProcesos, NULL);
 }
 
-void iniciar_marcos(int cantidadMarcos)
-{
+void iniciar_marcos()
+{  
+  int cantidadMarcos = MEMORIA_CONFIG.TAM_MEMORIA / MEMORIA_CONFIG.TAM_PAGINA;
   marcos = list_create();
   for (int numeroDeMarco = 0; numeroDeMarco < cantidadMarcos; numeroDeMarco++)
   {
@@ -205,8 +207,13 @@ bool tiene_marcos_por_asignar(Proceso *proceso)
 
 void agregar_pagina_a_paginas_asignadas_del_proceso(Proceso *proceso, Pagina *pagina)
 {
-  // TODO: Ver en que posicion de la lista habria que agregar, por numero de marco? donde se reemplazo? al final? y actualizar el puntero
-  list_add(proceso->paginasAsignadas, pagina);
+  int posicionAAgregar = proceso->posicionDelPunteroDeSustitucion - 1;
+
+  if( posicionAAgregar >= 0)
+    list_add_in_index(proceso->paginasAsignadas, posicionAAgregar, pagina);
+  else
+    list_add(proceso->paginasAsignadas, pagina);
+
 }
 
 void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco *marco)
@@ -248,6 +255,7 @@ Marco *asignar_pagina_a_marco_libre(Proceso *proceso, Pagina *pagina)
   return marco;
 }
 
+//Algoritmos de sustitucion
 Marco *marco_del_proceso_sustituido(Proceso *proceso)
 {
   Logger *logger = iniciar_logger_memoria();
@@ -332,6 +340,7 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
 
   return marcoSustituido;
 }
+//
 
 Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina)
 {
@@ -478,8 +487,6 @@ int obtener_numero_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaAT
 
 int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundoNivel)
 {
-  printf("Pedidos de CPU: numeroTabla: %d, entradaTabla: %d\n", numeroTablaSegundoNivel, entradaATablaDeSegundoNivel);
-
   Proceso *proceso = buscar_proceso_de_tabla_segundo_nivel_numero(numeroTablaSegundoNivel);
 
   if (proceso != NULL)
@@ -496,7 +503,7 @@ int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundo
       return paginaBuscada->marcoAsignado->numeroMarco;
   }
   else
-    return -1; //proceso no encontrado
+    return -1; //proceso no encontrado => marco no encontrado
 }
 
 Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNivel)
