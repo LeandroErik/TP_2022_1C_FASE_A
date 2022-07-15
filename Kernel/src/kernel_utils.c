@@ -28,9 +28,7 @@ int rellenar_lista_instrucciones(Lista *listaInstrucciones, int socketCliente)
 
   int tamanioProceso = *(int *)list_get(listaPlana, 0);
   deserializar_lista_de_instrucciones(listaInstrucciones, listaPlana, 1, 1);
-
   list_destroy_and_destroy_elements(listaPlana, &free);
-
   return tamanioProceso;
 }
 
@@ -48,7 +46,7 @@ Pcb *crear_pcb(Lista *listaInstrucciones, int tamanioProceso)
   pcb->escenario->estado = NUEVO;
   pcb->instrucciones = list_duplicate(listaInstrucciones);
   pcb->tiempoRafagaRealAnterior = KERNEL_CONFIG.ESTIMACION_INICIAL / 1000;
-  pcb->tiempoInicioEjecucion = (int)NULL;
+  pcb->tiempoInicioEjecucion = 0;
 
   list_destroy(listaInstrucciones);
 
@@ -59,7 +57,6 @@ Pcb *generar_pcb(int socketCliente)
 {
   Lista *listaInstrucciones = list_create();
   int tamanioProceso = rellenar_lista_instrucciones(listaInstrucciones, socketCliente);
-
   return crear_pcb(listaInstrucciones, tamanioProceso);
 }
 
@@ -83,10 +80,34 @@ int conectar_con_cpu_dispatch()
 
 int conectar_con_cpu_interrupt()
 {
-  return crear_conexion_con_servidor(KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
+  log_info(logger, "Conectando con Servidor CPU via Interrupt en IP: %s y Puerto: %s", KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
+
+  int socketCPUDInterrupt = crear_conexion_con_servidor(KERNEL_CONFIG.IP_CPU, KERNEL_CONFIG.PUERTO_CPU_INTERRUPT);
+
+  if (socketCPUDInterrupt < 0)
+  {
+    log_error(logger, "Conexión rechazada. El Servidor CPU/Puerto Interrupt no está disponible. %d", socketCPUDInterrupt);
+    return DESCONEXION;
+  }
+
+  log_info(logger, "Conexión con Interrupt establecida.");
+
+  return socketCPUDInterrupt;
 }
 
 int conectar_con_memoria()
 {
-  return crear_conexion_con_servidor(KERNEL_CONFIG.IP_MEMORIA, KERNEL_CONFIG.PUERTO_MEMORIA);
+  log_info(logger, "Conectando con Servidor Memoria en IP: %s y Puerto: %s", KERNEL_CONFIG.IP_MEMORIA, KERNEL_CONFIG.PUERTO_MEMORIA);
+
+  int socketCPUDInterrupt = crear_conexion_con_servidor(KERNEL_CONFIG.IP_MEMORIA, KERNEL_CONFIG.PUERTO_MEMORIA);
+
+  if (socketCPUDInterrupt < 0)
+  {
+    log_error(logger, "Conexión rechazada. El Servidor Memoria no está disponible. %d", socketCPUDInterrupt);
+    return DESCONEXION;
+  }
+
+  log_info(logger, "Conexión con Memoria establecida.");
+
+  return socketCPUDInterrupt;
 }

@@ -213,6 +213,7 @@ void serializar_pcb(Paquete *paquete, Pcb *pcb)
   agregar_a_paquete(paquete, &(pcb->contadorPrograma), sizeof(int));
   agregar_a_paquete(paquete, &(pcb->tablaPaginas), sizeof(int));
   agregar_a_paquete(paquete, &(pcb->estimacionRafaga), sizeof(float));
+  agregar_a_paquete(paquete, &(pcb->tiempoRafagaRealAnterior), sizeof(int));
   agregar_a_paquete(paquete, &(pcb->escenario->estado), sizeof(Estado));
   agregar_a_paquete(paquete, &(pcb->escenario->tiempoBloqueadoIO), sizeof(int));
   agregar_a_paquete(paquete, &(pcb->tiempoInicioEjecucion), sizeof(int));
@@ -232,12 +233,13 @@ Pcb *deserializar_pcb(int socketCliente)
   pcb->contadorPrograma = *(int *)list_get(propiedadesPlanas, 2);
   pcb->tablaPaginas = *(int *)list_get(propiedadesPlanas, 3);
   pcb->estimacionRafaga = *(float *)list_get(propiedadesPlanas, 4);
+  pcb->tiempoRafagaRealAnterior = *(int *)list_get(propiedadesPlanas, 5);
   pcb->escenario = malloc(sizeof(Escenario));
-  pcb->escenario->estado = *(Estado *)list_get(propiedadesPlanas, 5);
-  pcb->escenario->tiempoBloqueadoIO = *(int *)list_get(propiedadesPlanas, 6);
-  pcb->tiempoInicioEjecucion = *(int *)list_get(propiedadesPlanas, 7);
+  pcb->escenario->estado = *(Estado *)list_get(propiedadesPlanas, 6);
+  pcb->escenario->tiempoBloqueadoIO = *(int *)list_get(propiedadesPlanas, 7);
+  pcb->tiempoInicioEjecucion = *(int *)list_get(propiedadesPlanas, 8);
 
-  deserializar_lista_de_instrucciones(listaResultado, propiedadesPlanas, 8, 10);
+  deserializar_lista_de_instrucciones(listaResultado, propiedadesPlanas, 9, 11);
 
   pcb->instrucciones = listaResultado;
 

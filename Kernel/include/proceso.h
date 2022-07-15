@@ -54,6 +54,8 @@ Semaforo semaforoCantidadProcesosEjecutando;
 
 int socketMemoria;
 int socketDispatch;
+int socketInterrupt;
+int socketKernel;
 
 /*Hilos*/
 Hilo hilo_planificador_largo_plazo;
@@ -107,6 +109,7 @@ char *leer_lista(t_list *);
 /*Monitores de variables globales*/
 void incrementar_cantidad_procesos_memoria();
 void decrementar_cantidad_procesos_memoria();
+int cantidad_procesos_memoria();
 
 int lectura_cola_mutex(t_queue *, pthread_mutex_t *);
 
@@ -153,5 +156,16 @@ void liberar_estructuras();
 void liberar_instruccion(LineaInstruccion *);
 void liberar_pcb(Pcb *);
 void liberar_semaforos();
+void liberar_conexiones();
+bool es_SRT();
+bool esProcesoNuevo(Pcb *);
+
+int calcular_tiempo_rafaga_real_anterior(Pcb *);
+
+bool procesoSigueBloqueado(int);
+
+void imprimir_pcb(Pcb *);
+
+bool buscar_pcb_cola(int);
 
 #endif
