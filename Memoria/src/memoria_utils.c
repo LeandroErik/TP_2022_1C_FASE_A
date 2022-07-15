@@ -37,7 +37,7 @@ void iniciar_semaforos()
 }
 
 void iniciar_marcos()
-{  
+{
   int cantidadMarcos = MEMORIA_CONFIG.TAM_MEMORIA / MEMORIA_CONFIG.TAM_PAGINA;
   marcos = list_create();
   for (int numeroDeMarco = 0; numeroDeMarco < cantidadMarcos; numeroDeMarco++)
@@ -209,11 +209,10 @@ void agregar_pagina_a_paginas_asignadas_del_proceso(Proceso *proceso, Pagina *pa
 {
   int posicionAAgregar = proceso->posicionDelPunteroDeSustitucion - 1;
 
-  if( posicionAAgregar >= 0)
+  if (posicionAAgregar >= 0)
     list_add_in_index(proceso->paginasAsignadas, posicionAAgregar, pagina);
   else
     list_add(proceso->paginasAsignadas, pagina);
-
 }
 
 void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco *marco)
@@ -227,6 +226,7 @@ void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco
 
   agregar_pagina_a_paginas_asignadas_del_proceso(proceso, pagina);
   pagina->marcoAsignado = marco;
+  pagina->uso = true;
   marco->paginaActual = pagina;
   marco->idProceso = proceso->idProceso;
 
@@ -255,7 +255,7 @@ Marco *asignar_pagina_a_marco_libre(Proceso *proceso, Pagina *pagina)
   return marco;
 }
 
-//Algoritmos de sustitucion
+// Algoritmos de sustitucion
 Marco *marco_del_proceso_sustituido(Proceso *proceso)
 {
   Logger *logger = iniciar_logger_memoria();
@@ -311,6 +311,7 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
   Marco *marcoSustituido;
   bool eligioVictima = false;
   int numeroDePaginasAsignadas = list_size(proceso->paginasAsignadas);
+  int posicionInicialDelPuntero = proceso->posicionDelPunteroDeSustitucion;
 
   int contadorDeVueltas = 0;
   while (!eligioVictima)
@@ -318,7 +319,7 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
     Pagina *pagina = list_get(proceso->paginasAsignadas, proceso->posicionDelPunteroDeSustitucion);
     if (!pagina->uso)
     {
-      if (!pagina->modificado || contadorDeVueltas == 3)
+      if (!pagina->modificado || contadorDeVueltas == 3 || contadorDeVueltas == 1)
       {
         eligioVictima = true;
         log_info(logger, "Victima elegida pagina %d del proceso %d", pagina->numeroPagina, proceso->idProceso);
@@ -334,10 +335,12 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
     if (proceso->posicionDelPunteroDeSustitucion == numeroDePaginasAsignadas)
     {
       proceso->posicionDelPunteroDeSustitucion = 0;
+    }
+    if (proceso->posicionDelPunteroDeSustitucion == posicionInicialDelPuntero)
+    {
       contadorDeVueltas++;
     }
   }
-
   return marcoSustituido;
 }
 //
@@ -345,7 +348,10 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
 Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina)
 {
   Marco *marcoDesasignado = pagina->marcoAsignado;
-  escribir_en_swap(pagina, proceso);
+  if (pagina->modificado)
+  {
+    escribir_en_swap(pagina, proceso);
+  }
   desasignar_pagina(proceso, pagina);
   return marcoDesasignado;
 }
@@ -361,7 +367,6 @@ void desasignar_pagina(Proceso *proceso, Pagina *pagina)
   desasignar_marco(pagina->marcoAsignado);
   pagina->marcoAsignado = NULL;
   pagina->modificado = false;
-  pagina->uso = true;
   sacar_pagina_de_paginas_asignadas(proceso, pagina);
 }
 
@@ -386,11 +391,7 @@ void suspender_proceso(int idProcesoASuspender)
   while (!list_is_empty(proceso->paginasAsignadas))
   {
     Pagina *pagina = list_get(proceso->paginasAsignadas, 0);
-    if (pagina->modificado)
-    {
-      escribir_en_swap(pagina, proceso);
-    }
-    desasignar_pagina(proceso, pagina);
+    desalojar_pagina(proceso, pagina);
   }
 
   proceso->posicionDelPunteroDeSustitucion = 0;
@@ -500,10 +501,10 @@ int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundo
     {
       asignar_pagina_a_marco_libre(proceso, paginaBuscada);
     }
-      return paginaBuscada->marcoAsignado->numeroMarco;
+    return paginaBuscada->marcoAsignado->numeroMarco;
   }
   else
-    return -1; //proceso no encontrado => marco no encontrado
+    return -1; // proceso no encontrado => marco no encontrado
 }
 
 Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNivel)
