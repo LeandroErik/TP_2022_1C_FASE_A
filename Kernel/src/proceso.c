@@ -129,7 +129,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
         char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de finalizacion
-        log_info(logger, confirmacion);
+        log_info(logger, "%s", confirmacion);
 
         // Libero el pcb a medida que va finalizando
         liberar_pcb(queue_pop(colaFinalizado));
@@ -488,7 +488,7 @@ void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
     procesoBloqueado->escenario->estado = BLOQUEADO_IO;
 
     queue_push(colaBloqueados, procesoBloqueado);
-    log_info(loggerPlanificacion, "Proceso: [%d] se movio a BLOQUEADO.", procesoBloqueado->pid, procesoBloqueado->escenario->tiempoBloqueadoIO / 1000);
+    log_info(loggerPlanificacion, "Proceso: [%d] se movio a BLOQUEADO.", procesoBloqueado->pid);
 
     pthread_mutex_unlock(&mutexColaBloqueados);
 
@@ -649,7 +649,7 @@ void imprimir_colas()
     \n\tCola listos: %s \
     \n\tCola ejecutando: %s \
     \n\tCola bloqueados: %s\
-    \n\tCola suspended - ready: % s\
+    \n\tCola suspended - ready: %s\
     \n\tCola terminados: %s",
              strcolaNuevos,
              strcolaListos, strcolaEjecutando, strcolaBloqueados, strcolaSuspendidoListo, strcolaFinalizado);
