@@ -150,5 +150,7 @@ void cargar_estructura_memoria(int socketMemoria)
   ESTRUCTURA_MEMORIA.TAMANIO_PAGINA = *(int *)list_get(lista_plana, 1);
 
   log_info(logger, "Estructura de memoria cargada.");
+
+  list_destroy_and_destroy_elements(lista_plana, &free);
   log_destroy(logger);
 }

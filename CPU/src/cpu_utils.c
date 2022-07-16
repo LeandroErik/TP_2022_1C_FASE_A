@@ -71,8 +71,7 @@ void ejecutar_io(Pcb *pcb, int tiempoBloqueadoIO, int socketKernel)
   pcb->escenario->estado = BLOQUEADO_IO;
   pcb->escenario->tiempoBloqueadoIO = tiempoBloqueadoIO;
 
-  Paquete *paquete = malloc(sizeof(Paquete));
-  paquete = crear_paquete(PCB);
+  Paquete *paquete = crear_paquete(PCB);
   serializar_pcb(paquete, pcb);
 
   enviar_paquete_a_cliente(paquete, socketKernel);
@@ -83,8 +82,7 @@ void ejecutar_exit(Pcb *pcb, int socketKernel)
 {
   pcb->escenario->estado = TERMINADO;
 
-  Paquete *paquete = malloc(sizeof(Paquete));
-  paquete = crear_paquete(PCB);
+  Paquete *paquete = crear_paquete(PCB);
   serializar_pcb(paquete, pcb);
 
   enviar_paquete_a_cliente(paquete, socketKernel);
@@ -206,6 +204,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
     if (instruccion == IO || instruccion == EXIT)
     {
       log_destroy(logger);
+      eliminar_pcb(pcb);
       return;
     }
   }
@@ -365,8 +364,9 @@ int llamar_mmu(Pcb *proceso, int direccionLogica)
     log_info(logger, "numero de marco recibido: %d", numeroMarco);
     agregar_a_tlb(numeroPagina, numeroMarco);
     mostrar_tlb();
-    log_destroy(logger);
   }
+
+  log_destroy(logger);
 
   return numeroMarco * ESTRUCTURA_MEMORIA.TAMANIO_PAGINA + desplazamiento;
 }
