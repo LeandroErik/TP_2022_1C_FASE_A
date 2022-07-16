@@ -22,8 +22,8 @@ FILE *crear_archivo_swap(int idProceso)
 
 void borrar_archivo_swap_del_proceso(Proceso *proceso)
 {
-  fclose(proceso->archivoSwap);
-  char* pathArchivoSwap = generar_path_archivo_swap(proceso->idProceso);
+  // fclose(proceso->archivoSwap);
+  char *pathArchivoSwap = generar_path_archivo_swap(proceso->idProceso);
   remove(pathArchivoSwap);
   free(pathArchivoSwap);
 }
