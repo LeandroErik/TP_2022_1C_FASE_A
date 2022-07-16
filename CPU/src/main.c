@@ -10,7 +10,7 @@ int main(void)
 
   rellenar_configuracion_cpu(config);
 
-  / log_info(logger, "Iniciando Servidor CPU...");
+  log_info(logger, "Iniciando Servidor CPU...");
   int socketCpuDispatch = iniciar_servidor_cpu_dispatch();
   int socketCpuInterrupt = iniciar_servidor_cpu_interrupt();
 
