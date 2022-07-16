@@ -11,6 +11,13 @@ bool seNecesitaAtenderInterrupcion;
 
 Lista *tlb;
 
+typedef struct EntradaTlb
+{
+    int numeroPagina;
+    int numeroMarco;
+    int ultimaVezUtilizada;
+} EntradaTlb;
+
 /**
  * @brief Iniciar un logger en el Módulo CPU.
  *
@@ -154,6 +161,55 @@ int pedir_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaTablaPrimer
  */
 int pedir_marco(int numeroTablaSegundoNivel, int entradaTablaSegundoNivel);
 
+/**
+ * @brief Agrega una entrada de TLB a la lista.
+ *
+ * @param numeroPagina Número de página.
+ *
+ * @param numeroMarco Número de marco.
+ */
+void agregar_a_tlb(int numeroPagina, int numeroMarco);
+
+/**
+ * @brief Limpia la lista de entradas de TLB.
+ *
+ */
 void limpiar_tlb();
+
+/**
+ * @brief Loggea las entradas de TLB.
+ */
+void mostrar_tlb();
+
+/**
+ * @brief Reemplaza una entrada de TLB según el algoritmo de reemplazo dado por el config.
+ *
+ * @param numeroPagina Número de página.
+ * @param numeroMarco Número de marco.
+ *
+ */
+void reemplazar_tlb(int numeroPagina, int numeroMarco);
+
+/**
+ * @brief Elimina una entrada de TLB de la lista.
+ *
+ * @param victima Víctima a eliminar.
+ *
+ */
+void eliminar_entrada_tlb(EntradaTlb *victima);
+
+/**
+ * @brief Utiliza el algoritmo de reemplazo FIFO para reemplazar una entrada en la TLB.
+ *
+ * @return Víctima.
+ */
+EntradaTlb *elegir_victima_por_fifo();
+
+/**
+ * @brief Utiliza el algoritmo de reemplazo LRU para reemplazar una entrada en la TLB.
+ *
+ * @return Victima.
+ */
+EntradaTlb *elegir_victima_por_lru();
 
 #endif

@@ -257,4 +257,11 @@ void enviar_mensaje_a_cliente(char *mensaje, int socketCliente);
 
 char *obtener_mensaje_del_servidor(int socketServidor);
 
+/**
+* @brief Devuelve el tiempo actual
+
+  @return Tiempo actual.
+*/
+int obtener_tiempo_actual();
+
 #endif

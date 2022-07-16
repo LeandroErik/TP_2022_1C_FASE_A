@@ -1,11 +1,5 @@
 #include <cpu_utils.h>
 
-typedef struct EntradaTlb
-{
-  int numeroPagina;
-  int numeroMarco;
-} EntradaTlb;
-
 Logger *iniciar_logger_cpu()
 {
   return log_create("CPU.log", "CPU", true, LOG_LEVEL_INFO);
@@ -244,22 +238,39 @@ int devolver_marco_por_tlb(int numeroPagina)
 
 void agregar_a_tlb(int numeroPagina, int numeroMarco)
 {
-  if (list_size(tlb) <= CPU_CONFIG.ENTRADAS_TLB)
+  bool esEntrada(void *_entrada)
   {
+    EntradaTlb *entrada = _entrada;
+    return entrada->numeroPagina == numeroPagina && entrada->numeroMarco == numeroMarco;
+  }
+
+  Logger *logger = iniciar_logger_cpu();
+
+  if (list_find(tlb, &esEntrada))
+  {
+    log_info(logger, "La página %d y el marco %d se encuentra en TLB", numeroPagina, numeroMarco);
+    EntradaTlb *entrada = list_find(tlb, &esEntrada);
+    log_info(logger, "Actualizando tiempo de uso...");
+    entrada->ultimaVezUtilizada = obtener_tiempo_actual();
+  }
+  else if (list_size(tlb) < CPU_CONFIG.ENTRADAS_TLB)
+  {
+    log_info(logger, "Agregando nueva entrada en TLB...");
     EntradaTlb *entradaTLB = (EntradaTlb *)malloc(sizeof(EntradaTlb));
 
     entradaTLB->numeroPagina = numeroPagina;
     entradaTLB->numeroMarco = numeroMarco;
+    entradaTLB->ultimaVezUtilizada = obtener_tiempo_actual();
 
     list_add(tlb, entradaTLB);
   }
   else
   {
-    // TODO: Implementar método de sustitución (FIFO | LRU).
-    // 1. Elegir víctima.
-    // 2. Borrar víctima de la lista.
-    // 3. Llamar agregar_a_tlb().
+    log_info(logger, "Iniciando reemplazo de TLB...");
+    reemplazar_tlb(numeroPagina, numeroMarco);
   }
+
+  log_destroy(logger);
 }
 
 void limpiar_tlb()
@@ -275,10 +286,62 @@ void mostrar_tlb()
   for (int i = 0; i < list_size(tlb); i++)
   {
     EntradaTlb *entradaTLB = (EntradaTlb *)list_get(tlb, i);
-    log_info(logger, "Entrada %d TLB:\n\t- Número de página: %d\n\t- Número de marco: %d\n\n", i, entradaTLB->numeroPagina, entradaTLB->numeroMarco);
+    log_info(logger, "Entrada %d TLB:\n\t- Número de página: %d\n\t- Número de marco: %d\n\t- Última vez utilizada: %d\n", i, entradaTLB->numeroPagina, entradaTLB->numeroMarco, entradaTLB->ultimaVezUtilizada);
   }
 
+  log_info(logger, "------------------------------------------------------");
+
   log_destroy(logger);
+}
+
+void reemplazar_tlb(int numeroPagina, int numeroMarco)
+{
+  EntradaTlb *victima;
+  Logger *logger = iniciar_logger_cpu();
+
+  if (!strcmp(CPU_CONFIG.REEMPLAZO_TLB, "FIFO"))
+    victima = elegir_victima_por_fifo();
+  else
+    victima = elegir_victima_por_lru();
+
+  log_info(logger, "Víctima:\n\t- Página: %d\n\t- Marco: %d\n", victima->numeroPagina, victima->numeroMarco);
+
+  eliminar_entrada_tlb(victima);
+  log_destroy(logger);
+
+  agregar_a_tlb(numeroPagina, numeroMarco);
+}
+
+void eliminar_entrada_tlb(EntradaTlb *victima)
+{
+  bool esEntrada(void *_entrada)
+  {
+    EntradaTlb *entrada = _entrada;
+    return entrada == victima;
+  }
+
+  list_remove_and_destroy_by_condition(tlb, &esEntrada, &free);
+}
+
+EntradaTlb *elegir_victima_por_fifo()
+{
+  return list_get(tlb, 0);
+}
+
+EntradaTlb *elegir_victima_por_lru()
+{
+  void *esMenor(void *_unaEntrada, void *_otraEntrada)
+  {
+    EntradaTlb *unaEntrada = _unaEntrada;
+    EntradaTlb *otraEntrada = _otraEntrada;
+
+    if (unaEntrada->ultimaVezUtilizada <= otraEntrada->ultimaVezUtilizada)
+      return unaEntrada;
+    else
+      return otraEntrada;
+  }
+
+  return list_get_minimum(tlb, &esMenor);
 }
 
 int llamar_mmu(Pcb *proceso, int direccionLogica)

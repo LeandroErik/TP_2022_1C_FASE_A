@@ -625,10 +625,6 @@ char *leer_cola(t_queue *cola)
     }
     return out;
 }
-int obtener_tiempo_actual()
-{
-    return time(NULL);
-}
 
 float obtener_tiempo_de_trabajo_actual(Pcb *proceso)
 {

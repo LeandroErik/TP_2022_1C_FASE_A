@@ -269,7 +269,7 @@ char *obtener_mensaje_del_servidor(int socketServidor)
   {
   case MENSAJE:
     listaMensaje = obtener_paquete_como_lista(socketServidor);
-    mensaje = string_duplicate((char*) list_get(listaMensaje, 0));
+    mensaje = string_duplicate((char *)list_get(listaMensaje, 0));
     list_destroy(listaMensaje);
     break;
 
@@ -278,4 +278,9 @@ char *obtener_mensaje_del_servidor(int socketServidor)
   }
 
   return mensaje;
+}
+
+int obtener_tiempo_actual()
+{
+  return time(NULL);
 }
