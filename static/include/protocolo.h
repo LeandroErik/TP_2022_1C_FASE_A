@@ -63,8 +63,8 @@ typedef struct Pcb
   unsigned int contadorPrograma;
   unsigned int tablaPaginas;
   float estimacionRafaga;
-  int tiempoInicioEjecucion;
-  int tiempoRafagaRealAnterior;
+  unsigned int tiempoInicioEjecucion;
+  unsigned int tiempoRafagaRealAnterior;
   Escenario *escenario;
   Lista *instrucciones;
 } Pcb;

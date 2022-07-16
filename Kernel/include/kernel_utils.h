@@ -14,6 +14,8 @@ Logger *logger;
 Logger *loggerPlanificacion;
 
 int idProcesoGlobal;
+Hilo hiloConsolas;
+Hilo hiloConexionMemoria;
 
 /**
  * @brief Inicia un logger en el Módulo Kernel.

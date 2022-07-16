@@ -23,6 +23,9 @@ t_queue *colaEjecutando;
 t_queue *colaFinalizado;
 t_queue *colaSuspendidoListo;
 
+t_list *hilosConsola;
+t_list *hilosMonitorizadores;
+
 /*semaforos*/
 pthread_mutex_t mutexNumeroProceso;
 pthread_mutex_t mutexProcesoListo;
@@ -51,6 +54,8 @@ Semaforo semaforoCantidadProcesosEjecutando;
 
 int socketMemoria;
 int socketDispatch;
+int socketInterrupt;
+int socketKernel;
 
 /*Hilos*/
 Hilo hilo_planificador_largo_plazo;
@@ -77,7 +82,7 @@ void *planificador_corto_plazo_srt();
 
 void *dispositivo_io();
 
-void monitorizarSuspension(Pcb *);
+void *monitorizarSuspension(Pcb *);
 
 /*Transiciones*/
 void agregar_proceso_nuevo(Pcb *);
@@ -104,6 +109,7 @@ char *leer_lista(t_list *);
 /*Monitores de variables globales*/
 void incrementar_cantidad_procesos_memoria();
 void decrementar_cantidad_procesos_memoria();
+int cantidad_procesos_memoria();
 
 int lectura_cola_mutex(t_queue *, pthread_mutex_t *);
 
@@ -117,7 +123,7 @@ void imprimir_colas();
  * @brief saca al proceso de la cola de ejecucion
  *
  */
-void sacar_proceso_ejecutando();
+Pcb *sacar_proceso_ejecutando();
 
 /**
  * @brief saca al proceso de la cola de bloqueados
@@ -150,5 +156,16 @@ void liberar_estructuras();
 void liberar_instruccion(LineaInstruccion *);
 void liberar_pcb(Pcb *);
 void liberar_semaforos();
+void liberar_conexiones();
+bool es_SRT();
+bool esProcesoNuevo(Pcb *);
+
+int calcular_tiempo_rafaga_real_anterior(Pcb *);
+
+bool procesoSigueBloqueado(int);
+
+void imprimir_pcb(Pcb *);
+
+bool buscar_pcb_cola(int);
 
 #endif

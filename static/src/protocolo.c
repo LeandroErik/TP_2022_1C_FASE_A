@@ -196,7 +196,7 @@ void deserializar_lista_de_instrucciones(Lista *listaInstrucciones, Lista *lista
     LineaInstruccion *lineaInstruccion = malloc(sizeof(LineaInstruccion));
     short base = 3 * i;
 
-    lineaInstruccion->identificador = list_get(listaPlana, base + indiceLista + 1);
+    lineaInstruccion->identificador = string_duplicate(list_get(listaPlana, base + indiceLista + 1));
     lineaInstruccion->parametros[0] = *(int *)list_get(listaPlana, base + indiceLista + 2);
     lineaInstruccion->parametros[1] = *(int *)list_get(listaPlana, base + indiceLista + 3);
 
@@ -213,6 +213,7 @@ void serializar_pcb(Paquete *paquete, Pcb *pcb)
   agregar_a_paquete(paquete, &(pcb->contadorPrograma), sizeof(int));
   agregar_a_paquete(paquete, &(pcb->tablaPaginas), sizeof(int));
   agregar_a_paquete(paquete, &(pcb->estimacionRafaga), sizeof(float));
+  agregar_a_paquete(paquete, &(pcb->tiempoRafagaRealAnterior), sizeof(int));
   agregar_a_paquete(paquete, &(pcb->escenario->estado), sizeof(Estado));
   agregar_a_paquete(paquete, &(pcb->escenario->tiempoBloqueadoIO), sizeof(int));
   agregar_a_paquete(paquete, &(pcb->tiempoInicioEjecucion), sizeof(int));
@@ -232,21 +233,21 @@ Pcb *deserializar_pcb(int socketCliente)
   pcb->contadorPrograma = *(int *)list_get(propiedadesPlanas, 2);
   pcb->tablaPaginas = *(int *)list_get(propiedadesPlanas, 3);
   pcb->estimacionRafaga = *(float *)list_get(propiedadesPlanas, 4);
+  pcb->tiempoRafagaRealAnterior = *(int *)list_get(propiedadesPlanas, 5);
   pcb->escenario = malloc(sizeof(Escenario));
-  pcb->escenario->estado = *(Estado *)list_get(propiedadesPlanas, 5);
-  pcb->escenario->tiempoBloqueadoIO = *(int *)list_get(propiedadesPlanas, 6);
-  pcb->tiempoInicioEjecucion = *(int *)list_get(propiedadesPlanas, 7);
+  pcb->escenario->estado = *(Estado *)list_get(propiedadesPlanas, 6);
+  pcb->escenario->tiempoBloqueadoIO = *(int *)list_get(propiedadesPlanas, 7);
+  pcb->tiempoInicioEjecucion = *(int *)list_get(propiedadesPlanas, 8);
 
-  deserializar_lista_de_instrucciones(listaResultado, propiedadesPlanas, 8, 10);
+  deserializar_lista_de_instrucciones(listaResultado, propiedadesPlanas, 9, 11);
 
-  pcb->instrucciones = list_duplicate(listaResultado);
+  pcb->instrucciones = listaResultado;
 
-  list_destroy(propiedadesPlanas);
-  list_destroy(listaResultado);
+  // liberar_instrucciones_de_lista_pcb(propiedadesPlanas);
+  list_destroy_and_destroy_elements(propiedadesPlanas, &free);
 
   return pcb;
 }
-
 void enviar_paquete_a_cliente(Paquete *paquete, int socketCliente)
 {
   enviar_paquete_a_servidor(paquete, socketCliente);
