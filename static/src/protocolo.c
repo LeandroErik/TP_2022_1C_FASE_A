@@ -32,13 +32,10 @@ void eliminar_pcb(Pcb *pcb)
   if (pcb != NULL)
   {
     if (pcb->instrucciones != NULL)
-    {
-      for (int i = 0; i < list_size(pcb->instrucciones); i++)
-      {
-        eliminar_linea_instruccion(list_get(pcb->instrucciones, i));
-      }
-      free(pcb->instrucciones);
-    }
+      list_destroy_and_destroy_elements(pcb->instrucciones, (void *)eliminar_linea_instruccion);
+
+    if (pcb->escenario != NULL)
+      free(pcb->escenario);
     free(pcb);
   }
 }
@@ -271,7 +268,7 @@ char *obtener_mensaje_del_servidor(int socketServidor)
   case MENSAJE:
     listaMensaje = obtener_paquete_como_lista(socketServidor);
     mensaje = string_duplicate((char *)list_get(listaMensaje, 0));
-    list_destroy(listaMensaje);
+    list_destroy_and_destroy_elements(listaMensaje, &free);
     break;
 
   default:

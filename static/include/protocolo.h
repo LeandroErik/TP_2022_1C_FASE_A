@@ -3,6 +3,7 @@
 
 #include <socket/socket.h>
 #include <commons/collections/list.h>
+#include <commons/string.h>
 #include <semaphore.h>
 
 typedef t_config Config;
