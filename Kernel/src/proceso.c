@@ -443,9 +443,8 @@ int tabla_pagina_primer_nivel(int pid, int tamanio)
     int tablaPrimerNivel;
 
     mensajeDeMemoria = obtener_mensaje_del_servidor(socketMemoria);
-    puts(mensajeDeMemoria);
     tablaPrimerNivel = atoi(mensajeDeMemoria);
-    log_info(logger, "Se recibio de memoria el numero de tabla de primer nivel del proceso");
+    log_info(logger, "Se recibio de memoria la tabla de primer nivel %d del proceso", tablaPrimerNivel);
 
     eliminar_paquete(paquete);
 
