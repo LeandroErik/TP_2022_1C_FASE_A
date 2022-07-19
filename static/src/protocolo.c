@@ -18,13 +18,7 @@ void eliminar_paquete(Paquete *paquete)
 void eliminar_linea_instruccion(LineaInstruccion *lineaInstruccion)
 {
   if (lineaInstruccion != NULL)
-  {
-    if (lineaInstruccion->identificador != NULL)
-    {
-      free(lineaInstruccion->identificador);
-    }
     free(lineaInstruccion);
-  }
 }
 
 void eliminar_pcb(Pcb *pcb)
