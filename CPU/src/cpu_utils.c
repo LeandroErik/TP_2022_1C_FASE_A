@@ -243,6 +243,12 @@ void agregar_a_tlb(int numeroPagina, int numeroMarco)
     return entrada->numeroPagina == numeroPagina && entrada->numeroMarco == numeroMarco;
   }
 
+  bool coincideMarco(void *_entrada)
+  {
+    EntradaTlb *entrada = _entrada;
+    return entrada->numeroMarco == numeroMarco;
+  }
+
   Logger *logger = iniciar_logger_cpu();
 
   if (list_find(tlb, &esEntrada))
@@ -254,6 +260,15 @@ void agregar_a_tlb(int numeroPagina, int numeroMarco)
   }
   else if (list_size(tlb) < CPU_CONFIG.ENTRADAS_TLB)
   {
+    if (list_find(tlb, &coincideMarco))
+    {
+      log_info(logger, "El marco %d ya se encuentra en TLB", numeroMarco);
+      EntradaTlb *entrada = list_find(tlb, &coincideMarco);
+
+      list_remove_by_condition(tlb, &coincideMarco);
+      free(entrada);
+    }
+
     log_info(logger, "Agregando nueva entrada en TLB...");
     EntradaTlb *entradaTLB = (EntradaTlb *)malloc(sizeof(EntradaTlb));
 
