@@ -179,14 +179,19 @@ void manejar_proceso_interrumpido(Pcb *pcb)
         if (tiempoRestanteEnSegundos > tiempoPcbMasCortoEnSegundos)
         {
             log_info(loggerPlanificacion, "[INTERRUPCION] Proceso: [%d] es desalojado por [%d]! con menor SRT.", pcbEjecutar->pid, pcbMasCortoDeListos->pid);
-            agregar_proceso_listo(pcb);
+            pthread_mutex_lock(&mutexColaListos);
+
+            pcb->escenario->estado = LISTO;
+            list_add(colaListos, pcb);
+            log_info(loggerPlanificacion, "Proceso: [%d] se movio LISTO.", pcb->pid);
+
+            pthread_mutex_unlock(&mutexColaListos);
             // aca pongo a ejecutar al mas corto,caso contrario sigue ejecutando el otro
-            sem_wait(&semaforoProcesoListo); // Asi decremento el semaforo y no saca a ejecutar a otro que no existe
 
             pcbEjecutar = sacar_proceso_mas_corto(colaListos);
         }
     }
-    pthread_mutex_unlock(&mutexColaListos);
+
     // log_info(loggerPlanificacion, "[INTERRUPCION] Proceso:[%d] se ejecuta con puntero en %d", pcbEjecutar->pid, pcbEjecutar->contadorPrograma);
 
     agregar_proceso_ejecutando(pcbEjecutar);
@@ -330,13 +335,6 @@ void *planificador_largo_plazo()
 
             agregar_proceso_listo(procesoSaliente);
 
-            // Envio interrupcion por cada vez que que entra uno a ready
-
-            if (es_SRT() && (lectura_cola_mutex(colaEjecutando, &mutexColaEjecutando) > 0))
-            {
-                enviar_interrupcion();
-            }
-
             incrementar_cantidad_procesos_memoria();
         }
     }
@@ -428,7 +426,12 @@ void agregar_proceso_listo(Pcb *procesoListo)
     log_info(loggerPlanificacion, "Proceso: [%d] se movio LISTO.", procesoListo->pid);
 
     pthread_mutex_unlock(&mutexColaListos);
+    // Envio interrupcion por cada vez que que entra uno a ready
 
+    if (es_SRT())
+    {
+        enviar_interrupcion();
+    }
     sem_post(&semaforoProcesoListo);
 
     imprimir_colas();
@@ -567,11 +570,6 @@ Pcb *sacar_proceso_bloqueado()
     log_info(loggerPlanificacion, "Proceso: [%d] salío de BLOQUEADO. (real ant : %d)", pcbSaliente->pid, pcbSaliente->tiempoRafagaRealAnterior);
 
     pthread_mutex_unlock(&mutexColaBloqueados);
-
-    if (es_SRT())
-    {
-        enviar_interrupcion();
-    }
 
     return pcbSaliente;
 }
