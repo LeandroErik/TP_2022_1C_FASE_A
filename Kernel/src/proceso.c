@@ -102,7 +102,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
     switch (pcb->escenario->estado)
     {
     case INTERRUPCION_EXTERNA:
-        log_info(loggerPlanificacion, "[INTERRUPCION] Proceso: [%d] fue INTERRUPIDO.", pcb->pid);
+
         // log_info(loggerPlanificacion, "Tiempo ejecucion Proceso: [%d] %d seg.", pcb->pid, obtener_tiempo_actual() - pcb->tiempoInicioEjecucion);
         manejar_proceso_interrumpido(pcb);
 
@@ -159,10 +159,11 @@ void manejar_proceso_interrumpido(Pcb *pcb)
 
     float tiempoRestanteEnSegundos = estimacionEnSegundos - tiempoQueYaEjecuto;
 
-    log_info(loggerPlanificacion, "[INTERRUPCION] Proceso: [%d] ,(cpu: %d), estimación restante: %.2f.", pcb->pid, tiempoQueYaEjecuto, tiempoRestanteEnSegundos);
+    // log_info(loggerPlanificacion, "[INTERRUPCION] Proceso: [%d] ,(cpu: %d), estimación restante: %.2f.", pcb->pid, tiempoQueYaEjecuto, tiempoRestanteEnSegundos);
 
     if (!list_is_empty(colaListos))
     {
+        log_info(loggerPlanificacion, "[INTERRUPCION] Proceso: [%d] fue INTERRUPIDO.", pcb->pid);
         // Ordeno segun esos valores
         list_sort(colaListos, &ordenar_segun_tiempo_de_trabajo);
 
@@ -173,11 +174,11 @@ void manejar_proceso_interrumpido(Pcb *pcb)
         Pcb *pcbMasCortoDeListos = list_get(colaListos, 0);
 
         float tiempoPcbMasCortoEnSegundos = obtener_tiempo_de_trabajo_actual(pcbMasCortoDeListos) / 1000;
-        log_info(loggerPlanificacion, "[INTERRUPCION]El menor de los LISTOS [%d], con estimacion: %.2f.", pcbMasCortoDeListos->pid, tiempoPcbMasCortoEnSegundos);
+        // log_info(loggerPlanificacion, "[INTERRUPCION]El menor de los LISTOS [%d], con estimacion: %.2f.", pcbMasCortoDeListos->pid, tiempoPcbMasCortoEnSegundos);
 
         if (tiempoRestanteEnSegundos > tiempoPcbMasCortoEnSegundos)
         {
-            log_info(loggerPlanificacion, "Proceso: [%d] es DESALOJADO!.", pcbEjecutar->pid);
+            log_info(loggerPlanificacion, "[INTERRUPCION] Proceso: [%d] es desalojado por [%d]! con menor SRT.", pcbEjecutar->pid, pcbMasCortoDeListos->pid);
             agregar_proceso_listo(pcb);
             // aca pongo a ejecutar al mas corto,caso contrario sigue ejecutando el otro
             sem_wait(&semaforoProcesoListo); // Asi decremento el semaforo y no saca a ejecutar a otro que no existe
@@ -186,7 +187,7 @@ void manejar_proceso_interrumpido(Pcb *pcb)
         }
     }
     pthread_mutex_unlock(&mutexColaListos);
-    log_info(loggerPlanificacion, "[INTERRUPCION] Proceso:[%d] se ejecuta con puntero en %d", pcbEjecutar->pid, pcbEjecutar->contadorPrograma);
+    // log_info(loggerPlanificacion, "[INTERRUPCION] Proceso:[%d] se ejecuta con puntero en %d", pcbEjecutar->pid, pcbEjecutar->contadorPrograma);
 
     agregar_proceso_ejecutando(pcbEjecutar);
 
@@ -205,7 +206,7 @@ void *monitorizarSuspension(Pcb *proceso)
     if (procesoSigueBloqueado(pid))
     {
         proceso->escenario->estado = SUSPENDIDO;
-        log_info(loggerPlanificacion, "proceso:[%d],se movio a SUSPENDIDO-BLOQUEADO", proceso->pid);
+        log_info(loggerPlanificacion, "Proceso: [%d],se movio a SUSPENDIDO-BLOQUEADO", proceso->pid);
 
         decrementar_cantidad_procesos_memoria();
 
@@ -331,7 +332,7 @@ void *planificador_largo_plazo()
 
             // Envio interrupcion por cada vez que que entra uno a ready
 
-            if (es_SRT())
+            if (es_SRT() && (lectura_cola_mutex(colaEjecutando, &mutexColaEjecutando) > 0))
             {
                 enviar_interrupcion();
             }
@@ -395,7 +396,7 @@ Pcb *sacar_proceso_mas_corto()
 
     pcbSaliente = list_remove(colaListos, 0);
 
-    log_info(loggerPlanificacion, "\n[REPLANIFICACION] Proceso:[%d] rafaga anterior: %d ,estimacion anterior: %.2f-> estimacion actual: %.2f \n", pcbSaliente->pid, pcbSaliente->tiempoRafagaRealAnterior, (pcbSaliente->estimacionRafaga / 1000), obtener_tiempo_de_trabajo_actual(pcbSaliente) / 1000);
+    // log_info(loggerPlanificacion, "\n[REPLANIFICACION] Proceso:[%d] rafaga anterior: %d ,estimacion anterior: %.2f-> estimacion actual: %.2f \n", pcbSaliente->pid, pcbSaliente->tiempoRafagaRealAnterior, (pcbSaliente->estimacionRafaga / 1000), obtener_tiempo_de_trabajo_actual(pcbSaliente) / 1000);
 
     pthread_mutex_unlock(&mutexColaListos);
 
@@ -484,11 +485,10 @@ void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
 {
     procesoBloqueado->estimacionRafaga = obtener_tiempo_de_trabajo_actual(procesoBloqueado);
     procesoBloqueado->tiempoRafagaRealAnterior = calcular_tiempo_rafaga_real_anterior(procesoBloqueado);
-    log_info(loggerPlanificacion, "Proceso [%d] rafaga real anterior: %d", procesoBloqueado->pid, procesoBloqueado->tiempoRafagaRealAnterior);
-    log_info(loggerPlanificacion, "Proceso [%d] estimacion rafaga anterior: %.2f", procesoBloqueado->pid, (procesoBloqueado->estimacionRafaga / 1000));
+    // log_info(loggerPlanificacion, "Proceso [%d] rafaga real anterior: %d", procesoBloqueado->pid, procesoBloqueado->tiempoRafagaRealAnterior);
+    // log_info(loggerPlanificacion, "Proceso [%d] estimacion rafaga anterior: %.2f", procesoBloqueado->pid, (procesoBloqueado->estimacionRafaga / 1000));
 
     pthread_mutex_lock(&mutexColaBloqueados);
-    // Se guarda la estimacion y tiempo de ejecucion anterior
 
     procesoBloqueado->escenario->estado = BLOQUEADO_IO;
 
