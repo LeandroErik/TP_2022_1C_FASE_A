@@ -331,7 +331,7 @@ void *planificador_largo_plazo()
 
             // Envio interrupcion por cada vez que que entra uno a ready
 
-            if (es_SRT() && lectura_cola_mutex(colaEjecutando, &mutexColaEjecutando) > 0)
+            if (es_SRT())
             {
                 enviar_interrupcion();
             }
@@ -567,6 +567,11 @@ Pcb *sacar_proceso_bloqueado()
     log_info(loggerPlanificacion, "Proceso: [%d] salío de BLOQUEADO. (real ant : %d)", pcbSaliente->pid, pcbSaliente->tiempoRafagaRealAnterior);
 
     pthread_mutex_unlock(&mutexColaBloqueados);
+
+    if (es_SRT())
+    {
+        enviar_interrupcion();
+    }
 
     return pcbSaliente;
 }
