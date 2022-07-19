@@ -134,6 +134,12 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         // Libero el pcb a medida que va finalizando
         liberar_pcb(queue_pop(colaFinalizado));
 
+        // Aviso finalizacion a consola
+        int socketConsola = list_get(socketsConsola, pid);
+        enviar_mensaje_a_cliente(paquete, socketConsola);
+
+        eliminar_paquete(paquete);
+
         break;
 
     default:

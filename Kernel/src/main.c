@@ -19,6 +19,7 @@ int main(void)
 {
     signal(SIGINT, interprete_de_seniales);
 
+    socketsConsola = list_create();
     idProcesoGlobal = 0;
     cantidadProcesosEnMemoria = 0;
 

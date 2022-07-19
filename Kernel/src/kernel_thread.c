@@ -17,6 +17,8 @@ void esperar_consola(int socketKernel)
 
     log_info(logger, "Conexión de Consola establecida.");
 
+    list_add(socketsConsola, socketConsola);
+
     Hilo hiloConsola;
     pthread_create(&hiloConsola, NULL, (void *)manejar_paquete_consola, (void *)socketConsola);
     pthread_join(hiloConsola, NULL);
@@ -34,6 +36,7 @@ void manejar_paquete_consola(int socketConsola)
     case LINEAS_CODIGO:
       log_info(logger, "Lineas de Código recibidas de Consola.");
       agregar_proceso_nuevo(generar_pcb(socketConsola));
+      return;
 
       break;
     case MENSAJE:
