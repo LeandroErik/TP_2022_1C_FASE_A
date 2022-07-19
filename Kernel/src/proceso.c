@@ -737,6 +737,8 @@ void liberar_estructuras()
     queue_destroy(colaSuspendidoListo);
 
     queue_destroy(colaFinalizado);
+
+    list_destroy_and_destroy_elements(socketsConsola, (void *)close);
 }
 
 void liberar_pcb(Pcb *pcb)
