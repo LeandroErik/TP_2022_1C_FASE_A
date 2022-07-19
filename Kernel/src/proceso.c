@@ -136,7 +136,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 
         // Aviso finalizacion a consola
         int socketConsola = list_get(socketsConsola, pid);
-        enviar_mensaje_a_cliente(paquete, socketConsola);
+        enviar_paquete_a_cliente(paquete, socketConsola);
 
         eliminar_paquete(paquete);
 
