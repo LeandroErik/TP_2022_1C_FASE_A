@@ -17,6 +17,8 @@ void esperar_kernel_dispatch(int socketCpu)
 
   realizar_handshake_con_memoria(socketMemoria);
 
+  bool desconecto = false;
+
   while (true)
   {
     log_info(logger, "Esperando a Kernel que se conecte al puerto Dispatch...");
@@ -30,14 +32,19 @@ void esperar_kernel_dispatch(int socketCpu)
     }
 
     log_info(logger, "Conexión con Kernel en puerto Dispatch establecida.");
-    log_destroy(logger);
 
-    manejar_paquete_kernel_dispatch(socketKernel);
+    desconecto = manejar_paquete_kernel_dispatch(socketKernel);
+
+    if (desconecto)
+      return;
   }
+  log_destroy(logger);
 }
 
 void esperar_kernel_interrupt(int socketCpu)
 {
+  bool desconecto = false;
+
   while (true)
   {
     Logger *logger = iniciar_logger_cpu();
@@ -54,11 +61,14 @@ void esperar_kernel_interrupt(int socketCpu)
     log_info(logger, "Conexión con Kernel en puerto Interrupt establecida.");
     log_destroy(logger);
 
-    manejar_paquete_kernel_interrupt(socketKernel);
+    desconecto = manejar_paquete_kernel_interrupt(socketKernel);
+
+    if (desconecto)
+      return;
   }
 }
 
-void manejar_paquete_kernel_dispatch(int socketKernel)
+bool manejar_paquete_kernel_dispatch(int socketKernel)
 {
   while (true)
   {
@@ -69,13 +79,13 @@ void manejar_paquete_kernel_dispatch(int socketKernel)
     {
     case DESCONEXION:
       log_warning(logger, "Conexión con Kernel en puerto Dispatch terminada.");
+      liberar_conexion_con_servidor(socketKernel);
       log_destroy(logger);
-      return;
+      return true;
 
     case PCB:
       log_info(logger, "PCB recibido de Kernel.");
       pcb = deserializar_pcb(socketKernel);
-      // mostrar_pcb(logger, pcb);
       ejecutar_lista_instrucciones_del_pcb(pcb, socketKernel);
       break;
 
@@ -87,7 +97,7 @@ void manejar_paquete_kernel_dispatch(int socketKernel)
   }
 }
 
-void manejar_paquete_kernel_interrupt(int socketKernel)
+bool manejar_paquete_kernel_interrupt(int socketKernel)
 {
   while (true)
   {
@@ -97,8 +107,9 @@ void manejar_paquete_kernel_interrupt(int socketKernel)
     {
     case DESCONEXION:
       log_warning(logger, "Conexión con Kernel en puerto Interrupt terminada.");
+      liberar_conexion_con_servidor(socketKernel);
       log_destroy(logger);
-      return;
+      return true;
 
     case INTERRUPCION:
       log_info(logger, "Interrupción recibida de Kernel.");

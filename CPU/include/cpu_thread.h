@@ -30,15 +30,19 @@ void esperar_kernel_interrupt(int socketCpu);
  * @brief Maneja un PCB enviado por Kernel.
  *
  * @param socketKernel Socket de Kernel conectado al puerto de Dispatch.
+ *
+ * @return True si el Kernel se desconectó.
  */
-void manejar_paquete_kernel_dispatch(int socketKernel);
+bool manejar_paquete_kernel_dispatch(int socketKernel);
 
 /**
  * @brief Maneja una interrupción enviada por Kernel.
  *
  * @param socketKernel Socket de Kernel conectado al puerto de Interrupt.
+ *
+ * @return True si el Kernel se desconectó.
  */
-void manejar_paquete_kernel_interrupt(int socketKernel);
+bool manejar_paquete_kernel_interrupt(int socketKernel);
 
 /**
  * @brief Realiza el handshake con Memoria para obtener la estructura de memoria.
