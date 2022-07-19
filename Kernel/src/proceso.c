@@ -127,12 +127,9 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         paquete = crear_paquete(FINALIZAR_PROCESO);
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
         enviar_paquete_a_servidor(paquete, socketMemoria);
-        log_info(logger, "Se envio el proceso [%d] a la memoria para finalizar", pid);
-        char *mensaje = obtener_mensaje_del_cliente(socketMemoria);
-        free(mensaje);
-        eliminar_paquete(paquete);
-        // TODO:Avisar a consola asi se finaliza.
-        //  https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/23
+        log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
+        char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de finalizacion
+        log_info(logger, "%s", confirmacion);
 
         // Libero el pcb a medida que va finalizando
         liberar_pcb(queue_pop(colaFinalizado));
@@ -211,13 +208,8 @@ void *monitorizarSuspension(Pcb *proceso)
 
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
         enviar_paquete_a_servidor(paquete, socketMemoria);
-        log_info(logger, "Se envio el proceso %d a memoria para SUSPENDER", pid);
-
-        char *mensaje = obtener_mensaje_del_cliente(socketMemoria); // confirmacion de suspension
-        free(mensaje);
-        eliminar_paquete(paquete);
-        // TODO:Recibir confirmacion de suspension
-        // https://github.com/sisoputnfrba/tp-2022-1c-FASE_A/issues/24
+        log_info(logger, "Se envio el proceso %d a la memoria para suspender", pid);
+        obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
     }
     return NULL;
 }
@@ -447,25 +439,12 @@ int tabla_pagina_primer_nivel(int pid, int tamanio)
 
     log_info(logger, "Se envio el proceso %d a la memoria", pid);
 
-    CodigoOperacion codOperacion = obtener_codigo_operacion(socketMemoria);
-
     char *mensajeDeMemoria;
     int tablaPrimerNivel;
 
-    switch (codOperacion)
-    {
-    case MENSAJE:
-
-        mensajeDeMemoria = obtener_mensaje_del_cliente(socketMemoria);
-        tablaPrimerNivel = atoi(mensajeDeMemoria);
-        log_info(logger, "Se recibio de memoria el numero de tabla de primer nivel del proceso");
-        break;
-
-    default:
-        log_warning(logger, "Operación desconocida.");
-        eliminar_paquete(paquete);
-        return EXIT_FAILURE;
-    }
+    mensajeDeMemoria = obtener_mensaje_del_servidor(socketMemoria);
+    tablaPrimerNivel = atoi(mensajeDeMemoria);
+    log_info(logger, "Se recibio de memoria la tabla de primer nivel %d del proceso", tablaPrimerNivel);
 
     eliminar_paquete(paquete);
 
@@ -508,7 +487,7 @@ void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
     procesoBloqueado->escenario->estado = BLOQUEADO_IO;
 
     queue_push(colaBloqueados, procesoBloqueado);
-    log_info(loggerPlanificacion, "Proceso: [%d] se movio a BLOQUEADO.", procesoBloqueado->pid, procesoBloqueado->escenario->tiempoBloqueadoIO / 1000);
+    log_info(loggerPlanificacion, "Proceso: [%d] se movio a BLOQUEADO.", procesoBloqueado->pid);
 
     pthread_mutex_unlock(&mutexColaBloqueados);
 
@@ -669,7 +648,7 @@ void imprimir_colas()
     \n\tCola listos: %s \
     \n\tCola ejecutando: %s \
     \n\tCola bloqueados: %s\
-    \n\tCola suspended - ready: % s\
+    \n\tCola suspended - ready: %s\
     \n\tCola terminados: %s",
              strcolaNuevos,
              strcolaListos, strcolaEjecutando, strcolaBloqueados, strcolaSuspendidoListo, strcolaFinalizado);
@@ -713,11 +692,6 @@ char *leer_cola(t_queue *cola)
         free(pid);
     }
     return out;
-}
-
-int obtener_tiempo_actual()
-{
-    return time(NULL);
 }
 
 float obtener_tiempo_de_trabajo_actual(Pcb *proceso)

@@ -34,7 +34,7 @@ typedef struct
 typedef struct
 {
     int idProceso;
-    int tamanio;
+    int tamanio; //TODO: Ver donde usar este campo, es necesario?
     TablaPrimerNivel *tablaPrimerNivel;
     FILE *archivoSwap;
     Lista *paginasAsignadas;

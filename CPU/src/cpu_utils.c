@@ -71,8 +71,7 @@ void ejecutar_io(Pcb *pcb, int tiempoBloqueadoIO, int socketKernel)
   pcb->escenario->estado = BLOQUEADO_IO;
   pcb->escenario->tiempoBloqueadoIO = tiempoBloqueadoIO;
 
-  Paquete *paquete = malloc(sizeof(Paquete));
-  paquete = crear_paquete(PCB);
+  Paquete *paquete = crear_paquete(PCB);
   serializar_pcb(paquete, pcb);
 
   enviar_paquete_a_cliente(paquete, socketKernel);
@@ -83,11 +82,45 @@ void ejecutar_exit(Pcb *pcb, int socketKernel)
 {
   pcb->escenario->estado = TERMINADO;
 
-  Paquete *paquete = malloc(sizeof(Paquete));
-  paquete = crear_paquete(PCB);
+  Paquete *paquete = crear_paquete(PCB);
   serializar_pcb(paquete, pcb);
 
   enviar_paquete_a_cliente(paquete, socketKernel);
+  eliminar_paquete(paquete);
+}
+
+void ejecutar_read(int direccionFisica)
+{
+  Logger *logger = iniciar_logger_cpu();
+  Paquete *paquete = crear_paquete(LEER_DE_MEMORIA);
+  agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
+  enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+
+  char *valor = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  log_info(logger, "Se recibio el valor %s de memoria", valor);
+
+  free(valor);
+  eliminar_paquete(paquete);
+  log_destroy(logger);
+}
+
+void ejecutar_write(Pcb *proceso, int direccionFisica, int valor)
+{
+  Paquete *paquete = crear_paquete(ESCRIBIR_EN_MEMORIA);
+  agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
+  agregar_a_paquete(paquete, &valor, sizeof(int));
+  enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  eliminar_paquete(paquete);
+}
+
+void ejecutar_copy(Pcb *proceso, int direccionFisicoDestino, int direccionLogicaOrigen)
+{
+  int direccionFisicaOrigen = llamar_mmu(proceso, direccionLogicaOrigen);
+
+  Paquete *paquete = crear_paquete(COPIAR_EN_MEMORIA);
+  agregar_a_paquete(paquete, &direccionFisicoDestino, sizeof(int));
+  agregar_a_paquete(paquete, &direccionFisicaOrigen, sizeof(int));
+  enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   eliminar_paquete(paquete);
 }
 
@@ -130,6 +163,9 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       return;
     }
     pcb->contadorPrograma++;
+
+    int direccionFisica;
+
     switch (instruccion)
     {
     case NOOP:
@@ -141,14 +177,24 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       ejecutar_io(pcb, lineaInstruccion->parametros[0], socketKernel);
       break;
     case READ:
+      log_info(logger, "Ejecutando READ");
+      direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
+      ejecutar_read(direccionFisica);
       break;
     case COPY:
+      log_info(logger, "Ejecutando COPY");
+      direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
+      ejecutar_copy(pcb, direccionFisica, lineaInstruccion->parametros[1]);
       break;
     case WRITE:
+      log_info(logger, "Ejecutando WRITE");
+      direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
+      ejecutar_write(pcb, direccionFisica, lineaInstruccion->parametros[1]);
       break;
     case EXIT:
       log_info(logger, "Ejecutando EXIT");
       ejecutar_exit(pcb, socketKernel);
+      limpiar_tlb();
       break;
     default:
       log_error(logger, "Instrucción desconocida: %s", lineaInstruccion->identificador);
@@ -158,7 +204,216 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
     if (instruccion == IO || instruccion == EXIT)
     {
       log_destroy(logger);
+      eliminar_pcb(pcb);
       return;
     }
   }
+}
+
+bool esta_en_tlb(int numeroPagina)
+{
+
+  bool es_numero_pagina(void *_entradaTLB)
+  {
+    EntradaTlb *entradaTLB = (EntradaTlb *)_entradaTLB;
+    return entradaTLB->numeroPagina == numeroPagina;
+  }
+
+  return list_any_satisfy(tlb, &es_numero_pagina);
+}
+
+int devolver_marco_por_tlb(int numeroPagina)
+{
+  bool es_numero_pagina(void *_entradaTLB)
+  {
+    EntradaTlb *entradaTLB = (EntradaTlb *)_entradaTLB;
+    return entradaTLB->numeroPagina == numeroPagina;
+  }
+
+  EntradaTlb *entradaTlb = (EntradaTlb *)list_find(tlb, &es_numero_pagina);
+
+  return entradaTlb->numeroMarco;
+}
+
+void agregar_a_tlb(int numeroPagina, int numeroMarco)
+{
+  bool esEntrada(void *_entrada)
+  {
+    EntradaTlb *entrada = _entrada;
+    return entrada->numeroPagina == numeroPagina && entrada->numeroMarco == numeroMarco;
+  }
+
+  bool coincideMarco(void *_entrada)
+  {
+    EntradaTlb *entrada = _entrada;
+    return entrada->numeroMarco == numeroMarco;
+  }
+
+  Logger *logger = iniciar_logger_cpu();
+
+  if (list_find(tlb, &esEntrada))
+  {
+    log_info(logger, "La página %d y el marco %d se encuentra en TLB", numeroPagina, numeroMarco);
+    EntradaTlb *entrada = list_find(tlb, &esEntrada);
+    log_info(logger, "Actualizando tiempo de uso...");
+    entrada->ultimaVezUtilizada = obtener_tiempo_actual();
+  }
+  else if (list_size(tlb) < CPU_CONFIG.ENTRADAS_TLB)
+  {
+    if (list_find(tlb, &coincideMarco))
+    {
+      log_info(logger, "El marco %d ya se encuentra en TLB", numeroMarco);
+      EntradaTlb *entrada = list_find(tlb, &coincideMarco);
+
+      list_remove_by_condition(tlb, &coincideMarco);
+      free(entrada);
+    }
+
+    log_info(logger, "Agregando nueva entrada en TLB...");
+    EntradaTlb *entradaTLB = (EntradaTlb *)malloc(sizeof(EntradaTlb));
+
+    entradaTLB->numeroPagina = numeroPagina;
+    entradaTLB->numeroMarco = numeroMarco;
+    entradaTLB->ultimaVezUtilizada = obtener_tiempo_actual();
+
+    list_add(tlb, entradaTLB);
+  }
+  else
+  {
+    log_info(logger, "Iniciando reemplazo de TLB...");
+    reemplazar_tlb(numeroPagina, numeroMarco);
+  }
+
+  log_destroy(logger);
+}
+
+void limpiar_tlb()
+{
+  list_clean_and_destroy_elements(tlb, &free);
+}
+
+void mostrar_tlb()
+{
+  Logger *logger = iniciar_logger_cpu();
+
+  log_info(logger, "TLB:");
+  for (int i = 0; i < list_size(tlb); i++)
+  {
+    EntradaTlb *entradaTLB = (EntradaTlb *)list_get(tlb, i);
+    log_info(logger, "Entrada %d TLB:\n\t- Número de página: %d\n\t- Número de marco: %d\n\t- Última vez utilizada: %d\n", i, entradaTLB->numeroPagina, entradaTLB->numeroMarco, entradaTLB->ultimaVezUtilizada);
+  }
+
+  log_info(logger, "------------------------------------------------------");
+
+  log_destroy(logger);
+}
+
+void reemplazar_tlb(int numeroPagina, int numeroMarco)
+{
+  EntradaTlb *victima;
+  Logger *logger = iniciar_logger_cpu();
+
+  if (!strcmp(CPU_CONFIG.REEMPLAZO_TLB, "FIFO"))
+    victima = elegir_victima_por_fifo();
+  else
+    victima = elegir_victima_por_lru();
+
+  log_info(logger, "Víctima:\n\t- Página: %d\n\t- Marco: %d\n", victima->numeroPagina, victima->numeroMarco);
+
+  eliminar_entrada_tlb(victima);
+  log_destroy(logger);
+
+  agregar_a_tlb(numeroPagina, numeroMarco);
+}
+
+void eliminar_entrada_tlb(EntradaTlb *victima)
+{
+  bool esEntrada(void *_entrada)
+  {
+    EntradaTlb *entrada = _entrada;
+    return entrada == victima;
+  }
+
+  list_remove_and_destroy_by_condition(tlb, &esEntrada, &free);
+}
+
+EntradaTlb *elegir_victima_por_fifo()
+{
+  return list_get(tlb, 0);
+}
+
+EntradaTlb *elegir_victima_por_lru()
+{
+  void *esMenor(void *_unaEntrada, void *_otraEntrada)
+  {
+    EntradaTlb *unaEntrada = _unaEntrada;
+    EntradaTlb *otraEntrada = _otraEntrada;
+
+    if (unaEntrada->ultimaVezUtilizada <= otraEntrada->ultimaVezUtilizada)
+      return unaEntrada;
+    else
+      return otraEntrada;
+  }
+
+  return list_get_minimum(tlb, &esMenor);
+}
+
+int llamar_mmu(Pcb *proceso, int direccionLogica)
+{
+  Logger *logger = iniciar_logger_cpu();
+  int numeroPagina = floor((float)direccionLogica / ESTRUCTURA_MEMORIA.TAMANIO_PAGINA);
+  int desplazamiento = direccionLogica - numeroPagina * ESTRUCTURA_MEMORIA.TAMANIO_PAGINA;
+  int numeroMarco;
+
+  if (esta_en_tlb(numeroPagina))
+    numeroMarco = devolver_marco_por_tlb(numeroPagina);
+
+  else
+  {
+    int numeroTablaPrimerNivel = proceso->tablaPaginas;
+    int entradaTablaPrimerNivel = floor((float)numeroPagina / ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA);
+    int entradaTablaSegundoNivel = numeroPagina % ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA;
+    int numeroTablaSegundoNivel = pedir_tabla_segundo_nivel(numeroTablaPrimerNivel, entradaTablaPrimerNivel);
+    log_info(logger, "numero de tabla de segundo nivel recibido: %d", numeroTablaSegundoNivel);
+    numeroMarco = pedir_marco(numeroTablaSegundoNivel, entradaTablaSegundoNivel);
+    log_info(logger, "numero de marco recibido: %d", numeroMarco);
+    agregar_a_tlb(numeroPagina, numeroMarco);
+    mostrar_tlb();
+  }
+
+  log_destroy(logger);
+
+  return numeroMarco * ESTRUCTURA_MEMORIA.TAMANIO_PAGINA + desplazamiento;
+}
+
+int pedir_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaTablaPrimerNivel)
+{
+  Paquete *paquete = crear_paquete(PEDIDO_TABLA_SEGUNDO_NIVEL);
+  agregar_a_paquete(paquete, &numeroTablaPrimerNivel, sizeof(int));
+  agregar_a_paquete(paquete, &entradaTablaPrimerNivel, sizeof(int));
+
+  enviar_paquete_a_cliente(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  eliminar_paquete(paquete);
+
+  char *mensaje = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  int numeroTablaSegundoNivel = atoi(mensaje);
+  free(mensaje);
+
+  return numeroTablaSegundoNivel;
+}
+
+int pedir_marco(int numeroTablaSegundoNivel, int entradaTablaSegundoNivel)
+{
+  Paquete *paquete = crear_paquete(PEDIDO_MARCO);
+  agregar_a_paquete(paquete, &numeroTablaSegundoNivel, sizeof(int));
+  agregar_a_paquete(paquete, &entradaTablaSegundoNivel, sizeof(int));
+
+  enviar_paquete_a_cliente(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  eliminar_paquete(paquete);
+
+  char *mensaje = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  int numeroMarco = atoi(mensaje);
+  free(mensaje);
+
+  return numeroMarco;
 }

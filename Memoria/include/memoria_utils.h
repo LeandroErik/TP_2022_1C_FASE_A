@@ -18,6 +18,9 @@ Lista *marcos;
 void *memoriaPrincipal;
 int tablasDePrimerNivel, tablasDeSegundoNivel;
 
+pthread_mutex_t semaforoProcesos;
+//Semaforo semaforoMarcos;
+
 /**
  * @brief Inicia un logger en el Módulo Memoria.
  *
@@ -40,9 +43,9 @@ void iniciar_estructuras_memoria();
 
 /**
  * @brief Inicia los marcos de la memoria
- * @param cantidadMarcos Numero de marcos que tendra la memoria
+ * 
  */
-void iniciar_marcos(int cantidadMarcos);
+void iniciar_marcos();
 
 /**
  * @brief Crear tabla de primer nivel
@@ -277,19 +280,19 @@ int obtener_numero_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaAT
 int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundoNivel);
 
 /**
- * @brief Retorna un puntero a la tabla de primer nivel buscada.
- *
- * @param numeroTablaPrimerNivel
- * @return TablaPrimerNivel*
- */
-TablaPrimerNivel *buscar_tabla_primer_nivel_por_numero(int numeroTablaPrimerNivel);
-
-/**
  * @brief Retorna el proceso que tiene dicho numero de tabla de segundo nivel.
  *
  * @param numeroTablaSegundoNivel
  * @return Proceso*
  */
 Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNivel);
+
+void iniciar_semaforos();
+
+void destruir_semaforos();
+
+void agregar_proceso_a_lista_de_procesos(Proceso* proceso);
+
+void destruir_hilos(Hilo hiloCliente1, Hilo hiloCliente2);
 
 #endif

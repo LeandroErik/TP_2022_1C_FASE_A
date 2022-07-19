@@ -5,6 +5,18 @@
 #include <socket/servidor.h>
 #include <cpu_config.h>
 #include <cpu_thread.h>
+#include <math.h>
+
+bool seNecesitaAtenderInterrupcion;
+
+Lista *tlb;
+
+typedef struct EntradaTlb
+{
+    int numeroPagina;
+    int numeroMarco;
+    int ultimaVezUtilizada;
+} EntradaTlb;
 
 /**
  * @brief Iniciar un logger en el Módulo CPU.
@@ -82,6 +94,31 @@ void ejecutar_io(Pcb *pcb, int tiempoBloqueadoIO, int socketKernel);
 void ejecutar_exit(Pcb *pcb, int socketKernel);
 
 /**
+ * @brief Lee el valor de una dirección de memoria.
+ *
+ * @param direccionFisica Dirección de memoria.
+ */
+void ejecutar_read(int direccionFisica);
+
+/**
+ * @brief Escribe un valor en una dirección de memoria.
+ *
+ * @param proceso Proceso.
+ * @param direccionFisica Dirección de memoria.
+ * @param valor Valor a escribir.
+ */
+void ejecutar_write(Pcb *proceso, int direccionFisica, int valor);
+
+/**
+ * @brief Copia el valor de una dirección de memoria a otra.
+ *
+ * @param proceso Proceso.
+ * @param direccionDestino Dirección de memoria destino.
+ * @param direccionOrigen Dirección de memoria origen.
+ */
+void ejecutar_copy(Pcb *proceso, int direccionDestino, int direccionOrigen);
+
+/**
  * @brief Lee las líneas de instrucciones dadas por el PCB en el orden que diga el contador de programa.
  *
  * @param pcb PCB.
@@ -89,8 +126,90 @@ void ejecutar_exit(Pcb *pcb, int socketKernel);
  */
 void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel);
 
-bool seNecesitaAtenderInterrupcion;
-
+/**
+ * @brief "Atiende" una interrupción, modificando el PCB y se lo devuelve a Kernel.
+ *
+ * @param pcb PCB.
+ * @param socketKernel Socket de Kernel.
+ */
 void atender_interrupcion(Pcb *pcb, int socketKernel);
+
+/**
+ * @brief "Llama" al MMU para solicitar una dirección de memoria.
+ *
+ * @param proceso Proceso.
+ * @param direccionLogica Dirección lógica.
+ * @return Dirección física.
+ */
+int llamar_mmu(Pcb *proceso, int direccionLogica);
+
+/**
+ * @brief Pide el número de tabla de segundo nivel a Memoria.
+ *
+ * @param numeroTablaPrimerNivel Número de tabla de primer nivel.
+ * @param entradaTablaPrimerNivel Entrada de tabla de primer nivel.
+ * @return Número de tabla de segundo nivel.
+ */
+int pedir_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaTablaPrimerNivel);
+
+/**
+ * @brief Pide el marco a Memoria.
+ *
+ * @param numeroTablaSegundoNivel Número de tabla de segundo nivel.
+ * @param entradaTablaSegundoNivel Entrada de tabla de segundo nivel.
+ * @return Número de marco.
+ */
+int pedir_marco(int numeroTablaSegundoNivel, int entradaTablaSegundoNivel);
+
+/**
+ * @brief Agrega una entrada de TLB a la lista.
+ *
+ * @param numeroPagina Número de página.
+ *
+ * @param numeroMarco Número de marco.
+ */
+void agregar_a_tlb(int numeroPagina, int numeroMarco);
+
+/**
+ * @brief Limpia la lista de entradas de TLB.
+ *
+ */
+void limpiar_tlb();
+
+/**
+ * @brief Loggea las entradas de TLB.
+ */
+void mostrar_tlb();
+
+/**
+ * @brief Reemplaza una entrada de TLB según el algoritmo de reemplazo dado por el config.
+ *
+ * @param numeroPagina Número de página.
+ * @param numeroMarco Número de marco.
+ *
+ */
+void reemplazar_tlb(int numeroPagina, int numeroMarco);
+
+/**
+ * @brief Elimina una entrada de TLB de la lista.
+ *
+ * @param victima Víctima a eliminar.
+ *
+ */
+void eliminar_entrada_tlb(EntradaTlb *victima);
+
+/**
+ * @brief Utiliza el algoritmo de reemplazo FIFO para reemplazar una entrada en la TLB.
+ *
+ * @return Víctima.
+ */
+EntradaTlb *elegir_victima_por_fifo();
+
+/**
+ * @brief Utiliza el algoritmo de reemplazo LRU para reemplazar una entrada en la TLB.
+ *
+ * @return Victima.
+ */
+EntradaTlb *elegir_victima_por_lru();
 
 #endif

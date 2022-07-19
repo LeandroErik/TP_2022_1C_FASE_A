@@ -34,6 +34,7 @@ int main(void)
   pthread_join(hiloCliente1, NULL);
   pthread_join(hiloCliente2, NULL);
 
+  destruir_hilos(hiloCliente1, hiloCliente2);
   liberar_memoria();
   log_destroy(logger);
   config_destroy(config);

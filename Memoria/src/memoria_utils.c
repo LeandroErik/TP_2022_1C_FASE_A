@@ -19,18 +19,26 @@ void iniciar_estructuras_memoria()
 
   tablasDePrimerNivel = 0;
   tablasDeSegundoNivel = 0;
+
   memoriaPrincipal = (void *)malloc(MEMORIA_CONFIG.TAM_MEMORIA);
   memset(memoriaPrincipal, '0', MEMORIA_CONFIG.TAM_MEMORIA);
-  int cantidadMarcos = MEMORIA_CONFIG.TAM_MEMORIA / MEMORIA_CONFIG.TAM_PAGINA;
-  iniciar_marcos(cantidadMarcos);
+
+  iniciar_marcos();
   procesos = list_create();
 
   log_info(logger, "Estructuras de memoria inicializadas");
   log_destroy(logger);
 }
 
-void iniciar_marcos(int cantidadMarcos)
+void iniciar_semaforos()
 {
+  // sem_init(&semaforoMarcos, 0, 0);
+  pthread_mutex_init(&semaforoProcesos, NULL);
+}
+
+void iniciar_marcos()
+{
+  int cantidadMarcos = MEMORIA_CONFIG.TAM_MEMORIA / MEMORIA_CONFIG.TAM_PAGINA;
   marcos = list_create();
   for (int numeroDeMarco = 0; numeroDeMarco < cantidadMarcos; numeroDeMarco++)
   {
@@ -56,12 +64,18 @@ Proceso *crear_proceso(int id, int tamanio)
   log_info(logger, "Se creo el Proceso: %d, tamanio: %d", proceso->idProceso, proceso->tamanio);
 
   proceso->archivoSwap = crear_archivo_swap(id);
-
-  list_add(procesos, proceso);
+  agregar_proceso_a_lista_de_procesos(proceso);
 
   log_destroy(logger);
 
   return proceso;
+}
+
+void agregar_proceso_a_lista_de_procesos(Proceso *proceso)
+{
+  pthread_mutex_lock(&semaforoProcesos);
+  list_add(procesos, proceso);
+  pthread_mutex_unlock(&semaforoProcesos);
 }
 
 TablaPrimerNivel *crear_tabla_primer_nivel()
@@ -159,13 +173,18 @@ void copiar_entero_en_memoria(int direccionFisicaDestino, int direccionFisicaOri
 
 Proceso *buscar_proceso_por_id(int idProceso)
 {
+  pthread_mutex_lock(&semaforoProcesos);
+
   bool es_proceso(void *_proceso)
   {
     Proceso *proceso = (Proceso *)_proceso;
     return proceso->idProceso == idProceso;
   }
 
-  return list_find(procesos, &es_proceso);
+  Proceso *proceso = list_find(procesos, &es_proceso);
+  pthread_mutex_unlock(&semaforoProcesos);
+
+  return proceso;
 }
 
 Marco *primer_marco_libre() // First fit
@@ -188,8 +207,12 @@ bool tiene_marcos_por_asignar(Proceso *proceso)
 
 void agregar_pagina_a_paginas_asignadas_del_proceso(Proceso *proceso, Pagina *pagina)
 {
-  // TODO: Ver en que posicion de la lista habria que agregar, por numero de marco? donde se reemplazo? al final? y actualizar el puntero
-  list_add(proceso->paginasAsignadas, pagina);
+  int posicionAAgregar = proceso->posicionDelPunteroDeSustitucion - 1;
+
+  if (posicionAAgregar >= 0)
+    list_add_in_index(proceso->paginasAsignadas, posicionAAgregar, pagina);
+  else
+    list_add(proceso->paginasAsignadas, pagina);
 }
 
 void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco *marco)
@@ -203,6 +226,7 @@ void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco
 
   agregar_pagina_a_paginas_asignadas_del_proceso(proceso, pagina);
   pagina->marcoAsignado = marco;
+  pagina->uso = true;
   marco->paginaActual = pagina;
   marco->idProceso = proceso->idProceso;
 
@@ -231,6 +255,7 @@ Marco *asignar_pagina_a_marco_libre(Proceso *proceso, Pagina *pagina)
   return marco;
 }
 
+// Algoritmos de sustitucion
 Marco *marco_del_proceso_sustituido(Proceso *proceso)
 {
   Logger *logger = iniciar_logger_memoria();
@@ -286,6 +311,7 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
   Marco *marcoSustituido;
   bool eligioVictima = false;
   int numeroDePaginasAsignadas = list_size(proceso->paginasAsignadas);
+  int posicionInicialDelPuntero = proceso->posicionDelPunteroDeSustitucion;
 
   int contadorDeVueltas = 0;
   while (!eligioVictima)
@@ -293,7 +319,7 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
     Pagina *pagina = list_get(proceso->paginasAsignadas, proceso->posicionDelPunteroDeSustitucion);
     if (!pagina->uso)
     {
-      if (!pagina->modificado || contadorDeVueltas == 3)
+      if (!pagina->modificado || contadorDeVueltas == 3 || contadorDeVueltas == 1)
       {
         eligioVictima = true;
         log_info(logger, "Victima elegida pagina %d del proceso %d", pagina->numeroPagina, proceso->idProceso);
@@ -309,22 +335,28 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
     if (proceso->posicionDelPunteroDeSustitucion == numeroDePaginasAsignadas)
     {
       proceso->posicionDelPunteroDeSustitucion = 0;
+    }
+    if (proceso->posicionDelPunteroDeSustitucion == posicionInicialDelPuntero)
+    {
       contadorDeVueltas++;
     }
   }
-
   return marcoSustituido;
 }
+//
 
 Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina)
 {
   Marco *marcoDesasignado = pagina->marcoAsignado;
-  escribir_en_swap(pagina, proceso);
+  if (pagina->modificado)
+  {
+    escribir_en_swap(pagina, proceso);
+  }
   desasignar_pagina(proceso, pagina);
   return marcoDesasignado;
 }
 
-void desasignar_marco(Marco *marco)
+void desasignar_marco(Marco *marco) // TODO: Ver si necesita sincronizarse
 {
   marco->paginaActual = NULL;
   marco->idProceso = -1;
@@ -335,7 +367,6 @@ void desasignar_pagina(Proceso *proceso, Pagina *pagina)
   desasignar_marco(pagina->marcoAsignado);
   pagina->marcoAsignado = NULL;
   pagina->modificado = false;
-  pagina->uso = true;
   sacar_pagina_de_paginas_asignadas(proceso, pagina);
 }
 
@@ -360,11 +391,7 @@ void suspender_proceso(int idProcesoASuspender)
   while (!list_is_empty(proceso->paginasAsignadas))
   {
     Pagina *pagina = list_get(proceso->paginasAsignadas, 0);
-    if (pagina->modificado)
-    {
-      escribir_en_swap(pagina, proceso);
-    }
-    desasignar_pagina(proceso, pagina);
+    desalojar_pagina(proceso, pagina);
   }
 
   proceso->posicionDelPunteroDeSustitucion = 0;
@@ -398,6 +425,8 @@ void borrar_tablas_del_proceso(Proceso *proceso)
 
 void eliminar_proceso_de_lista_de_procesos(Proceso *proceso)
 {
+  pthread_mutex_lock(&semaforoProcesos);
+
   bool es_proceso(void *_procesoLista)
   {
     Proceso *procesoLista = (Proceso *)_procesoLista;
@@ -405,6 +434,8 @@ void eliminar_proceso_de_lista_de_procesos(Proceso *proceso)
   }
 
   list_remove_and_destroy_by_condition(procesos, &es_proceso, &free);
+
+  pthread_mutex_unlock(&semaforoProcesos);
 }
 
 void desasignar_marcos_al_proceso(Proceso *proceso)
@@ -431,6 +462,12 @@ void finalizar_proceso(int idProcesoAFinalizar)
   log_destroy(logger);
 }
 
+void destruir_semaforos()
+{
+  // sem_destroy(&semaforoMarcos);
+  pthread_mutex_destroy(&semaforoProcesos);
+}
+
 void liberar_memoria()
 {
   Logger *logger = iniciar_logger_memoria();
@@ -438,52 +475,44 @@ void liberar_memoria()
   list_destroy_and_destroy_elements(marcos, &free);
   free(memoriaPrincipal);
   list_destroy(procesos);
+  destruir_semaforos();
 
   log_info(logger, "Estructuras de memoria liberadas");
   log_destroy(logger);
 }
 
-// TODO: De aca para abajo, ver si modelar como lista global las tablas, para evitar recorrer todos los procesos
 int obtener_numero_tabla_segundo_nivel(int numeroTablaPrimerNivel, int entradaATablaDePrimerNivel)
 {
-  TablaPrimerNivel *tablaPrimerNivelBuscada = buscar_tabla_primer_nivel_por_numero(numeroTablaPrimerNivel);
-  TablaSegundoNivel *tablaSegundoNivelBuscada = list_get(tablaPrimerNivelBuscada->entradas, entradaATablaDePrimerNivel);
-
-  return tablaSegundoNivelBuscada->numeroTablaSegundoNivel;
+  return numeroTablaPrimerNivel * MEMORIA_CONFIG.ENTRADAS_POR_TABLA + entradaATablaDePrimerNivel;
 }
 
 int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundoNivel)
 {
   Proceso *proceso = buscar_proceso_de_tabla_segundo_nivel_numero(numeroTablaSegundoNivel);
 
-  int numeroTablaSegundoNivelBuscada = numeroTablaSegundoNivel % MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
-  TablaSegundoNivel *tablaSegundoNivelBuscada = list_get(proceso->tablaPrimerNivel->entradas, numeroTablaSegundoNivelBuscada);
-
-  Pagina *paginaBuscada = list_get(tablaSegundoNivelBuscada->entradas, entradaATablaDeSegundoNivel);
-
-  if (paginaBuscada->marcoAsignado == NULL)
+  if (proceso != NULL)
   {
-    asignar_pagina_a_marco_libre(proceso, paginaBuscada);
+    int numeroTablaSegundoNivelBuscada = numeroTablaSegundoNivel % MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
+    TablaSegundoNivel *tablaSegundoNivelBuscada = list_get(proceso->tablaPrimerNivel->entradas, numeroTablaSegundoNivelBuscada);
+
+    Pagina *paginaBuscada = list_get(tablaSegundoNivelBuscada->entradas, entradaATablaDeSegundoNivel);
+
+    if (paginaBuscada->marcoAsignado == NULL)
+    {
+      asignar_pagina_a_marco_libre(proceso, paginaBuscada);
+    }
+    return paginaBuscada->marcoAsignado->numeroMarco;
   }
-
-  return paginaBuscada->marcoAsignado->numeroMarco;
-}
-
-TablaPrimerNivel *buscar_tabla_primer_nivel_por_numero(int numeroTablaPrimerNivel)
-{
-  bool proceso_de_numero_de_tabla_primer_nivel(void *_procesoLista)
-  {
-    Proceso *procesoLista = (Proceso *)_procesoLista;
-    return procesoLista->tablaPrimerNivel->numeroTablaPrimerNivel == numeroTablaPrimerNivel;
-  }
-
-  Proceso *proceso = list_find(procesos, &proceso_de_numero_de_tabla_primer_nivel);
-  return proceso->tablaPrimerNivel;
+  else
+    return -1; // proceso no encontrado => marco no encontrado
 }
 
 Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNivel)
 {
   int entradas = MEMORIA_CONFIG.ENTRADAS_POR_TABLA;
+
+  pthread_mutex_lock(&semaforoProcesos);
+
   int numeroProcesos = list_size(procesos);
   for (int numeroProceso = 0; numeroProceso < numeroProcesos; numeroProceso++)
   {
@@ -493,10 +522,23 @@ Proceso *buscar_proceso_de_tabla_segundo_nivel_numero(int numeroTablaSegundoNive
       TablaSegundoNivel *tablaSegundoNivel = list_get(proceso->tablaPrimerNivel->entradas, entradaTablaPrimerNivel);
       if (tablaSegundoNivel->numeroTablaSegundoNivel == numeroTablaSegundoNivel)
       {
+        pthread_mutex_unlock(&semaforoProcesos);
         return proceso;
       }
     }
   }
 
+  // si llego aca es porque no existe dicho proceso
+  pthread_mutex_unlock(&semaforoProcesos);
+  Logger *logger = iniciar_logger_memoria();
+  log_error(logger, "No existe proceso de numero de tabla de segundo nivel %d", numeroTablaSegundoNivel);
+  log_destroy(logger);
+
   return NULL;
+}
+
+void destruir_hilos(Hilo hiloCliente1, Hilo hiloCliente2)
+{
+  pthread_detach(hiloCliente1);
+  pthread_detach(hiloCliente2);
 }

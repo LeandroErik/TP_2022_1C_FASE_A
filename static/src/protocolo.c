@@ -18,13 +18,7 @@ void eliminar_paquete(Paquete *paquete)
 void eliminar_linea_instruccion(LineaInstruccion *lineaInstruccion)
 {
   if (lineaInstruccion != NULL)
-  {
-    if (lineaInstruccion->identificador != NULL)
-    {
-      free(lineaInstruccion->identificador);
-    }
     free(lineaInstruccion);
-  }
 }
 
 void eliminar_pcb(Pcb *pcb)
@@ -32,13 +26,10 @@ void eliminar_pcb(Pcb *pcb)
   if (pcb != NULL)
   {
     if (pcb->instrucciones != NULL)
-    {
-      for (int i = 0; i < list_size(pcb->instrucciones); i++)
-      {
-        eliminar_linea_instruccion(list_get(pcb->instrucciones, i));
-      }
-      free(pcb->instrucciones);
-    }
+      list_destroy_and_destroy_elements(pcb->instrucciones, (void *)eliminar_linea_instruccion);
+
+    if (pcb->escenario != NULL)
+      free(pcb->escenario);
     free(pcb);
   }
 }
@@ -255,5 +246,33 @@ void enviar_paquete_a_cliente(Paquete *paquete, int socketCliente)
 
 void enviar_mensaje_a_cliente(char *mensaje, int socketCliente)
 {
-  enviar_mensaje_a_servidor(mensaje, socketCliente);
+  Paquete *paquete = crear_paquete(MENSAJE);
+  agregar_a_paquete(paquete, mensaje, strlen(mensaje) + 1);
+  enviar_paquete_a_cliente(paquete, socketCliente);
+  eliminar_paquete(paquete);
+}
+
+char *obtener_mensaje_del_servidor(int socketServidor)
+{
+  Lista *listaMensaje;
+  char *mensaje;
+
+  switch (obtener_codigo_operacion(socketServidor))
+  {
+  case MENSAJE:
+    listaMensaje = obtener_paquete_como_lista(socketServidor);
+    mensaje = string_duplicate((char *)list_get(listaMensaje, 0));
+    list_destroy_and_destroy_elements(listaMensaje, &free);
+    break;
+
+  default:
+    break;
+  }
+
+  return mensaje;
+}
+
+int obtener_tiempo_actual()
+{
+  return time(NULL);
 }

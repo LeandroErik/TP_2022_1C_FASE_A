@@ -3,6 +3,15 @@
 
 #include <cpu_utils.h>
 
+typedef struct EstructuraMemoria
+{
+  int SOCKET_MEMORIA;
+  int ENTRADAS_POR_TABLA;
+  int TAMANIO_PAGINA;
+} EstructuraMemoria;
+
+EstructuraMemoria ESTRUCTURA_MEMORIA;
+
 /**
  * @brief Espera a Kernel a que se conecte al servidor y recibe sus PCBs.
  *
@@ -21,20 +30,32 @@ void esperar_kernel_interrupt(int socketCpu);
  * @brief Maneja un PCB enviado por Kernel.
  *
  * @param socketKernel Socket de Kernel conectado al puerto de Dispatch.
+ *
+ * @return True si el Kernel se desconectó.
  */
-void manejar_paquete_kernel_dispatch(int socketKernel);
+bool manejar_paquete_kernel_dispatch(int socketKernel);
 
 /**
  * @brief Maneja una interrupción enviada por Kernel.
  *
  * @param socketKernel Socket de Kernel conectado al puerto de Interrupt.
+ *
+ * @return True si el Kernel se desconectó.
  */
-void manejar_paquete_kernel_interrupt(int socketKernel);
+bool manejar_paquete_kernel_interrupt(int socketKernel);
 
 /**
- * @brief Maneja una conexión con Memoria.
+ * @brief Realiza el handshake con Memoria para obtener la estructura de memoria.
  *
+ * @param socketMemoria Socket de Memoria.
  */
-void manejar_conexion_memoria();
+void realizar_handshake_con_memoria(int socketMemoria);
+
+/**
+ * @brief Cargar la estructura con los datos de la memoria.
+ *
+ * @param socketMemoria Socket de Memoria.
+ */
+void cargar_estructura_memoria(int socketMemoria);
 
 #endif

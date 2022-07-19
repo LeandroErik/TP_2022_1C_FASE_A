@@ -3,6 +3,7 @@
 
 #include <socket/socket.h>
 #include <commons/collections/list.h>
+#include <commons/string.h>
 #include <semaphore.h>
 
 typedef t_config Config;
@@ -254,5 +255,14 @@ void enviar_paquete_a_cliente(Paquete *paquete, int socketCliente);
  * @param socketCliente Socket del cliente.
  */
 void enviar_mensaje_a_cliente(char *mensaje, int socketCliente);
+
+char *obtener_mensaje_del_servidor(int socketServidor);
+
+/**
+* @brief Devuelve el tiempo actual
+
+  @return Tiempo actual.
+*/
+int obtener_tiempo_actual();
 
 #endif
