@@ -68,6 +68,7 @@ typedef struct Pcb
   unsigned int tiempoRafagaRealAnterior;
   Escenario *escenario;
   Lista *instrucciones;
+  Semaforo confirmacionSuspencion;
 } Pcb;
 
 typedef struct LineaInstruccion
