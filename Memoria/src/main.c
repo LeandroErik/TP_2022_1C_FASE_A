@@ -1,10 +1,16 @@
 #include <memoria_utils.h>
 #include <main.h>
 
-int main(void)
+int main(int argc, char *argv[])
 {
-  Config *config = config_create("Memoria.config");
   Logger *logger = iniciar_logger_memoria();
+  if (argc < 2)
+  {
+    log_error(logger, "Falta poner config.");
+    return EXIT_FAILURE;
+  }
+  char *parametro = argv[1];
+  Config *config = config_create(parametro);
 
   rellenar_config_memoria(config);
 
@@ -23,7 +29,7 @@ int main(void)
 
   log_info(logger, "Esperando a los clientes CPU y Kernel");
 
-  //Hilos
+  // Hilos
   Hilo hiloCliente1, hiloCliente2;
   int socketCliente = esperar_cliente(socketMemoria);
   pthread_create(&hiloCliente1, NULL, (void *)manejar_paquetes_clientes, (void *)socketCliente);

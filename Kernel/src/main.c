@@ -15,17 +15,24 @@ void interprete_de_seniales(int senial)
     }
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+    logger = iniciar_logger_kernel();
+    loggerPlanificacion = log_create("Kernel-Planificacion.log", "Kernel", 1, LOG_LEVEL_INFO);
+    if (argc < 2)
+    {
+        log_error(logger, "Falta poner config.");
+        return EXIT_FAILURE;
+    }
     signal(SIGINT, interprete_de_seniales);
 
     socketsConsola = list_create();
     idProcesoGlobal = 0;
     cantidadProcesosEnMemoria = 0;
 
-    Config *config = config_create("Kernel.config");
-    logger = iniciar_logger_kernel();
-    loggerPlanificacion = log_create("Kernel-Planificacion.log", "Kernel", 1, LOG_LEVEL_INFO);
+    char *parametro = argv[1];
+
+    Config *config = config_create(parametro);
 
     rellenar_configuracion_kernel(config);
 
