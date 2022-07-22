@@ -141,7 +141,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         liberar_pcb(queue_pop(colaFinalizado));
 
         // Aviso finalizacion a consola
-        int socketConsola = list_get(socketsConsola, pid);
+        int socketConsola = (int)list_get(socketsConsola, pid);
         enviar_paquete_a_cliente(paquete, socketConsola);
 
         eliminar_paquete(paquete);
@@ -227,7 +227,7 @@ void *monitorizarSuspension(Pcb *proceso)
 
         obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
 
-        log_info(loggerPlanificacion, "Recibi respuesta de memoria para suspender.", pid);
+        log_info(loggerPlanificacion, "Recibi respuesta de memoria para suspender.");
 
         proceso->escenario->estado = SUSPENDIDO;
         log_info(loggerPlanificacion, "Proceso: [%d],se movio a SUSPENDIDO-BLOQUEADO", proceso->pid);
