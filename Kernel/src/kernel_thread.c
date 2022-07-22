@@ -17,7 +17,7 @@ void esperar_consola(int socketKernel)
 
     log_info(logger, "Conexión de Consola establecida.");
 
-    list_add(socketsConsola, socketConsola);
+    list_add(socketsConsola, &socketConsola);
 
     Hilo hiloConsola;
     pthread_create(&hiloConsola, NULL, (void *)manejar_paquete_consola, (void *)socketConsola);

@@ -111,6 +111,8 @@ void ejecutar_write(Pcb *proceso, int direccionFisica, int valor)
   agregar_a_paquete(paquete, &valor, sizeof(int));
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   eliminar_paquete(paquete);
+  char *mensaje = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  free(mensaje);
 }
 
 void ejecutar_copy(Pcb *proceso, int direccionFisicoDestino, int direccionLogicaOrigen)
@@ -122,6 +124,9 @@ void ejecutar_copy(Pcb *proceso, int direccionFisicoDestino, int direccionLogica
   agregar_a_paquete(paquete, &direccionFisicaOrigen, sizeof(int));
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   eliminar_paquete(paquete);
+
+  char *mensaje = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  free(mensaje);
 }
 
 void atender_interrupcion(Pcb *pcb, int socketKernel)
@@ -207,7 +212,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       return;
     }
   }
-  eliminar_pcb(pcb);
+  // eliminar_pcb(pcb);
 }
 
 bool esta_en_tlb(int numeroPagina)

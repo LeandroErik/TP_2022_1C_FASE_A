@@ -179,6 +179,8 @@ void atender_escritura_en_memoria(int socketCPU, Logger *logger)
   list_destroy_and_destroy_elements(lista, &free);
 
   escribir_entero_en_memoria(numeroAEscribir, direccionFisicaAEscribir);
+
+  enviar_mensaje_a_cliente("ok", socketCPU);
 }
 
 void atender_lectura_de_memoria(int socketCPU, Logger *logger)
@@ -205,6 +207,8 @@ void atender_copiado_en_memoria(int socketCPU, Logger *logger)
   list_destroy_and_destroy_elements(lista, &free);
 
   copiar_entero_en_memoria(direccionFisicaDestino, direccionFisicaOrigen);
+
+  enviar_mensaje_a_cliente("ok", socketCPU);
 }
 
 // Funciones atender KERNEL
