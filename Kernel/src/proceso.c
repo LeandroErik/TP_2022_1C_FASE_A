@@ -317,6 +317,9 @@ void *dispositivo_io()
         usleep(tiempoBloqueoEnMicrosegundos);
 
         log_info(loggerPlanificacion, "----------[DISP I/O] Proceso: [%d] ,termino I/O %d segundos.----------", proceso->pid, tiempoBloqueo / 1000);
+        // Si el proceso actualmente bloqueado ,espera swapeo.
+        sem_wait(&(proceso->confirmacionSuspencion));
+        sem_post(&(proceso->confirmacionSuspencion));
 
         // Si el proceso actualmente bloqueado ,espera swapeo.
         sem_wait(&(proceso->confirmacionSuspencion)); // setea el valor de del semaforo en 0 si no necesita suspension,porque ya termino de IO
@@ -332,8 +335,6 @@ void *dispositivo_io()
         {
             agregar_proceso_listo(proceso);
         }
-        // Un vez utilizado ,lo elimino
-        // sem_destroy(&(proceso->confirmacionSuspencion));
     }
 }
 bool es_SRT()
