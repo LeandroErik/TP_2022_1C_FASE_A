@@ -28,9 +28,23 @@ if [ "$1" == "install" ]; then
 	git clone "https://github.com/sisoputnfrba/kiss-pruebas"
 
 
-	echo -e "\n\n ***** Se instalo todo. Ejecutar modulos *****\n"
+	
 	mkdir -p $SWAP_PATH
 	cd $PROJECT_PATH
+
+	PROJECTS=(Consola Kernel CPU Memoria)
+	echo -e "\n\nBuilding projects..."
+
+	for i in "${PROJECTS[@]}"
+	do
+  		echo -e "\n\nBuilding ${i}\n\n"
+  		cd $i
+		make clean
+  		make all 
+  		cd $PROJECT_PATH
+	done
+
+	echo -e "\n\n ***** Se instalo todo. Ejecutar modulos *****\n"
 
 else
 	echo -e "\n\n **** Desinstalando todo... ****\n\n"
