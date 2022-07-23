@@ -12,7 +12,11 @@ int main(int argc, char *argv[])
   }
   char *parametro = argv[1];
   Config *config = config_create(parametro);
-
+  if (config == NULL)
+  {
+    log_error(logger, "No existe config %s", parametro);
+    return EXIT_FAILURE;
+  }
   tlb = list_create();
   pidAnterior = -1;
 
