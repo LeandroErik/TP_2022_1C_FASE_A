@@ -11,10 +11,10 @@ int main(int argc, char *argv[])
   //   return EXIT_FAILURE;
   // }
   // char *parametro = argv[1];
-  Config *config = config_create("integral.config");
+  Config *config = config_create("clock.config");
 
   tlb = list_create();
-  pidAnterior = 1;
+  pidAnterior = -1;
 
   rellenar_configuracion_cpu(config);
 

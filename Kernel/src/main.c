@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
     // char *parametro = argv[1];
 
-    Config *config = config_create("integral.config");
+    Config *config = config_create("clock.config");
 
     rellenar_configuracion_kernel(config);
 

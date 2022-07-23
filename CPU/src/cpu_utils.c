@@ -94,11 +94,11 @@ void ejecutar_read(int direccionFisica)
   Logger *logger = iniciar_logger_cpu();
   Paquete *paquete = crear_paquete(LEER_DE_MEMORIA);
   agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
-  log_info(logger, "Se pide a memoria LEER : %d", direccionFisica);
+  //log_info(logger, "Se pide a memoria LEER : %d", direccionFisica);
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
 
   char *valor = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
-  log_info(logger, "Se recibio el valor %s de memoria", valor);
+  log_info(logger, "Se recibio el valor leido %s de memoria", valor);
 
   free(valor);
   eliminar_paquete(paquete);
@@ -112,8 +112,9 @@ void ejecutar_write(Pcb *proceso, int direccionFisica, int valor)
   agregar_a_paquete(paquete, &valor, sizeof(int));
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   eliminar_paquete(paquete);
-  char *mensaje = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
-  free(mensaje);
+
+  char *confirmacion = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  free(confirmacion);
 }
 
 void ejecutar_copy(Pcb *proceso, int direccionFisicoDestino, int direccionLogicaOrigen)
@@ -126,8 +127,8 @@ void ejecutar_copy(Pcb *proceso, int direccionFisicoDestino, int direccionLogica
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   eliminar_paquete(paquete);
 
-  char *mensaje = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
-  free(mensaje);
+  char *confirmacion = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  free(confirmacion);
 }
 
 void atender_interrupcion(Pcb *pcb, int socketKernel)

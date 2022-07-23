@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
   //   return EXIT_FAILURE;
   // }
   // char *parametro = argv[1];
-  Config *config = config_create("integral.config");
+  Config *config = config_create("clock-m.config");
 
   rellenar_config_memoria(config);
 
@@ -42,6 +42,10 @@ int main(int argc, char *argv[])
 
   destruir_hilos(hiloCliente1, hiloCliente2);
   liberar_memoria();
+
+  log_info(logger, "Page Faults totales: %d", contadorPageFaults);
+  log_info(logger, "Accesos a discos totales: %d", contadorAccesosADisco);
+
   log_destroy(logger);
   config_destroy(config);
 

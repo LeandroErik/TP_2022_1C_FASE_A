@@ -17,6 +17,8 @@ Lista *procesos;
 Lista *marcos;
 void *memoriaPrincipal;
 int tablasDePrimerNivel, tablasDeSegundoNivel;
+int contadorPageFaults;
+int contadorAccesosADisco;
 
 pthread_mutex_t semaforoProcesos;
 //Semaforo semaforoMarcos;

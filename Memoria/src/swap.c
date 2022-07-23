@@ -42,6 +42,7 @@ void escribir_datos_de_pagina_en_memoria(Proceso *proceso, int numeroPagina, int
 
   log_info(logger, "Se Leyo de swap la pagina %d del proceso %d y se escribio en el marco %d", numeroPagina, proceso->idProceso, numeroMarco);
   log_destroy(logger);
+  contadorAccesosADisco++;
 }
 
 void escribir_en_swap(Pagina *pagina, Proceso *proceso)
@@ -60,6 +61,7 @@ void escribir_en_swap(Pagina *pagina, Proceso *proceso)
 
   log_info(logger, "Se swappeo la pagina %d", pagina->numeroPagina);
   log_destroy(logger);
+  contadorAccesosADisco++;
 }
 
 void realizar_espera_swap()

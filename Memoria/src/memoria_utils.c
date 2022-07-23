@@ -19,6 +19,8 @@ void iniciar_estructuras_memoria()
 
   tablasDePrimerNivel = 0;
   tablasDeSegundoNivel = 0;
+  contadorPageFaults = 0;
+  contadorAccesosADisco = 0;
 
   memoriaPrincipal = (void *)malloc(MEMORIA_CONFIG.TAM_MEMORIA);
   memset(memoriaPrincipal, '0', MEMORIA_CONFIG.TAM_MEMORIA);
@@ -503,6 +505,7 @@ int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundo
 
     if (paginaBuscada->marcoAsignado == NULL)
     {
+      contadorPageFaults++;
       asignar_pagina_a_marco_libre(proceso, paginaBuscada);
     }
     return paginaBuscada->marcoAsignado->numeroMarco;
