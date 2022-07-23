@@ -24,6 +24,8 @@ void inicializar_semaforos()
     sem_init(&semaforoCantidadProcesosEjecutando, 0, 1);
 
     sem_init(&despertarPlanificadorLargoPlazo, 0, 0);
+
+    sem_init(&comunicacionMemoria, 0, 1);
 }
 
 void inicializar_colas_procesos()
@@ -128,12 +130,13 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         pid = pcb->pid;
         paquete = crear_paquete(FINALIZAR_PROCESO);
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
-
+        sem_wait(&comunicacionMemoria);
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
 
         char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de finalizacion
         log_info(logger, "%s [%d]", confirmacion, pid);
+        sem_post(&comunicacionMemoria);
 
         decrementar_cantidad_procesos_memoria();
 
@@ -217,22 +220,26 @@ void *monitorizarSuspension(Pcb *proceso)
     if (procesoSigueBloqueado(pid))
     {
 
-        sem_wait(&(proceso->confirmacionSuspencion));
         int pid = proceso->pid;
         Paquete *paquete = crear_paquete(SUSPENDER_PROCESO);
 
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
+        sem_wait(&(proceso->confirmacionSuspencion));
+        sem_wait(&comunicacionMemoria);
+
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(loggerPlanificacion, "Se envio el proceso %d a la memoria para suspender", pid);
 
         obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
 
+        sem_post(&comunicacionMemoria);
+        sem_post(&(proceso->confirmacionSuspencion));
         log_info(loggerPlanificacion, "Recibi respuesta de memoria para suspender.");
 
         proceso->escenario->estado = SUSPENDIDO;
         log_info(loggerPlanificacion, "Proceso: [%d],se movio a SUSPENDIDO-BLOQUEADO", proceso->pid);
 
-        sem_post(&(proceso->confirmacionSuspencion));
+        proceso->vieneDeSuspension = true;
 
         decrementar_cantidad_procesos_memoria();
     }
@@ -462,7 +469,7 @@ int tabla_pagina_primer_nivel(int pid, int tamanio)
 
     agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
     agregar_a_paquete(paquete, &tamanio, sizeof(unsigned int));
-
+    sem_wait(&comunicacionMemoria);
     enviar_paquete_a_servidor(paquete, socketMemoria);
 
     log_info(logger, "Se envio el proceso %d a la memoria", pid);
@@ -471,6 +478,7 @@ int tabla_pagina_primer_nivel(int pid, int tamanio)
     int tablaPrimerNivel;
 
     mensajeDeMemoria = obtener_mensaje_del_servidor(socketMemoria);
+    sem_post(&comunicacionMemoria);
     tablaPrimerNivel = atoi(mensajeDeMemoria);
     log_info(logger, "Se recibio de memoria la tabla de primer nivel %d del proceso", tablaPrimerNivel);
 

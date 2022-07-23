@@ -69,6 +69,7 @@ typedef struct Pcb
   Escenario *escenario;
   Lista *instrucciones;
   Semaforo confirmacionSuspencion;
+  bool vieneDeSuspension;
 } Pcb;
 
 typedef struct LineaInstruccion

@@ -208,6 +208,7 @@ void serializar_pcb(Paquete *paquete, Pcb *pcb)
   agregar_a_paquete(paquete, &(pcb->escenario->estado), sizeof(Estado));
   agregar_a_paquete(paquete, &(pcb->escenario->tiempoBloqueadoIO), sizeof(int));
   agregar_a_paquete(paquete, &(pcb->tiempoInicioEjecucion), sizeof(int));
+  agregar_a_paquete(paquete, &(pcb->vieneDeSuspension), sizeof(bool));
   agregar_a_paquete(paquete, &cantidadInstrucciones, sizeof(int));
 
   serializar_lista_de_instrucciones(paquete, pcb->instrucciones, pcb->tamanio);
@@ -229,8 +230,9 @@ Pcb *deserializar_pcb(int socketCliente)
   pcb->escenario->estado = *(Estado *)list_get(propiedadesPlanas, 6);
   pcb->escenario->tiempoBloqueadoIO = *(int *)list_get(propiedadesPlanas, 7);
   pcb->tiempoInicioEjecucion = *(int *)list_get(propiedadesPlanas, 8);
+  pcb->vieneDeSuspension = *(bool *)list_get(propiedadesPlanas, 9);
 
-  deserializar_lista_de_instrucciones(listaResultado, propiedadesPlanas, 9, 11);
+  deserializar_lista_de_instrucciones(listaResultado, propiedadesPlanas, 10, 12);
 
   pcb->instrucciones = listaResultado;
 
@@ -256,6 +258,7 @@ char *obtener_mensaje_del_servidor(int socketServidor)
 {
   Lista *listaMensaje;
   char *mensaje;
+  Logger *logger = log_create("Protocolo.log", "Protocolo", 1, LOG_LEVEL_INFO);
 
   switch (obtener_codigo_operacion(socketServidor))
   {
@@ -266,6 +269,11 @@ char *obtener_mensaje_del_servidor(int socketServidor)
     break;
 
   default:
+
+    listaMensaje = obtener_paquete_como_lista(socketServidor);
+    mensaje = string_duplicate((char *)list_get(listaMensaje, 0));
+    log_error(logger, "RECIBI SARAZA %s", mensaje);
+    list_destroy_and_destroy_elements(listaMensaje, &free);
     break;
   }
 

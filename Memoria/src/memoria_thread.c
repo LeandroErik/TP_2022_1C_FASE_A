@@ -187,6 +187,7 @@ void atender_lectura_de_memoria(int socketCPU, Logger *logger)
 {
   Lista *lista = obtener_paquete_como_lista(socketCPU);
   int direccionFisicaALeer = *(int *)list_get(lista, 0);
+  log_info(logger, "direccion fisica a LEER : %d", direccionFisicaALeer);
   list_destroy_and_destroy_elements(lista, &free);
 
   int leido = leer_entero_de_memoria(direccionFisicaALeer);

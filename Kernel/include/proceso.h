@@ -51,6 +51,7 @@ Semaforo suspensionFinalizada;
 Semaforo despertarPlanificadorLargoPlazo;
 
 Semaforo semaforoCantidadProcesosEjecutando;
+Semaforo comunicacionMemoria;
 
 int socketMemoria;
 int socketDispatch;

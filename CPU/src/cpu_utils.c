@@ -94,6 +94,7 @@ void ejecutar_read(int direccionFisica)
   Logger *logger = iniciar_logger_cpu();
   Paquete *paquete = crear_paquete(LEER_DE_MEMORIA);
   agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
+  log_info(logger, "Se pide a memoria LEER : %d", direccionFisica);
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
 
   char *valor = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
@@ -150,6 +151,13 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
 
   log_info(logger, "Ejecutando instrucciones del PCB Nº %d", pcb->pid);
 
+  if (pcb->pid != pidAnterior || pcb->vieneDeSuspension)
+  {
+    limpiar_tlb();
+    pidAnterior = pcb->pid;
+    pcb->vieneDeSuspension = false;
+  }
+
   for (int i = pcb->contadorPrograma; i < list_size(pcb->instrucciones); i++)
   {
     printf("Contador de Programa: %d\n", pcb->contadorPrograma);
@@ -199,7 +207,6 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
     case EXIT:
       log_info(logger, "Ejecutando EXIT");
       ejecutar_exit(pcb, socketKernel);
-      limpiar_tlb();
       break;
     default:
       log_error(logger, "Instrucción desconocida: %s", lineaInstruccion->identificador);
