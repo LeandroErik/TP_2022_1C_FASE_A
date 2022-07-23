@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
   //   return EXIT_FAILURE;
   // }
   // char *parametro = argv[1];
-  Config *config = config_create("clock-m.config");
+  Config *config = config_create("tlb.config");
 
   rellenar_config_memoria(config);
 
