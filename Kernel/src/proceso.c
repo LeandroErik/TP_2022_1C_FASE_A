@@ -134,7 +134,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
 
-        char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de finalizacion
+        char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); 
         log_info(logger, "%s [%d]", confirmacion, pid);
         sem_post(&comunicacionMemoria);
 
@@ -148,6 +148,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         enviar_paquete_a_cliente(paquete, socketConsola);
 
         eliminar_paquete(paquete);
+        free(confirmacion);
 
         break;
 
@@ -230,7 +231,8 @@ void *monitorizarSuspension(Pcb *proceso)
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(loggerPlanificacion, "Se envio el proceso %d a la memoria para suspender", pid);
 
-        obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
+        char* confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
+        free(confirmacion);
 
         sem_post(&comunicacionMemoria);
         sem_post(&(proceso->confirmacionSuspencion));
@@ -483,6 +485,7 @@ int tabla_pagina_primer_nivel(int pid, int tamanio)
     log_info(logger, "Se recibio de memoria la tabla de primer nivel %d del proceso", tablaPrimerNivel);
 
     eliminar_paquete(paquete);
+    free(mensajeDeMemoria);
 
     return tablaPrimerNivel;
 }
@@ -769,9 +772,7 @@ void liberar_pcb(Pcb *pcb)
 {
     free(pcb->escenario);
 
-    list_clean_and_destroy_elements(pcb->instrucciones, (void *)liberar_instruccion);
-
-    list_destroy(pcb->instrucciones);
+    list_destroy_and_destroy_elements(pcb->instrucciones, (void *)liberar_instruccion);
 
     free(pcb);
 }

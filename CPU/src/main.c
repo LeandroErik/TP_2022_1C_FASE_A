@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
   //   return EXIT_FAILURE;
   // }
   // char *parametro = argv[1];
-  Config *config = config_create("tlb_FIFO.config");
+  Config *config = config_create("integral.config");
 
   tlb = list_create();
   pidAnterior = -1;
@@ -37,6 +37,8 @@ int main(int argc, char *argv[])
 
   pthread_join(hiloKernelDispatch, NULL);
   pthread_join(hiloKernelInterrupt, NULL);
+
+  list_destroy_and_destroy_elements(tlb, &free);
 
   log_destroy(logger);
   config_destroy(config);
