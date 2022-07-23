@@ -347,7 +347,7 @@ void *planificador_largo_plazo()
     while (1)
     {
         sem_wait(&despertarPlanificadorLargoPlazo);
-        log_info(loggerPlanificacion, "[LARGO-PLAZO] Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
+        // log_info(loggerPlanificacion, "[LARGO-PLAZO] Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
 
         if (sePuedeAgregarMasProcesos())
         {
