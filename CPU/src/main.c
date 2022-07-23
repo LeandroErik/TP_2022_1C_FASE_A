@@ -5,14 +5,18 @@ bool seNecesitaAtenderInterrupcion = false;
 int main(int argc, char *argv[])
 {
   Logger *logger = iniciar_logger_cpu();
-  // if (argc < 2)
-  // {
-  //   log_error(logger, "Falta poner config.");
-  //   return EXIT_FAILURE;
-  // }
-  // char *parametro = argv[1];
-  Config *config = config_create("tlb_FIFO.config");
-
+  if (argc < 2)
+  {
+    log_error(logger, "Falta poner config.");
+    return EXIT_FAILURE;
+  }
+  char *parametro = argv[1];
+  Config *config = config_create(parametro);
+  if (config == NULL)
+  {
+    log_error(logger, "No existe config %s", parametro);
+    return EXIT_FAILURE;
+  }
   tlb = list_create();
   pidAnterior = -1;
 
@@ -37,6 +41,8 @@ int main(int argc, char *argv[])
 
   pthread_join(hiloKernelDispatch, NULL);
   pthread_join(hiloKernelInterrupt, NULL);
+
+  list_destroy_and_destroy_elements(tlb, &free);
 
   log_destroy(logger);
   config_destroy(config);

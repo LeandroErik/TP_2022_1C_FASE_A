@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
   if (pseudocodigo == NULL)
   {
-    log_error(logger, "No se pudo abrir el archivo de pseudocódigo.");
+    log_error(logger, "No se pudo abrir el archivo.");
     return EXIT_FAILURE;
   }
 

@@ -236,7 +236,6 @@ Pcb *deserializar_pcb(int socketCliente)
 
   pcb->instrucciones = listaResultado;
 
-  // liberar_instrucciones_de_lista_pcb(propiedadesPlanas);
   list_destroy_and_destroy_elements(propiedadesPlanas, &free);
 
   return pcb;

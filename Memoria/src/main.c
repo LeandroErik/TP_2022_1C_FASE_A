@@ -4,14 +4,18 @@
 int main(int argc, char *argv[])
 {
   Logger *logger = iniciar_logger_memoria();
-  // if (argc < 2)
-  // {
-  //   log_error(logger, "Falta poner config.");
-  //   return EXIT_FAILURE;
-  // }
-  // char *parametro = argv[1];
-  Config *config = config_create("tlb.config");
-
+  if (argc < 2)
+  {
+    log_error(logger, "Falta poner config.");
+    return EXIT_FAILURE;
+  }
+  char *parametro = argv[1];
+  Config *config = config_create(parametro);
+  if (config == NULL)
+  {
+    log_error(logger, "No existe config %s", parametro);
+    return EXIT_FAILURE;
+  }
   rellenar_config_memoria(config);
 
   log_info(logger, "Iniciando Servidor Memoria...");

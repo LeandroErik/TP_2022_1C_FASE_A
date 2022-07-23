@@ -36,9 +36,10 @@ void esperar_kernel_dispatch(int socketCpu)
     desconecto = manejar_paquete_kernel_dispatch(socketKernel);
 
     if (desconecto)
+      log_destroy(logger);
       return;
   }
-  log_destroy(logger);
+
 }
 
 void esperar_kernel_interrupt(int socketCpu)

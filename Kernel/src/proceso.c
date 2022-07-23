@@ -134,7 +134,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(logger, "Se envio el proceso %d a la memoria para finalizar", pid);
 
-        char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de finalizacion
+        char *confirmacion = obtener_mensaje_del_servidor(socketMemoria);
         log_info(logger, "%s [%d]", confirmacion, pid);
         sem_post(&comunicacionMemoria);
 
@@ -148,6 +148,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         enviar_paquete_a_cliente(paquete, socketConsola);
 
         eliminar_paquete(paquete);
+        free(confirmacion);
 
         break;
 
@@ -216,11 +217,14 @@ void *monitorizarSuspension(Pcb *proceso)
     int tiempoMaximoBloqueoEnMicrosegundos = tiempoMaximoBloqueo * 1000;
 
     usleep(tiempoMaximoBloqueoEnMicrosegundos);
+    int valor = 0;
+    sem_getvalue(&(proceso->confirmacionSuspencion), &valor);
 
-    if (procesoSigueBloqueado(pid))
+    if (valor == 1) // esto indica que aun sigue en la cola de bloqueados.
     {
+        proceso->escenario->estado = SUSPENDIDO;
+        proceso->vieneDeSuspension = true;
 
-        int pid = proceso->pid;
         Paquete *paquete = crear_paquete(SUSPENDER_PROCESO);
 
         agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
@@ -230,16 +234,16 @@ void *monitorizarSuspension(Pcb *proceso)
         enviar_paquete_a_servidor(paquete, socketMemoria);
         log_info(loggerPlanificacion, "Se envio el proceso %d a la memoria para suspender", pid);
 
-        obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
+        char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
+        log_info(loggerPlanificacion, "Recibi respuesta de memoria para suspender proceso %s.", confirmacion);
 
-        sem_post(&comunicacionMemoria);
-        sem_post(&(proceso->confirmacionSuspencion));
-        log_info(loggerPlanificacion, "Recibi respuesta de memoria para suspender.");
-
-        proceso->escenario->estado = SUSPENDIDO;
         log_info(loggerPlanificacion, "Proceso: [%d],se movio a SUSPENDIDO-BLOQUEADO", proceso->pid);
 
-        proceso->vieneDeSuspension = true;
+        sem_post(&comunicacionMemoria);
+
+        sem_post(&(proceso->confirmacionSuspencion));
+
+        free(confirmacion);
 
         decrementar_cantidad_procesos_memoria();
     }
@@ -317,6 +321,9 @@ void *dispositivo_io()
         sem_wait(&(proceso->confirmacionSuspencion));
         sem_post(&(proceso->confirmacionSuspencion));
 
+        // Si el proceso actualmente bloqueado ,espera swapeo.
+        sem_wait(&(proceso->confirmacionSuspencion)); // setea el valor de del semaforo en 0 si no necesita suspension,porque ya termino de IO
+
         proceso = sacar_proceso_bloqueado();
 
         // Analizo si fue suspendido.
@@ -328,8 +335,6 @@ void *dispositivo_io()
         {
             agregar_proceso_listo(proceso);
         }
-        // Un vez utilizado ,lo elimino
-        sem_destroy(&(proceso->confirmacionSuspencion));
     }
 }
 bool es_SRT()
@@ -343,7 +348,7 @@ void *planificador_largo_plazo()
     while (1)
     {
         sem_wait(&despertarPlanificadorLargoPlazo);
-        log_info(loggerPlanificacion, "[LARGO-PLAZO] Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
+        // log_info(loggerPlanificacion, "[LARGO-PLAZO] Procesos en MEMORIA: %d", cantidadProcesosEnMemoria);
 
         if (sePuedeAgregarMasProcesos())
         {
@@ -440,7 +445,7 @@ void agregar_proceso_nuevo(Pcb *procesoNuevo)
     // Despierto al Planificador de Largo Plazo
     sem_post(&despertarPlanificadorLargoPlazo);
 
-    imprimir_colas();
+    // imprimir_colas();
 }
 void agregar_proceso_listo(Pcb *procesoListo)
 {
@@ -459,7 +464,7 @@ void agregar_proceso_listo(Pcb *procesoListo)
     }
     sem_post(&semaforoProcesoListo);
 
-    imprimir_colas();
+    // imprimir_colas();
 }
 
 int tabla_pagina_primer_nivel(int pid, int tamanio)
@@ -483,6 +488,7 @@ int tabla_pagina_primer_nivel(int pid, int tamanio)
     log_info(logger, "Se recibio de memoria la tabla de primer nivel %d del proceso", tablaPrimerNivel);
 
     eliminar_paquete(paquete);
+    free(mensajeDeMemoria);
 
     return tablaPrimerNivel;
 }
@@ -503,7 +509,7 @@ void agregar_proceso_ejecutando(Pcb *procesoEjecutando)
 
     pthread_mutex_unlock(&mutexColaEjecutando);
 
-    imprimir_colas();
+    // imprimir_colas();
 }
 
 int calcular_tiempo_rafaga_real_anterior(Pcb *proceso)
@@ -533,7 +539,7 @@ void agregar_proceso_bloqueado(Pcb *procesoBloqueado)
 
     sem_post(&despertarPlanificadorLargoPlazo);
 
-    imprimir_colas();
+    // imprimir_colas();
 }
 
 void agregar_proceso_finalizado(Pcb *procesoFinalizado)
@@ -548,7 +554,7 @@ void agregar_proceso_finalizado(Pcb *procesoFinalizado)
     // Despierto al planificador de mediano plazo.
     sem_post(&despertarPlanificadorLargoPlazo);
 
-    imprimir_colas();
+    // imprimir_colas();
 }
 
 void agregar_proceso_suspendido_listo(Pcb *procesoSuspendidoListo)
@@ -564,7 +570,7 @@ void agregar_proceso_suspendido_listo(Pcb *procesoSuspendidoListo)
     // Despierto al Planificador de Largo Plazo
     sem_post(&despertarPlanificadorLargoPlazo);
 
-    imprimir_colas();
+    // imprimir_colas();
 }
 
 /*Funciones para sacar procesos a cola.*/
@@ -582,7 +588,7 @@ Pcb *sacar_proceso_ejecutando()
     // le aviso al planificador de corto plazo
     sem_post(&semaforoCantidadProcesosEjecutando);
 
-    imprimir_colas();
+    // imprimir_colas();
     return pcbSaliente;
 }
 
@@ -769,9 +775,7 @@ void liberar_pcb(Pcb *pcb)
 {
     free(pcb->escenario);
 
-    list_clean_and_destroy_elements(pcb->instrucciones, (void *)liberar_instruccion);
-
-    list_destroy(pcb->instrucciones);
+    list_destroy_and_destroy_elements(pcb->instrucciones, (void *)liberar_instruccion);
 
     free(pcb);
 }
