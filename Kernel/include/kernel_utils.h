@@ -17,6 +17,8 @@ int idProcesoGlobal;
 Hilo hiloConsolas;
 Hilo hiloConexionMemoria;
 
+t_list *socketsConsola;
+
 /**
  * @brief Inicia un logger en el Módulo Kernel.
  *

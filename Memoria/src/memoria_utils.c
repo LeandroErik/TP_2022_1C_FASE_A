@@ -19,6 +19,8 @@ void iniciar_estructuras_memoria()
 
   tablasDePrimerNivel = 0;
   tablasDeSegundoNivel = 0;
+  contadorPageFaults = 0;
+  contadorAccesosADisco = 0;
 
   memoriaPrincipal = (void *)malloc(MEMORIA_CONFIG.TAM_MEMORIA);
   memset(memoriaPrincipal, '0', MEMORIA_CONFIG.TAM_MEMORIA);
@@ -148,8 +150,12 @@ uint32_t leer_entero_de_memoria(int direccionFisica)
   void *direccionInicioLectura = memoriaPrincipal + direccionFisica;
   memcpy(&leido, direccionInicioLectura, sizeof(leido));
 
-  Marco *marcoEscrito = marco_de_direccion_fisica(direccionFisica);
-  marcoEscrito->paginaActual->uso = true;
+  Marco *marcoLeido = marco_de_direccion_fisica(direccionFisica);
+  if (marcoLeido == NULL)
+  {
+    log_error(logger, "ERROR EN EL MARCO LEIDO");
+  }
+  marcoLeido->paginaActual->uso = true;
 
   log_info(logger, "Valor leido %d, de la posicion de memoria fisica %d.", leido, direccionFisica);
   log_destroy(logger);
@@ -499,6 +505,7 @@ int obtener_numero_marco(int numeroTablaSegundoNivel, int entradaATablaDeSegundo
 
     if (paginaBuscada->marcoAsignado == NULL)
     {
+      contadorPageFaults++;
       asignar_pagina_a_marco_libre(proceso, paginaBuscada);
     }
     return paginaBuscada->marcoAsignado->numeroMarco;

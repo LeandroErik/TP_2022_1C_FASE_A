@@ -44,6 +44,8 @@ int main(int argc, char *argv[])
   enviar_paquete_a_servidor(paquete, socketKernel);
   log_info(logger, "Enviando Lista de Instrucciones al Servidor Kernel...");
 
+  obtener_codigo_operacion(socketKernel);
+
   log_warning(logger, "Saliendo del Servidor Kernel...");
   terminar_consola(socketKernel, config, logger, listaInstrucciones, pseudocodigo, paquete);
 

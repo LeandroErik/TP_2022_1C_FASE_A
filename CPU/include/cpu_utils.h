@@ -8,7 +8,7 @@
 #include <math.h>
 
 bool seNecesitaAtenderInterrupcion;
-
+int pidAnterior;
 Lista *tlb;
 
 typedef struct EntradaTlb

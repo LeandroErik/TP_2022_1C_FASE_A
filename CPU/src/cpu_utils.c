@@ -94,10 +94,11 @@ void ejecutar_read(int direccionFisica)
   Logger *logger = iniciar_logger_cpu();
   Paquete *paquete = crear_paquete(LEER_DE_MEMORIA);
   agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
+  //log_info(logger, "Se pide a memoria LEER : %d", direccionFisica);
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
 
   char *valor = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
-  log_info(logger, "Se recibio el valor %s de memoria", valor);
+  log_info(logger, "Se recibio el valor leido %s de memoria", valor);
 
   free(valor);
   eliminar_paquete(paquete);
@@ -111,6 +112,9 @@ void ejecutar_write(Pcb *proceso, int direccionFisica, int valor)
   agregar_a_paquete(paquete, &valor, sizeof(int));
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   eliminar_paquete(paquete);
+
+  char *confirmacion = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  free(confirmacion);
 }
 
 void ejecutar_copy(Pcb *proceso, int direccionFisicoDestino, int direccionLogicaOrigen)
@@ -122,6 +126,9 @@ void ejecutar_copy(Pcb *proceso, int direccionFisicoDestino, int direccionLogica
   agregar_a_paquete(paquete, &direccionFisicaOrigen, sizeof(int));
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   eliminar_paquete(paquete);
+
+  char *confirmacion = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  free(confirmacion);
 }
 
 void atender_interrupcion(Pcb *pcb, int socketKernel)
@@ -144,6 +151,13 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
   Logger *logger = iniciar_logger_cpu();
 
   log_info(logger, "Ejecutando instrucciones del PCB Nº %d", pcb->pid);
+
+  if (pcb->pid != pidAnterior || pcb->vieneDeSuspension)
+  {
+    limpiar_tlb();
+    pidAnterior = pcb->pid;
+    pcb->vieneDeSuspension = false;
+  }
 
   for (int i = pcb->contadorPrograma; i < list_size(pcb->instrucciones); i++)
   {
@@ -194,7 +208,6 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
     case EXIT:
       log_info(logger, "Ejecutando EXIT");
       ejecutar_exit(pcb, socketKernel);
-      limpiar_tlb();
       break;
     default:
       log_error(logger, "Instrucción desconocida: %s", lineaInstruccion->identificador);
@@ -204,10 +217,10 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
     if (instruccion == IO || instruccion == EXIT)
     {
       log_destroy(logger);
-      eliminar_pcb(pcb);
       return;
     }
   }
+  // eliminar_pcb(pcb);
 }
 
 bool esta_en_tlb(int numeroPagina)

@@ -22,7 +22,7 @@ FILE *crear_archivo_swap(int idProceso)
 
 void borrar_archivo_swap_del_proceso(Proceso *proceso)
 {
-  // fclose(proceso->archivoSwap);
+  fclose(proceso->archivoSwap);
   char *pathArchivoSwap = generar_path_archivo_swap(proceso->idProceso);
   remove(pathArchivoSwap);
   free(pathArchivoSwap);
@@ -42,6 +42,7 @@ void escribir_datos_de_pagina_en_memoria(Proceso *proceso, int numeroPagina, int
 
   log_info(logger, "Se Leyo de swap la pagina %d del proceso %d y se escribio en el marco %d", numeroPagina, proceso->idProceso, numeroMarco);
   log_destroy(logger);
+  contadorAccesosADisco++;
 }
 
 void escribir_en_swap(Pagina *pagina, Proceso *proceso)
@@ -60,6 +61,7 @@ void escribir_en_swap(Pagina *pagina, Proceso *proceso)
 
   log_info(logger, "Se swappeo la pagina %d", pagina->numeroPagina);
   log_destroy(logger);
+  contadorAccesosADisco++;
 }
 
 void realizar_espera_swap()
