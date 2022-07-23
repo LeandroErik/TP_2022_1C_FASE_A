@@ -5,13 +5,13 @@ bool seNecesitaAtenderInterrupcion = false;
 int main(int argc, char *argv[])
 {
   Logger *logger = iniciar_logger_cpu();
-  // if (argc < 2)
-  // {
-  //   log_error(logger, "Falta poner config.");
-  //   return EXIT_FAILURE;
-  // }
-  // char *parametro = argv[1];
-  Config *config = config_create("integral.config");
+  if (argc < 2)
+  {
+    log_error(logger, "Falta poner config.");
+    return EXIT_FAILURE;
+  }
+  char *parametro = argv[1];
+  Config *config = config_create(parametro);
 
   tlb = list_create();
   pidAnterior = -1;

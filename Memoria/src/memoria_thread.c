@@ -187,7 +187,7 @@ void atender_lectura_de_memoria(int socketCPU, Logger *logger)
 {
   Lista *lista = obtener_paquete_como_lista(socketCPU);
   int direccionFisicaALeer = *(int *)list_get(lista, 0);
-  //log_info(logger, "direccion fisica a LEER : %d", direccionFisicaALeer);
+  // log_info(logger, "direccion fisica a LEER : %d", direccionFisicaALeer);
   list_destroy_and_destroy_elements(lista, &free);
 
   int leido = leer_entero_de_memoria(direccionFisicaALeer);
@@ -240,7 +240,7 @@ void atender_suspension_de_proceso(int socketKernel, Logger *logger)
 
   realizar_espera_de_memoria();
 
-  enviar_mensaje_a_cliente("Proceso suspendido", socketKernel);
+  enviar_mensaje_a_cliente(string_itoa(id), socketKernel);
   log_info(logger, "Se envia a kernel confirmacion de suspension del proceso %d", id);
 }
 
