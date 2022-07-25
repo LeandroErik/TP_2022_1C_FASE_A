@@ -222,8 +222,6 @@ void *monitorizarSuspension(Pcb *proceso)
 
     if (valor == 1) // esto indica que aun sigue en la cola de bloqueados.
     {
-        proceso->escenario->estado = SUSPENDIDO;
-        proceso->vieneDeSuspension = true;
 
         Paquete *paquete = crear_paquete(SUSPENDER_PROCESO);
 
@@ -236,16 +234,17 @@ void *monitorizarSuspension(Pcb *proceso)
 
         char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
         log_info(loggerPlanificacion, "Recibi respuesta de memoria para suspender proceso %s.", confirmacion);
+        sem_post(&comunicacionMemoria);
 
         log_info(loggerPlanificacion, "Proceso: [%d],se movio a SUSPENDIDO-BLOQUEADO", proceso->pid);
+        proceso->escenario->estado = SUSPENDIDO;
+        proceso->vieneDeSuspension = true;
 
-        sem_post(&comunicacionMemoria);
+        decrementar_cantidad_procesos_memoria();
 
         sem_post(&(proceso->confirmacionSuspencion));
 
         free(confirmacion);
-
-        decrementar_cantidad_procesos_memoria();
     }
     return NULL;
 }
@@ -653,6 +652,8 @@ void decrementar_cantidad_procesos_memoria()
     pthread_mutex_lock(&mutexcantidadProcesosMemoria);
     cantidadProcesosEnMemoria--;
     pthread_mutex_unlock(&mutexcantidadProcesosMemoria);
+
+    sem_post(&despertarPlanificadorLargoPlazo);
 }
 int cantidad_procesos_memoria()
 {
