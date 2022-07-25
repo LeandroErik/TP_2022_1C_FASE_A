@@ -242,12 +242,12 @@ int devolver_marco_por_tlb(int numeroPagina)
   {
     EntradaTlb *entradaTLB = (EntradaTlb *)_entradaTLB;
 
-    entradaTlb->ultimaVezUtilizada = obtener_tiempo_actual();
-
     return entradaTLB->numeroPagina == numeroPagina;
   }
 
   EntradaTlb *entradaTlb = (EntradaTlb *)list_find(tlb, &es_numero_pagina);
+
+  entradaTlb->ultimaVezUtilizada = obtener_tiempo_actual();
 
   return entradaTlb->numeroMarco;
 }
