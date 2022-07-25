@@ -136,8 +136,7 @@ void atender_interrupcion(Pcb *pcb, int socketKernel)
 {
   pcb->escenario->estado = INTERRUPCION_EXTERNA;
 
-  Paquete *paquete = malloc(sizeof(Paquete));
-  paquete = crear_paquete(PCB);
+  Paquete *paquete = crear_paquete(PCB);
   serializar_pcb(paquete, pcb);
 
   enviar_paquete_a_cliente(paquete, socketKernel);
@@ -175,7 +174,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       atender_interrupcion(pcb, socketKernel);
 
       log_info(logger, "Se termino de atender una interrupción (valor : %d)", seNecesitaAtenderInterrupcion);
-      // eliminar_pcb(pcb); me tira error ,pero em parece que es necesario.
+      log_destroy(logger);
       return;
     }
     pcb->contadorPrograma++;
@@ -219,10 +218,10 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
     if (instruccion == IO || instruccion == EXIT)
     {
       log_destroy(logger);
+      // eliminar_pcb(pcb);
       return;
     }
   }
-  eliminar_pcb(pcb);
 }
 
 bool esta_en_tlb(int numeroPagina)
