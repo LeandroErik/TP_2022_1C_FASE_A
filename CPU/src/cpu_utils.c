@@ -174,7 +174,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       atender_interrupcion(pcb, socketKernel);
 
       log_info(logger, "Se termino de atender una interrupción (valor : %d)", seNecesitaAtenderInterrupcion);
-      eliminar_pcb(pcb);
+      // eliminar_pcb(pcb); me tira error ,pero em parece que es necesario.
       return;
     }
     pcb->contadorPrograma++;
@@ -241,6 +241,9 @@ int devolver_marco_por_tlb(int numeroPagina)
   bool es_numero_pagina(void *_entradaTLB)
   {
     EntradaTlb *entradaTLB = (EntradaTlb *)_entradaTLB;
+
+    entradaTlb->ultimaVezUtilizada = obtener_tiempo_actual();
+
     return entradaTLB->numeroPagina == numeroPagina;
   }
 
