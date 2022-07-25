@@ -4,6 +4,7 @@ bool seNecesitaAtenderInterrupcion = false;
 
 int main(int argc, char *argv[])
 {
+  cantidad_acceso_tlb = 0;
   Logger *logger = iniciar_logger_cpu();
   if (argc < 2)
   {
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
   pthread_join(hiloKernelInterrupt, NULL);
 
   list_destroy_and_destroy_elements(tlb, &free);
+  log_info(logger, "ACCESOS A MEMORIA : %d", cantidad_acceso_tlb);
 
   log_destroy(logger);
   config_destroy(config);

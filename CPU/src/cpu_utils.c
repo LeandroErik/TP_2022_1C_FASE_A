@@ -94,12 +94,12 @@ void ejecutar_read(int direccionFisica)
   Logger *logger = iniciar_logger_cpu();
   Paquete *paquete = crear_paquete(LEER_DE_MEMORIA);
   agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
-  //log_info(logger, "Se pide a memoria LEER : %d", direccionFisica);
+  // log_info(logger, "Se pide a memoria LEER : %d", direccionFisica);
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
 
   char *valor = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   log_info(logger, "Se recibio el valor leido %s de memoria", valor);
-
+  cantidad_acceso_tlb++;
   free(valor);
   eliminar_paquete(paquete);
   log_destroy(logger);
@@ -114,6 +114,7 @@ void ejecutar_write(Pcb *proceso, int direccionFisica, int valor)
   eliminar_paquete(paquete);
 
   char *confirmacion = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  cantidad_acceso_tlb++;
   free(confirmacion);
 }
 
@@ -191,17 +192,17 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       ejecutar_io(pcb, lineaInstruccion->parametros[0], socketKernel);
       break;
     case READ:
-      log_info(logger, "Ejecutando READ");
+      log_info(logger, "Ejecutando READ : %d", lineaInstruccion->parametros[0]);
       direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
       ejecutar_read(direccionFisica);
       break;
     case COPY:
-      log_info(logger, "Ejecutando COPY");
+      log_info(logger, "Ejecutando COPY : %d  %d", lineaInstruccion->parametros[0], lineaInstruccion->parametros[1]);
       direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
       ejecutar_copy(pcb, direccionFisica, lineaInstruccion->parametros[1]);
       break;
     case WRITE:
-      log_info(logger, "Ejecutando WRITE");
+      log_info(logger, "Ejecutando WRITE  %d  %d", lineaInstruccion->parametros[0], lineaInstruccion->parametros[1]);
       direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
       ejecutar_write(pcb, direccionFisica, lineaInstruccion->parametros[1]);
       break;
@@ -379,10 +380,13 @@ int llamar_mmu(Pcb *proceso, int direccionLogica)
   int numeroMarco;
 
   if (esta_en_tlb(numeroPagina))
+  {
     numeroMarco = devolver_marco_por_tlb(numeroPagina);
-
+    log_info(logger, "TLB HIT: marco:%d pagina:%d", numeroMarco, numeroPagina);
+  }
   else
   {
+    log_info(logger, "No esta en TLB");
     int numeroTablaPrimerNivel = proceso->tablaPaginas;
     int entradaTablaPrimerNivel = floor((float)numeroPagina / ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA);
     int entradaTablaSegundoNivel = numeroPagina % ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA;
@@ -390,6 +394,8 @@ int llamar_mmu(Pcb *proceso, int direccionLogica)
     log_info(logger, "numero de tabla de segundo nivel recibido: %d", numeroTablaSegundoNivel);
     numeroMarco = pedir_marco(numeroTablaSegundoNivel, entradaTablaSegundoNivel);
     log_info(logger, "numero de marco recibido: %d", numeroMarco);
+
+    cantidad_acceso_tlb += 2;
     agregar_a_tlb(numeroPagina, numeroMarco);
     mostrar_tlb();
   }

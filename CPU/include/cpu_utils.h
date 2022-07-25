@@ -11,6 +11,8 @@ bool seNecesitaAtenderInterrupcion;
 int pidAnterior;
 Lista *tlb;
 
+int cantidad_acceso_tlb;
+
 typedef struct EntradaTlb
 {
     int numeroPagina;
