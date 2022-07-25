@@ -174,8 +174,6 @@ void serializar_lista_de_instrucciones(Paquete *paquete, Lista *instrucciones, i
     agregar_a_paquete(paquete, &(lineaInstruccion->parametros[0]), sizeof(int));
     agregar_a_paquete(paquete, &(lineaInstruccion->parametros[1]), sizeof(int));
   }
-
-  eliminar_linea_instruccion(lineaInstruccion);
 }
 
 void deserializar_lista_de_instrucciones(Lista *listaInstrucciones, Lista *listaPlana, int indiceTamanio, int indiceLista)
@@ -276,4 +274,20 @@ char *obtener_mensaje_del_servidor(int socketServidor)
 int obtener_tiempo_actual()
 {
   return time(NULL);
+}
+
+void liberar_pcb(Pcb *pcb)
+{
+  free(pcb->escenario);
+
+  list_destroy_and_destroy_elements(pcb->instrucciones, (void *)liberar_instruccion);
+
+  free(pcb);
+}
+
+void liberar_instruccion(LineaInstruccion *linea)
+{
+  free(linea->identificador);
+
+  free(linea);
 }

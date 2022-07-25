@@ -267,4 +267,7 @@ char *obtener_mensaje_del_servidor(int socketServidor);
 */
 int obtener_tiempo_actual();
 
+void liberar_instruccion(LineaInstruccion *);
+void liberar_pcb(Pcb *);
+
 #endif
