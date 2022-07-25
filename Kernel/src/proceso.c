@@ -457,7 +457,7 @@ void agregar_proceso_listo(Pcb *procesoListo)
     pthread_mutex_unlock(&mutexColaListos);
     // Envio interrupcion por cada vez que que entra uno a ready
 
-    if (es_SRT() && lectura_cola_mutex(colaEjecutando, &mutexColaEjecutando) > 0)
+    if (es_SRT())
     {
         enviar_interrupcion();
     }
