@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
   pthread_join(hiloCliente2, NULL);
 
   destruir_hilos(hiloCliente1, hiloCliente2);
+  apagar_servidor(socketMemoria);
   liberar_memoria();
 
   log_info(logger, "Page Faults totales: %d", contadorPageFaults);

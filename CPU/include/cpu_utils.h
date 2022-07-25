@@ -214,4 +214,6 @@ EntradaTlb *elegir_victima_por_fifo();
  */
 EntradaTlb *elegir_victima_por_lru();
 
+EntradaTlb *buscar_entrada_de_numero_de_pagina(int numeroPagina);
+
 #endif

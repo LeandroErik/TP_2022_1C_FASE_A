@@ -155,6 +155,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
 
   if (pcb->pid != pidAnterior || pcb->vieneDeSuspension)
   {
+    log_info(logger, "Limpiando TLB.");
     limpiar_tlb();
     pidAnterior = pcb->pid;
     pcb->vieneDeSuspension = false;
@@ -236,7 +237,7 @@ bool esta_en_tlb(int numeroPagina)
   return list_any_satisfy(tlb, &es_numero_pagina);
 }
 
-int devolver_marco_por_tlb(int numeroPagina)
+EntradaTlb *buscar_entrada_de_numero_de_pagina(int numeroPagina)
 {
   bool es_numero_pagina(void *_entradaTLB)
   {
@@ -247,18 +248,11 @@ int devolver_marco_por_tlb(int numeroPagina)
 
   EntradaTlb *entradaTlb = (EntradaTlb *)list_find(tlb, &es_numero_pagina);
 
-  entradaTlb->ultimaVezUtilizada = obtener_tiempo_actual();
-
-  return entradaTlb->numeroMarco;
+  return entradaTlb;
 }
 
 void agregar_a_tlb(int numeroPagina, int numeroMarco)
 {
-  bool esEntrada(void *_entrada)
-  {
-    EntradaTlb *entrada = _entrada;
-    return entrada->numeroPagina == numeroPagina && entrada->numeroMarco == numeroMarco;
-  }
 
   bool coincideMarco(void *_entrada)
   {
@@ -268,25 +262,15 @@ void agregar_a_tlb(int numeroPagina, int numeroMarco)
 
   Logger *logger = iniciar_logger_cpu();
 
-  if (list_find(tlb, &esEntrada))
+  if (list_find(tlb, &coincideMarco))
   {
-    log_info(logger, "La página %d y el marco %d se encuentra en TLB", numeroPagina, numeroMarco);
-    EntradaTlb *entrada = list_find(tlb, &esEntrada);
-    log_info(logger, "Actualizando tiempo de uso...");
-    entrada->ultimaVezUtilizada = obtener_tiempo_actual();
+    log_info(logger, "El marco %d ya se encuentra en TLB pero asociado a otra pagina. Borrando entrada desactualizada.", numeroMarco);
+    list_remove_and_destroy_by_condition(tlb, &coincideMarco, &free);
   }
-  else if (list_size(tlb) < CPU_CONFIG.ENTRADAS_TLB)
+
+  if (list_size(tlb) < CPU_CONFIG.ENTRADAS_TLB)
   {
-    if (list_find(tlb, &coincideMarco))
-    {
-      log_info(logger, "El marco %d ya se encuentra en TLB", numeroMarco);
-      EntradaTlb *entrada = list_find(tlb, &coincideMarco);
-
-      list_remove_by_condition(tlb, &coincideMarco);
-      free(entrada);
-    }
-
-    log_info(logger, "Agregando nueva entrada en TLB...");
+    log_info(logger, "Agregando nueva entrada en TLB");
     EntradaTlb *entradaTLB = (EntradaTlb *)malloc(sizeof(EntradaTlb));
 
     entradaTLB->numeroPagina = numeroPagina;
@@ -297,7 +281,7 @@ void agregar_a_tlb(int numeroPagina, int numeroMarco)
   }
   else
   {
-    log_info(logger, "Iniciando reemplazo de TLB...");
+    log_info(logger, "Iniciando reemplazo de TLB");
     reemplazar_tlb(numeroPagina, numeroMarco);
   }
 
@@ -384,8 +368,11 @@ int llamar_mmu(Pcb *proceso, int direccionLogica)
 
   if (esta_en_tlb(numeroPagina))
   {
-    numeroMarco = devolver_marco_por_tlb(numeroPagina);
-    log_info(logger, "TLB HIT: marco:%d pagina:%d", numeroMarco, numeroPagina);
+    EntradaTlb *entrada = buscar_entrada_de_numero_de_pagina(numeroPagina);
+    numeroMarco = entrada->numeroMarco;
+    log_info(logger, "TLB HIT: [Marco: %d | Pagina: %d]", numeroMarco, numeroPagina);
+    log_info(logger, "Actualizando ultima referencia a la pagina %d", numeroPagina);
+    entrada->ultimaVezUtilizada = obtener_tiempo_actual();
   }
   else
   {
@@ -394,9 +381,9 @@ int llamar_mmu(Pcb *proceso, int direccionLogica)
     int entradaTablaPrimerNivel = floor((float)numeroPagina / ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA);
     int entradaTablaSegundoNivel = numeroPagina % ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA;
     int numeroTablaSegundoNivel = pedir_tabla_segundo_nivel(numeroTablaPrimerNivel, entradaTablaPrimerNivel);
-    log_info(logger, "numero de tabla de segundo nivel recibido: %d", numeroTablaSegundoNivel);
+    log_info(logger, "Numero de tabla de segundo nivel recibido: %d", numeroTablaSegundoNivel);
     numeroMarco = pedir_marco(numeroTablaSegundoNivel, entradaTablaSegundoNivel);
-    log_info(logger, "numero de marco recibido: %d", numeroMarco);
+    log_info(logger, "Numero de marco recibido: %d", numeroMarco);
 
     cantidad_acceso_tlb += 2;
     agregar_a_tlb(numeroPagina, numeroMarco);
