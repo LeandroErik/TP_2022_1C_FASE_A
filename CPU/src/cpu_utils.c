@@ -174,7 +174,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       atender_interrupcion(pcb, socketKernel);
 
       log_info(logger, "Se termino de atender una interrupción (valor : %d)", seNecesitaAtenderInterrupcion);
-
+      eliminar_pcb(pcb);
       return;
     }
     pcb->contadorPrograma++;
@@ -221,7 +221,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       return;
     }
   }
-  // eliminar_pcb(pcb);
+  eliminar_pcb(pcb);
 }
 
 bool esta_en_tlb(int numeroPagina)
