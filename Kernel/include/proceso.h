@@ -154,8 +154,6 @@ void manejar_proceso_interrumpido(Pcb *);
 int tabla_pagina_primer_nivel(int pid, int tamanio);
 
 void liberar_estructuras();
-void liberar_instruccion(LineaInstruccion *);
-void liberar_pcb(Pcb *);
 void liberar_semaforos();
 void liberar_conexiones();
 bool es_SRT();

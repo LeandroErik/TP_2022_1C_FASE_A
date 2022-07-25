@@ -95,7 +95,7 @@ void ejecutar(Pcb *proceso)
 void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 {
     Pcb *actual = sacar_proceso_ejecutando();
-    free(actual); // Es lo maximo que puedo liberar(me parece que rompe con liberar char*)
+    liberar_pcb(actual);
 
     int pid;
     Paquete *paquete;
@@ -770,22 +770,6 @@ void liberar_estructuras()
     queue_destroy(colaFinalizado);
 
     list_destroy(socketsConsola);
-}
-
-void liberar_pcb(Pcb *pcb)
-{
-    free(pcb->escenario);
-
-    list_destroy_and_destroy_elements(pcb->instrucciones, (void *)liberar_instruccion);
-
-    free(pcb);
-}
-
-void liberar_instruccion(LineaInstruccion *linea)
-{
-    free(linea->identificador);
-
-    free(linea);
 }
 
 void imprimir_pcb(Pcb *proceso)
