@@ -218,7 +218,6 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
     if (instruccion == IO || instruccion == EXIT)
     {
       log_destroy(logger);
-      // eliminar_pcb(pcb);
       return;
     }
   }
