@@ -139,6 +139,7 @@ void escribir_entero_en_memoria(uint32_t valorAEscribir, int direccionFisica)
   marcoEscrito->paginaActual->uso = true;
 
   log_info(logger, "Valor escrito %d, en la posicion de memoria fisica %d.", valorAEscribir, direccionFisica);
+  imprimir_pagina(marcoEscrito->paginaActual);
   log_destroy(logger);
 }
 
@@ -158,6 +159,7 @@ uint32_t leer_entero_de_memoria(int direccionFisica)
   marcoLeido->paginaActual->uso = true;
 
   log_info(logger, "Valor leido %d, de la posicion de memoria fisica %d.", leido, direccionFisica);
+  imprimir_pagina(marcoLeido->paginaActual);
   log_destroy(logger);
 
   return leido;
@@ -237,6 +239,7 @@ void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco
   marco->idProceso = proceso->idProceso;
 
   log_info(logger, "Pagina %d del proceso %d, asignada al Marco %d", pagina->numeroPagina, proceso->idProceso, marco->numeroMarco);
+  imprimir_pagina(pagina);
   log_destroy(logger);
 }
 
@@ -288,13 +291,16 @@ Marco *correr_clock(Proceso *proceso, Logger *logger)
   Marco *marcoSustituido;
   bool eligioVictima = false;
   int numeroDePaginasAsignadas = list_size(proceso->paginasAsignadas);
+
   while (!eligioVictima)
   {
     Pagina *pagina = list_get(proceso->paginasAsignadas, proceso->posicionDelPunteroDeSustitucion);
+    imprimir_pagina(pagina);
     if (!pagina->uso)
     {
       eligioVictima = true;
       log_info(logger, "Victima elegida pagina %d del proceso %d", pagina->numeroPagina, proceso->idProceso);
+      imprimir_pagina(pagina);
       marcoSustituido = desalojar_pagina(proceso, pagina);
     }
     else
@@ -323,12 +329,14 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
   while (!eligioVictima)
   {
     Pagina *pagina = list_get(proceso->paginasAsignadas, proceso->posicionDelPunteroDeSustitucion);
+    imprimir_pagina(pagina);
     if (!pagina->uso)
     {
       if (!pagina->modificado || contadorDeVueltas == 3 || contadorDeVueltas == 1)
       {
         eligioVictima = true;
         log_info(logger, "Victima elegida pagina %d del proceso %d", pagina->numeroPagina, proceso->idProceso);
+        imprimir_pagina(pagina);
         marcoSustituido = desalojar_pagina(proceso, pagina);
       }
     }
@@ -548,4 +556,11 @@ void destruir_hilos(Hilo hiloCliente1, Hilo hiloCliente2)
 {
   pthread_detach(hiloCliente1);
   pthread_detach(hiloCliente2);
+}
+
+void imprimir_pagina(Pagina *pagina)
+{
+  Logger *logger = iniciar_logger_memoria();
+  log_info(logger, "[Page %d | Frame %d | P %d | U %d | M %d]",
+           pagina->numeroPagina, pagina->marcoAsignado->numeroMarco, !(pagina->paginaVacia), pagina->uso, pagina->modificado);
 }
