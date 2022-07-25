@@ -16,7 +16,7 @@ void manejar_paquetes_clientes(int socketCliente)
     esKernel = es_kernel(socketCliente);
     if (esKernel)
     {
-      log_info(logger, "Se conecto Kernel.");
+      log_info(logger, "Se conecto Kernel.\n");
       escuchar_kernel(socketCliente);
     }
     else
@@ -167,7 +167,7 @@ void atender_pedido_de_marco(int socketCPU, Logger *logger)
 
   char *numeroComoString = string_itoa(numeroMarco);
   enviar_mensaje_a_cliente(numeroComoString, socketCPU);
-  log_info(logger, "Se envia a CPU el numero de marco %d", numeroMarco);
+  log_info(logger, "Se envia a CPU el numero de marco %d\n", numeroMarco);
   free(numeroComoString);
 }
 
@@ -179,6 +179,7 @@ void atender_escritura_en_memoria(int socketCPU, Logger *logger)
   list_destroy_and_destroy_elements(lista, &free);
 
   escribir_entero_en_memoria(numeroAEscribir, direccionFisicaAEscribir);
+  log_info(logger, "Se envia a CPU confirmacion de escritura\n");
 
   enviar_mensaje_a_cliente("ok", socketCPU);
 }
@@ -195,7 +196,7 @@ void atender_lectura_de_memoria(int socketCPU, Logger *logger)
 
   char *leidoComoString = string_itoa(leido);
   enviar_mensaje_a_cliente(leidoComoString, socketCPU);
-  log_info(logger, "Se envia a CPU el numero leido %d", leido);
+  log_info(logger, "Se envia a CPU el numero leido %d\n", leido);
   free(leidoComoString);
 }
 
@@ -207,6 +208,7 @@ void atender_copiado_en_memoria(int socketCPU, Logger *logger)
   list_destroy_and_destroy_elements(lista, &free);
 
   copiar_entero_en_memoria(direccionFisicaDestino, direccionFisicaOrigen);
+  log_info(logger, "Se envia a CPU confirmacion de copiado\n");
 
   enviar_mensaje_a_cliente("ok", socketCPU);
 }
@@ -225,7 +227,7 @@ void atender_creacion_de_proceso(int socketKernel, Logger *logger)
   realizar_espera_de_memoria();
 
   enviar_mensaje_a_cliente(numeroTablaPrimerNivel, socketKernel);
-  log_info(logger, "Se envia a kernel el numero de tabla de primer nivel %d", nuevoProceso->tablaPrimerNivel->numeroTablaPrimerNivel);
+  log_info(logger, "Se envia a kernel el numero de tabla de primer nivel %d\n", nuevoProceso->tablaPrimerNivel->numeroTablaPrimerNivel);
   free(numeroTablaPrimerNivel);
 }
 
@@ -240,7 +242,7 @@ void atender_suspension_de_proceso(int socketKernel, Logger *logger)
   realizar_espera_de_memoria();
 
   enviar_mensaje_a_cliente(string_itoa(id), socketKernel);
-  log_info(logger, "Se envia a kernel confirmacion de suspension del proceso %d", id);
+  log_info(logger, "Se envia a kernel confirmacion de suspension del proceso %d\n", id);
 }
 
 void atender_finalizacion_de_proceso(int socketKernel, Logger *logger)
@@ -254,5 +256,5 @@ void atender_finalizacion_de_proceso(int socketKernel, Logger *logger)
   realizar_espera_de_memoria();
 
   enviar_mensaje_a_cliente("Proceso finalizado", socketKernel);
-  log_info(logger, "Se envia a kernel confirmacion de finalizacion del proceso %d", id);
+  log_info(logger, "Se envia a kernel confirmacion de finalizacion del proceso %d\n", id);
 }

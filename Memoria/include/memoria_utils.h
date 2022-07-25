@@ -297,6 +297,11 @@ void agregar_proceso_a_lista_de_procesos(Proceso *proceso);
 
 void destruir_hilos(Hilo hiloCliente1, Hilo hiloCliente2);
 
+/**
+ * @brief Muestra el frame asignado y los bits de la pagina
+ * 
+ * @param pagina Pagina a mostrar
+ */
 void imprimir_pagina(Pagina *pagina);
 
 #endif

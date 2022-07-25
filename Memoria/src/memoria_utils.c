@@ -234,7 +234,7 @@ void asignar_pagina_del_proceso_al_marco(Proceso *proceso, Pagina *pagina, Marco
 
   agregar_pagina_a_paginas_asignadas_del_proceso(proceso, pagina);
   pagina->marcoAsignado = marco;
-  pagina->uso = true;
+  //pagina->uso = true;
   marco->paginaActual = pagina;
   marco->idProceso = proceso->idProceso;
 
@@ -273,14 +273,15 @@ Marco *marco_del_proceso_sustituido(Proceso *proceso)
   bool esClock = !strcmp(MEMORIA_CONFIG.ALGORITMO_REEMPLAZO, "CLOCK");
   if (esClock)
   {
-    log_info(logger, "Iniciando algoritmo de sustitucion Clock");
+    log_info(logger, "----- Iniciando algoritmo de sustitucion Clock -----");
     marcoSustituido = correr_clock(proceso, logger);
   }
   else
   {
-    log_info(logger, "Iniciando algoritmo de sustitucion Clock-M");
+    log_info(logger, "----- Iniciando algoritmo de sustitucion Clock-M -----");
     marcoSustituido = correr_clock_modificado(proceso, logger);
   }
+  log_info(logger, "----- Fin de algortimo de sustitucion -----");
 
   log_destroy(logger);
   return marcoSustituido;
@@ -300,19 +301,16 @@ Marco *correr_clock(Proceso *proceso, Logger *logger)
     {
       eligioVictima = true;
       log_info(logger, "Victima elegida pagina %d del proceso %d", pagina->numeroPagina, proceso->idProceso);
-      imprimir_pagina(pagina);
+      //imprimir_pagina(pagina);
       marcoSustituido = desalojar_pagina(proceso, pagina);
     }
     else
-    {
       pagina->uso = false;
-    }
 
     proceso->posicionDelPunteroDeSustitucion++;
     if (proceso->posicionDelPunteroDeSustitucion == numeroDePaginasAsignadas)
-    {
       proceso->posicionDelPunteroDeSustitucion = 0;
-    }
+
   }
 
   return marcoSustituido;
@@ -326,6 +324,7 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
   int posicionInicialDelPuntero = proceso->posicionDelPunteroDeSustitucion;
 
   int contadorDeVueltas = 0;
+  log_info(logger, "Vuelta 1, buscando (0,0):");
   while (!eligioVictima)
   {
     Pagina *pagina = list_get(proceso->paginasAsignadas, proceso->posicionDelPunteroDeSustitucion);
@@ -336,7 +335,7 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
       {
         eligioVictima = true;
         log_info(logger, "Victima elegida pagina %d del proceso %d", pagina->numeroPagina, proceso->idProceso);
-        imprimir_pagina(pagina);
+        //imprimir_pagina(pagina);
         marcoSustituido = desalojar_pagina(proceso, pagina);
       }
     }
@@ -347,12 +346,17 @@ Marco *correr_clock_modificado(Proceso *proceso, Logger *logger)
 
     proceso->posicionDelPunteroDeSustitucion++;
     if (proceso->posicionDelPunteroDeSustitucion == numeroDePaginasAsignadas)
-    {
       proceso->posicionDelPunteroDeSustitucion = 0;
-    }
+    
     if (proceso->posicionDelPunteroDeSustitucion == posicionInicialDelPuntero)
     {
       contadorDeVueltas++;
+      if(contadorDeVueltas + 1 == 2)
+        log_info(logger, "Vuelta 2, buscando (0,1) y actualizando bit de uso:");
+      else if(contadorDeVueltas + 1 == 3)
+        log_info(logger, "Vuelta 3, buscando (0,0):");
+      else
+        log_info(logger, "Vuelta 4, buscando (0,1):");
     }
   }
   return marcoSustituido;
@@ -363,9 +367,8 @@ Marco *desalojar_pagina(Proceso *proceso, Pagina *pagina)
 {
   Marco *marcoDesasignado = pagina->marcoAsignado;
   if (pagina->modificado)
-  {
     escribir_en_swap(pagina, proceso);
-  }
+
   desasignar_pagina(proceso, pagina);
   return marcoDesasignado;
 }
@@ -380,6 +383,7 @@ void desasignar_pagina(Proceso *proceso, Pagina *pagina)
 {
   desasignar_marco(pagina->marcoAsignado);
   pagina->marcoAsignado = NULL;
+  pagina->uso = false;
   pagina->modificado = false;
   sacar_pagina_de_paginas_asignadas(proceso, pagina);
 }
@@ -561,6 +565,8 @@ void destruir_hilos(Hilo hiloCliente1, Hilo hiloCliente2)
 void imprimir_pagina(Pagina *pagina)
 {
   Logger *logger = iniciar_logger_memoria();
-  log_info(logger, "[Page %d | Frame %d | P %d | U %d | M %d]",
-           pagina->numeroPagina, pagina->marcoAsignado->numeroMarco, !(pagina->paginaVacia), pagina->uso, pagina->modificado);
+  bool presencia = pagina->marcoAsignado != NULL;
+  log_info(logger, "[Pagina %d | Marco %d | P %d | U %d | M %d]",
+           pagina->numeroPagina, pagina->marcoAsignado->numeroMarco, presencia, pagina->uso, pagina->modificado);
+  log_destroy(logger);
 }
