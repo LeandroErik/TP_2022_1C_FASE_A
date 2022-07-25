@@ -257,7 +257,6 @@ char *obtener_mensaje_del_servidor(int socketServidor)
 {
   Lista *listaMensaje;
   char *mensaje;
-  Logger *logger = log_create("Protocolo.log", "Protocolo", 1, LOG_LEVEL_INFO);
 
   switch (obtener_codigo_operacion(socketServidor))
   {
@@ -268,11 +267,6 @@ char *obtener_mensaje_del_servidor(int socketServidor)
     break;
 
   default:
-
-    listaMensaje = obtener_paquete_como_lista(socketServidor);
-    mensaje = string_duplicate((char *)list_get(listaMensaje, 0));
-    log_error(logger, "RECIBI SARAZA %s", mensaje);
-    list_destroy_and_destroy_elements(listaMensaje, &free);
     break;
   }
 
