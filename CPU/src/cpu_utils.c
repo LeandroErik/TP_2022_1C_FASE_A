@@ -130,6 +130,7 @@ void ejecutar_copy(Pcb *proceso, int direccionFisicoDestino, int direccionLogica
 
   char *confirmacion = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   free(confirmacion);
+  cantidad_acceso_tlb += 2;
 }
 
 void atender_interrupcion(Pcb *pcb, int socketKernel)
@@ -299,12 +300,24 @@ void mostrar_tlb()
   for (int i = 0; i < list_size(tlb); i++)
   {
     EntradaTlb *entradaTLB = (EntradaTlb *)list_get(tlb, i);
-    log_info(logger, "Entrada %d TLB:\n\t- Número de página: %d\n\t- Número de marco: %d\n\t- Última vez utilizada: %d\n", i, entradaTLB->numeroPagina, entradaTLB->numeroMarco, entradaTLB->ultimaVezUtilizada);
+    log_info(logger, "Entrada %d TLB:\n\t- Número de página: %d\n\t- Número de marco: %d\n\t- Última vez utilizada: %s\n", i, entradaTLB->numeroPagina, entradaTLB->numeroMarco, obtenerHorasMinutosSegundos(entradaTLB->ultimaVezUtilizada));
   }
 
   log_info(logger, "------------------------------------------------------");
 
   log_destroy(logger);
+}
+
+char *obtenerHorasMinutosSegundos(int valor)
+{
+
+  int horas = (valor / 3600);
+  int minutos = ((valor - horas * 3600) / 60);
+  int segundos = valor - (horas * 3600 + minutos * 60);
+
+  char *impresion = string_new();
+  string_append_with_format(&impresion, "min:%d seg:%d", minutos, segundos);
+  return impresion;
 }
 
 void reemplazar_tlb(int numeroPagina, int numeroMarco)
@@ -382,6 +395,8 @@ int llamar_mmu(Pcb *proceso, int direccionLogica)
     log_info(logger, "Numero de tabla de segundo nivel recibido: %d", numeroTablaSegundoNivel);
     numeroMarco = pedir_marco(numeroTablaSegundoNivel, entradaTablaSegundoNivel);
     log_info(logger, "Numero de marco recibido: %d", numeroMarco);
+
+    log_info(logger, "Nueva traduccion: [Marco: %d | Pagina: %d]", numeroMarco, numeroPagina);
 
     cantidad_acceso_tlb += 2;
     agregar_a_tlb(numeroPagina, numeroMarco);
