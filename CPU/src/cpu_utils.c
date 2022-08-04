@@ -300,7 +300,9 @@ void mostrar_tlb()
   for (int i = 0; i < list_size(tlb); i++)
   {
     EntradaTlb *entradaTLB = (EntradaTlb *)list_get(tlb, i);
-    log_info(logger, "Entrada %d TLB:\n\t- Número de página: %d\n\t- Número de marco: %d\n\t- Última vez utilizada: %s\n", i, entradaTLB->numeroPagina, entradaTLB->numeroMarco, obtenerHorasMinutosSegundos(entradaTLB->ultimaVezUtilizada));
+    char *tiempo = obtenerHorasMinutosSegundos(entradaTLB->ultimaVezUtilizada);
+    log_info(logger, "Entrada %d TLB:\n\t- Número de página: %d\n\t- Número de marco: %d\n\t- Última vez utilizada: %s\n", i, entradaTLB->numeroPagina, entradaTLB->numeroMarco, tiempo);
+    free(tiempo);
   }
 
   log_info(logger, "------------------------------------------------------");
