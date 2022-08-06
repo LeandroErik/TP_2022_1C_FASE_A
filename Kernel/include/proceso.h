@@ -23,9 +23,6 @@ t_queue *colaEjecutando;
 t_queue *colaFinalizado;
 t_queue *colaSuspendidoListo;
 
-t_list *hilosConsola;
-t_list *hilosMonitorizadores;
-
 /*semaforos*/
 pthread_mutex_t mutexNumeroProceso;
 pthread_mutex_t mutexProcesoListo;
@@ -154,8 +151,6 @@ void manejar_proceso_interrumpido(Pcb *);
 int tabla_pagina_primer_nivel(int pid, int tamanio);
 
 void liberar_estructuras();
-void liberar_instruccion(LineaInstruccion *);
-void liberar_pcb(Pcb *);
 void liberar_semaforos();
 void liberar_conexiones();
 bool es_SRT();

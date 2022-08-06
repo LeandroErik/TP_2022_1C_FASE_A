@@ -21,7 +21,7 @@ int contadorPageFaults;
 int contadorAccesosADisco;
 
 pthread_mutex_t semaforoProcesos;
-//Semaforo semaforoMarcos;
+// Semaforo semaforoMarcos;
 
 /**
  * @brief Inicia un logger en el Módulo Memoria.
@@ -45,7 +45,7 @@ void iniciar_estructuras_memoria();
 
 /**
  * @brief Inicia los marcos de la memoria
- * 
+ *
  */
 void iniciar_marcos();
 
@@ -293,8 +293,15 @@ void iniciar_semaforos();
 
 void destruir_semaforos();
 
-void agregar_proceso_a_lista_de_procesos(Proceso* proceso);
+void agregar_proceso_a_lista_de_procesos(Proceso *proceso);
 
 void destruir_hilos(Hilo hiloCliente1, Hilo hiloCliente2);
+
+/**
+ * @brief Muestra el frame asignado y los bits de la pagina
+ * 
+ * @param pagina Pagina a mostrar
+ */
+void imprimir_pagina(Pagina *pagina);
 
 #endif

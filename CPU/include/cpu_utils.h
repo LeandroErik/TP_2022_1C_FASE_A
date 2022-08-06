@@ -11,6 +11,8 @@ bool seNecesitaAtenderInterrupcion;
 int pidAnterior;
 Lista *tlb;
 
+int cantidad_acceso_tlb;
+
 typedef struct EntradaTlb
 {
     int numeroPagina;
@@ -211,5 +213,8 @@ EntradaTlb *elegir_victima_por_fifo();
  * @return Victima.
  */
 EntradaTlb *elegir_victima_por_lru();
+
+EntradaTlb *buscar_entrada_de_numero_de_pagina(int numeroPagina);
+char *obtenerHorasMinutosSegundos(int);
 
 #endif

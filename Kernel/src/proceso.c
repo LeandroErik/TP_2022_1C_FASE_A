@@ -36,9 +36,6 @@ void inicializar_colas_procesos()
     colaBloqueados = queue_create();
     colaSuspendidoListo = queue_create();
     colaFinalizado = queue_create();
-
-    hilosConsola = list_create();
-    hilosMonitorizadores = list_create();
 }
 
 void iniciar_planificadores()
@@ -95,7 +92,7 @@ void ejecutar(Pcb *proceso)
 void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
 {
     Pcb *actual = sacar_proceso_ejecutando();
-    free(actual); // Es lo maximo que puedo liberar(me parece que rompe con liberar char*)
+    liberar_pcb(actual);
 
     int pid;
     Paquete *paquete;
@@ -121,7 +118,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         // Comienza el analisis de suspension (10 segundos)
         Hilo hiloMonitorizacionSuspension;
         pthread_create(&hiloMonitorizacionSuspension, NULL, (void *)monitorizarSuspension, pcb);
-
+        pthread_detach(hiloMonitorizacionSuspension);
         break;
 
     case TERMINADO:
@@ -222,12 +219,10 @@ void *monitorizarSuspension(Pcb *proceso)
 
     if (valor == 1) // esto indica que aun sigue en la cola de bloqueados.
     {
-        proceso->escenario->estado = SUSPENDIDO;
-        proceso->vieneDeSuspension = true;
 
         Paquete *paquete = crear_paquete(SUSPENDER_PROCESO);
 
-        agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
+        agregar_a_paquete(paquete, &(proceso->pid), sizeof(int));
         sem_wait(&(proceso->confirmacionSuspencion));
         sem_wait(&comunicacionMemoria);
 
@@ -236,16 +231,18 @@ void *monitorizarSuspension(Pcb *proceso)
 
         char *confirmacion = obtener_mensaje_del_servidor(socketMemoria); // confirmacion de suspension
         log_info(loggerPlanificacion, "Recibi respuesta de memoria para suspender proceso %s.", confirmacion);
+        sem_post(&comunicacionMemoria);
 
         log_info(loggerPlanificacion, "Proceso: [%d],se movio a SUSPENDIDO-BLOQUEADO", proceso->pid);
+        proceso->escenario->estado = SUSPENDIDO;
+        proceso->vieneDeSuspension = true;
 
-        sem_post(&comunicacionMemoria);
+        decrementar_cantidad_procesos_memoria();
 
         sem_post(&(proceso->confirmacionSuspencion));
 
         free(confirmacion);
-
-        decrementar_cantidad_procesos_memoria();
+        eliminar_paquete(paquete);
     }
     return NULL;
 }
@@ -458,7 +455,7 @@ void agregar_proceso_listo(Pcb *procesoListo)
     pthread_mutex_unlock(&mutexColaListos);
     // Envio interrupcion por cada vez que que entra uno a ready
 
-    if (es_SRT() && lectura_cola_mutex(colaEjecutando, &mutexColaEjecutando) > 0)
+    if (es_SRT())
     {
         enviar_interrupcion();
     }
@@ -653,6 +650,8 @@ void decrementar_cantidad_procesos_memoria()
     pthread_mutex_lock(&mutexcantidadProcesosMemoria);
     cantidadProcesosEnMemoria--;
     pthread_mutex_unlock(&mutexcantidadProcesosMemoria);
+
+    sem_post(&despertarPlanificadorLargoPlazo);
 }
 int cantidad_procesos_memoria()
 {
@@ -769,22 +768,6 @@ void liberar_estructuras()
     queue_destroy(colaFinalizado);
 
     list_destroy(socketsConsola);
-}
-
-void liberar_pcb(Pcb *pcb)
-{
-    free(pcb->escenario);
-
-    list_destroy_and_destroy_elements(pcb->instrucciones, (void *)liberar_instruccion);
-
-    free(pcb);
-}
-
-void liberar_instruccion(LineaInstruccion *linea)
-{
-    free(linea->identificador);
-
-    free(linea);
 }
 
 void imprimir_pcb(Pcb *proceso)

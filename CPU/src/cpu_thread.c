@@ -37,9 +37,8 @@ void esperar_kernel_dispatch(int socketCpu)
 
     if (desconecto)
       log_destroy(logger);
-      return;
+    return;
   }
-
 }
 
 void esperar_kernel_interrupt(int socketCpu)
@@ -88,6 +87,7 @@ bool manejar_paquete_kernel_dispatch(int socketKernel)
       log_info(logger, "PCB recibido de Kernel.");
       pcb = deserializar_pcb(socketKernel);
       ejecutar_lista_instrucciones_del_pcb(pcb, socketKernel);
+      liberar_pcb(pcb);
       break;
 
     default:

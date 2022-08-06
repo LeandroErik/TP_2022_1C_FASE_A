@@ -94,12 +94,12 @@ void ejecutar_read(int direccionFisica)
   Logger *logger = iniciar_logger_cpu();
   Paquete *paquete = crear_paquete(LEER_DE_MEMORIA);
   agregar_a_paquete(paquete, &direccionFisica, sizeof(int));
-  //log_info(logger, "Se pide a memoria LEER : %d", direccionFisica);
+  // log_info(logger, "Se pide a memoria LEER : %d", direccionFisica);
   enviar_paquete_a_servidor(paquete, ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
 
   char *valor = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   log_info(logger, "Se recibio el valor leido %s de memoria", valor);
-
+  cantidad_acceso_tlb++;
   free(valor);
   eliminar_paquete(paquete);
   log_destroy(logger);
@@ -114,6 +114,7 @@ void ejecutar_write(Pcb *proceso, int direccionFisica, int valor)
   eliminar_paquete(paquete);
 
   char *confirmacion = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
+  cantidad_acceso_tlb++;
   free(confirmacion);
 }
 
@@ -129,14 +130,14 @@ void ejecutar_copy(Pcb *proceso, int direccionFisicoDestino, int direccionLogica
 
   char *confirmacion = obtener_mensaje_del_servidor(ESTRUCTURA_MEMORIA.SOCKET_MEMORIA);
   free(confirmacion);
+  cantidad_acceso_tlb += 2;
 }
 
 void atender_interrupcion(Pcb *pcb, int socketKernel)
 {
   pcb->escenario->estado = INTERRUPCION_EXTERNA;
 
-  Paquete *paquete = malloc(sizeof(Paquete));
-  paquete = crear_paquete(PCB);
+  Paquete *paquete = crear_paquete(PCB);
   serializar_pcb(paquete, pcb);
 
   enviar_paquete_a_cliente(paquete, socketKernel);
@@ -154,6 +155,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
 
   if (pcb->pid != pidAnterior || pcb->vieneDeSuspension)
   {
+    log_info(logger, "Limpiando TLB.");
     limpiar_tlb();
     pidAnterior = pcb->pid;
     pcb->vieneDeSuspension = false;
@@ -173,7 +175,7 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       atender_interrupcion(pcb, socketKernel);
 
       log_info(logger, "Se termino de atender una interrupción (valor : %d)", seNecesitaAtenderInterrupcion);
-
+      log_destroy(logger);
       return;
     }
     pcb->contadorPrograma++;
@@ -191,17 +193,17 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       ejecutar_io(pcb, lineaInstruccion->parametros[0], socketKernel);
       break;
     case READ:
-      log_info(logger, "Ejecutando READ");
+      log_info(logger, "Ejecutando READ : %d", lineaInstruccion->parametros[0]);
       direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
       ejecutar_read(direccionFisica);
       break;
     case COPY:
-      log_info(logger, "Ejecutando COPY");
+      log_info(logger, "Ejecutando COPY : %d  %d", lineaInstruccion->parametros[0], lineaInstruccion->parametros[1]);
       direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
       ejecutar_copy(pcb, direccionFisica, lineaInstruccion->parametros[1]);
       break;
     case WRITE:
-      log_info(logger, "Ejecutando WRITE");
+      log_info(logger, "Ejecutando WRITE  %d  %d", lineaInstruccion->parametros[0], lineaInstruccion->parametros[1]);
       direccionFisica = llamar_mmu(pcb, lineaInstruccion->parametros[0]);
       ejecutar_write(pcb, direccionFisica, lineaInstruccion->parametros[1]);
       break;
@@ -220,7 +222,6 @@ void ejecutar_lista_instrucciones_del_pcb(Pcb *pcb, int socketKernel)
       return;
     }
   }
-  // eliminar_pcb(pcb);
 }
 
 bool esta_en_tlb(int numeroPagina)
@@ -235,26 +236,22 @@ bool esta_en_tlb(int numeroPagina)
   return list_any_satisfy(tlb, &es_numero_pagina);
 }
 
-int devolver_marco_por_tlb(int numeroPagina)
+EntradaTlb *buscar_entrada_de_numero_de_pagina(int numeroPagina)
 {
   bool es_numero_pagina(void *_entradaTLB)
   {
     EntradaTlb *entradaTLB = (EntradaTlb *)_entradaTLB;
+
     return entradaTLB->numeroPagina == numeroPagina;
   }
 
   EntradaTlb *entradaTlb = (EntradaTlb *)list_find(tlb, &es_numero_pagina);
 
-  return entradaTlb->numeroMarco;
+  return entradaTlb;
 }
 
 void agregar_a_tlb(int numeroPagina, int numeroMarco)
 {
-  bool esEntrada(void *_entrada)
-  {
-    EntradaTlb *entrada = _entrada;
-    return entrada->numeroPagina == numeroPagina && entrada->numeroMarco == numeroMarco;
-  }
 
   bool coincideMarco(void *_entrada)
   {
@@ -264,25 +261,15 @@ void agregar_a_tlb(int numeroPagina, int numeroMarco)
 
   Logger *logger = iniciar_logger_cpu();
 
-  if (list_find(tlb, &esEntrada))
+  if (list_find(tlb, &coincideMarco))
   {
-    log_info(logger, "La página %d y el marco %d se encuentra en TLB", numeroPagina, numeroMarco);
-    EntradaTlb *entrada = list_find(tlb, &esEntrada);
-    log_info(logger, "Actualizando tiempo de uso...");
-    entrada->ultimaVezUtilizada = obtener_tiempo_actual();
+    log_info(logger, "El marco %d ya se encuentra en TLB pero asociado a otra pagina. Borrando entrada desactualizada.", numeroMarco);
+    list_remove_and_destroy_by_condition(tlb, &coincideMarco, &free);
   }
-  else if (list_size(tlb) < CPU_CONFIG.ENTRADAS_TLB)
+
+  if (list_size(tlb) < CPU_CONFIG.ENTRADAS_TLB)
   {
-    if (list_find(tlb, &coincideMarco))
-    {
-      log_info(logger, "El marco %d ya se encuentra en TLB", numeroMarco);
-      EntradaTlb *entrada = list_find(tlb, &coincideMarco);
-
-      list_remove_by_condition(tlb, &coincideMarco);
-      free(entrada);
-    }
-
-    log_info(logger, "Agregando nueva entrada en TLB...");
+    log_info(logger, "Agregando nueva entrada en TLB");
     EntradaTlb *entradaTLB = (EntradaTlb *)malloc(sizeof(EntradaTlb));
 
     entradaTLB->numeroPagina = numeroPagina;
@@ -293,7 +280,7 @@ void agregar_a_tlb(int numeroPagina, int numeroMarco)
   }
   else
   {
-    log_info(logger, "Iniciando reemplazo de TLB...");
+    log_info(logger, "Iniciando reemplazo de TLB");
     reemplazar_tlb(numeroPagina, numeroMarco);
   }
 
@@ -313,12 +300,26 @@ void mostrar_tlb()
   for (int i = 0; i < list_size(tlb); i++)
   {
     EntradaTlb *entradaTLB = (EntradaTlb *)list_get(tlb, i);
-    log_info(logger, "Entrada %d TLB:\n\t- Número de página: %d\n\t- Número de marco: %d\n\t- Última vez utilizada: %d\n", i, entradaTLB->numeroPagina, entradaTLB->numeroMarco, entradaTLB->ultimaVezUtilizada);
+    char *tiempo = obtenerHorasMinutosSegundos(entradaTLB->ultimaVezUtilizada);
+    log_info(logger, "Entrada %d TLB:\n\t- Número de página: %d\n\t- Número de marco: %d\n\t- Última vez utilizada: %s\n", i, entradaTLB->numeroPagina, entradaTLB->numeroMarco, tiempo);
+    free(tiempo);
   }
 
   log_info(logger, "------------------------------------------------------");
 
   log_destroy(logger);
+}
+
+char *obtenerHorasMinutosSegundos(int valor)
+{
+
+  int horas = (valor / 3600);
+  int minutos = ((valor - horas * 3600) / 60);
+  int segundos = valor - (horas * 3600 + minutos * 60);
+
+  char *impresion = string_new();
+  string_append_with_format(&impresion, "min:%d seg:%d", minutos, segundos);
+  return impresion;
 }
 
 void reemplazar_tlb(int numeroPagina, int numeroMarco)
@@ -379,17 +380,27 @@ int llamar_mmu(Pcb *proceso, int direccionLogica)
   int numeroMarco;
 
   if (esta_en_tlb(numeroPagina))
-    numeroMarco = devolver_marco_por_tlb(numeroPagina);
-
+  {
+    EntradaTlb *entrada = buscar_entrada_de_numero_de_pagina(numeroPagina);
+    numeroMarco = entrada->numeroMarco;
+    log_info(logger, "TLB HIT: [Marco: %d | Pagina: %d]", numeroMarco, numeroPagina);
+    log_info(logger, "Actualizando ultima referencia a la pagina %d", numeroPagina);
+    entrada->ultimaVezUtilizada = obtener_tiempo_actual();
+  }
   else
   {
+    log_info(logger, "No esta en TLB");
     int numeroTablaPrimerNivel = proceso->tablaPaginas;
     int entradaTablaPrimerNivel = floor((float)numeroPagina / ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA);
     int entradaTablaSegundoNivel = numeroPagina % ESTRUCTURA_MEMORIA.ENTRADAS_POR_TABLA;
     int numeroTablaSegundoNivel = pedir_tabla_segundo_nivel(numeroTablaPrimerNivel, entradaTablaPrimerNivel);
-    log_info(logger, "numero de tabla de segundo nivel recibido: %d", numeroTablaSegundoNivel);
+    log_info(logger, "Numero de tabla de segundo nivel recibido: %d", numeroTablaSegundoNivel);
     numeroMarco = pedir_marco(numeroTablaSegundoNivel, entradaTablaSegundoNivel);
-    log_info(logger, "numero de marco recibido: %d", numeroMarco);
+    log_info(logger, "Numero de marco recibido: %d", numeroMarco);
+
+    log_info(logger, "Nueva traduccion: [Marco: %d | Pagina: %d]", numeroMarco, numeroPagina);
+
+    cantidad_acceso_tlb += 2;
     agregar_a_tlb(numeroPagina, numeroMarco);
     mostrar_tlb();
   }
