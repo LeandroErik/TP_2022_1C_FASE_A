@@ -23,9 +23,6 @@ t_queue *colaEjecutando;
 t_queue *colaFinalizado;
 t_queue *colaSuspendidoListo;
 
-t_list *hilosConsola;
-t_list *hilosMonitorizadores;
-
 /*semaforos*/
 pthread_mutex_t mutexNumeroProceso;
 pthread_mutex_t mutexProcesoListo;

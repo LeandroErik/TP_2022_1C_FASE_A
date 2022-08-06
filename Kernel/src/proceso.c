@@ -36,9 +36,6 @@ void inicializar_colas_procesos()
     colaBloqueados = queue_create();
     colaSuspendidoListo = queue_create();
     colaFinalizado = queue_create();
-
-    hilosConsola = list_create();
-    hilosMonitorizadores = list_create();
 }
 
 void iniciar_planificadores()
@@ -121,7 +118,7 @@ void manejar_proceso_recibido(Pcb *pcb, int socketDispatch)
         // Comienza el analisis de suspension (10 segundos)
         Hilo hiloMonitorizacionSuspension;
         pthread_create(&hiloMonitorizacionSuspension, NULL, (void *)monitorizarSuspension, pcb);
-
+        pthread_detach(hiloMonitorizacionSuspension);
         break;
 
     case TERMINADO:
@@ -225,7 +222,7 @@ void *monitorizarSuspension(Pcb *proceso)
 
         Paquete *paquete = crear_paquete(SUSPENDER_PROCESO);
 
-        agregar_a_paquete(paquete, &pid, sizeof(unsigned int));
+        agregar_a_paquete(paquete, &(proceso->pid), sizeof(int));
         sem_wait(&(proceso->confirmacionSuspencion));
         sem_wait(&comunicacionMemoria);
 
@@ -245,6 +242,7 @@ void *monitorizarSuspension(Pcb *proceso)
         sem_post(&(proceso->confirmacionSuspencion));
 
         free(confirmacion);
+        eliminar_paquete(paquete);
     }
     return NULL;
 }
